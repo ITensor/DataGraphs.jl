@@ -8,6 +8,5 @@
 .tmp
 .vscode/
 /docs/build/
-Manifest.toml
 benchmark/*.json
 docs/build/
