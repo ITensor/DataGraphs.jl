@@ -6,7 +6,19 @@ vertex_data(graph::AbstractDataGraph) = _not_implemented()
 edge_data(graph::AbstractDataGraph) = _not_implemented()
 
 # Graphs overloads
-for f in [:edgetype, :nv, :ne, :vertices, :edges, :eltype, :has_edge, :has_vertex, :neighbors, :is_directed, :adjacency_matrix]
+for f in [
+  :edgetype,
+  :nv,
+  :ne,
+  :vertices,
+  :edges,
+  :eltype,
+  :has_edge,
+  :has_vertex,
+  :neighbors,
+  :is_directed,
+  :adjacency_matrix,
+]
   @eval begin
     $f(graph::AbstractDataGraph, args...) = $f(underlying_graph(graph), args...)
   end
@@ -24,13 +36,15 @@ struct IsEdge <: VertexOrEdge end
 
 # TODO: To allow the syntax `g[1, 1]` as a shorthand for the index `g[(1, 1)]`,
 # define `is_vertex_or_edge(graph::AbstractGraph, args...) = is_vertex_or_edge(graph::AbstractGraph, args)`.
-is_vertex_or_edge(graph::AbstractGraph, v_or_e) = error("$v_or_e doesn't represent a vertex or an edge for graph:\n$graph.")
+function is_vertex_or_edge(graph::AbstractGraph, v_or_e)
+  return error("$v_or_e doesn't represent a vertex or an edge for graph:\n$graph.")
+end
 is_vertex_or_edge(graph::AbstractGraph{V}, ::V) where {V} = IsVertex()
 is_vertex_or_edge(graph::AbstractGraph, ::AbstractEdge) = IsEdge()
 is_vertex_or_edge(graph::AbstractGraph, ::Pair) = IsEdge()
 
 # Handles multi-dimensional indexing.
-# XXX: Maybe only define for `MultiDimDataGraph`?
+# XXX: Maybe only define for `NamedDimDataGraph`?
 is_vertex_or_edge(graph::AbstractGraph, ::Any...) = IsVertex()
 
 data(::IsVertex, graph::AbstractDataGraph) = vertex_data(graph)
@@ -39,8 +53,10 @@ index_type(::IsVertex, graph::AbstractDataGraph, v) = eltype(graph)(v)
 index_type(::IsEdge, graph::AbstractDataGraph, e) = edgetype(graph)(e)
 
 # Handles multi-dimensional indexing.
-# XXX: Maybe only define for `MultiDimDataGraph`?
-index_type(::IsVertex, graph::AbstractDataGraph, v1, v2, vs...) = eltype(graph)(tuple(v1, v2, vs...))
+# XXX: Maybe only define for `NamedDimDataGraph`?
+function index_type(::IsVertex, graph::AbstractDataGraph, v1, v2, vs...)
+  return eltype(graph)(tuple(v1, v2, vs...))
+end
 
 function map_vertex_data(f, graph::AbstractDataGraph; vertices=nothing)
   graph′ = copy(graph)
@@ -66,13 +82,23 @@ function map_data(f, graph::AbstractDataGraph; vertices, edges)
 end
 
 # Data access
-getindex(graph::AbstractDataGraph, v_or_e...) = getindex(is_vertex_or_edge(graph, v_or_e...), graph, v_or_e...)
-getindex(ve::VertexOrEdge, graph::AbstractDataGraph, v_or_e...) = getindex(data(ve, graph), index_type(ve, graph, v_or_e...))
+function getindex(graph::AbstractDataGraph, v_or_e...)
+  return getindex(is_vertex_or_edge(graph, v_or_e...), graph, v_or_e...)
+end
+function getindex(ve::VertexOrEdge, graph::AbstractDataGraph, v_or_e...)
+  return getindex(data(ve, graph), index_type(ve, graph, v_or_e...))
+end
 
-isassigned(graph::AbstractDataGraph, v_or_e) = isassigned(is_vertex_or_edge(graph, v_or_e), graph, v_or_e)
-isassigned(ve::VertexOrEdge, graph::AbstractDataGraph, v_or_e) = isassigned(data(ve, graph), index_type(ve, graph, v_or_e))
+function isassigned(graph::AbstractDataGraph, v_or_e)
+  return isassigned(is_vertex_or_edge(graph, v_or_e), graph, v_or_e)
+end
+function isassigned(ve::VertexOrEdge, graph::AbstractDataGraph, v_or_e)
+  return isassigned(data(ve, graph), index_type(ve, graph, v_or_e))
+end
 
-setindex!(graph::AbstractDataGraph, x, v_or_e...) = setindex!(is_vertex_or_edge(graph, v_or_e...), graph, x, v_or_e...)
+function setindex!(graph::AbstractDataGraph, x, v_or_e...)
+  return setindex!(is_vertex_or_edge(graph, v_or_e...), graph, x, v_or_e...)
+end
 function setindex!(ve::IsVertex, graph::AbstractDataGraph, x, v_or_e...)
   set!(data(ve, graph), index_type(ve, graph, v_or_e...), x)
   return graph
@@ -97,7 +123,9 @@ end
 # ERROR: MethodError: induced_subgraph(::ITensorNetwork{Int64}, ::Vector{Int64}) is ambiguous. Candidates:
 # induced_subgraph(g::T, vlist::AbstractVector{U}) where {U<:Integer, T<:Graphs.AbstractGraph} in Graphs at /home/mfishman/.julia/packages/Graphs/Mih78/src/operators.jl:639
 # induced_subgraph(graph::ITensorNetworks.DataGraphs.AbstractDataGraph, vlist_or_elist) in ITensorNetworks.DataGraphs at /home/mfishman/.julia/dev/ITensorNetworks/src/DataGraphs/src/DataGraphs.jl:96
-function induced_subgraph(graph::AbstractDataGraph, vlist_or_elist::AbstractVector{<:Integer})
+function induced_subgraph(
+  graph::AbstractDataGraph, vlist_or_elist::AbstractVector{<:Integer}
+)
   return _induced_subgraph(graph, vlist_or_elist)
 end
 
@@ -204,7 +232,7 @@ function default_data(
   data_type::Type,
   indices_function::Function,
   underlying_graph::AbstractGraph,
-  ::Nothing
+  ::Nothing,
 )
   return similar(Indices(indices_function(underlying_graph)), data_type)
 end
@@ -215,7 +243,7 @@ function default_data(
   data_type::Type,
   indices_function::Function,
   underlying_graph::AbstractGraph,
-  ::Nothing
+  ::Nothing,
 )
   out_indices = indices_function(underlying_graph)
   in_indices = reverse.(out_indices)
@@ -230,7 +258,7 @@ function data_dict(
   data_type::Type,
   indices_function::Function,
   underlying_graph::AbstractGraph,
-  data::Vector{<:Pair}
+  data::Vector{<:Pair},
 )
   indices = index_type.(first.(data))
   values = convert(Vector{data_type}, last.(data))
@@ -243,7 +271,7 @@ function data_dict(
   data_type::Type,
   indices_function::Function,
   underlying_graph::AbstractGraph,
-  data::Vector
+  data::Vector,
 )
   indices = indices_function(underlying_graph)
   values = convert(Vector{data_type}, data)
@@ -255,20 +283,8 @@ function default_data(
   data_type::Type,
   indices_function::Function,
   underlying_graph::AbstractGraph,
-  init_data
+  init_data,
 )
-  data = data_dict(
-    index_type,
-    data_type,
-    indices_function,
-    underlying_graph,
-    init_data
-  )
-  return default_data(
-    index_type,
-    data_type,
-    indices_function,
-    underlying_graph,
-    data
-  )
+  data = data_dict(index_type, data_type, indices_function, underlying_graph, init_data)
+  return default_data(index_type, data_type, indices_function, underlying_graph, data)
 end

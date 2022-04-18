@@ -4,7 +4,7 @@ using Dictionaries
 using Graphs
 
 g = MultiDimGraph(grid((2, 2)); dims=(2, 2))
-dg = MultiDimDataGraph{String,String}(g)
+dg = NamedDimDataGraph{String,String}(g)
 
 dg[1, 1] = "X11"
 

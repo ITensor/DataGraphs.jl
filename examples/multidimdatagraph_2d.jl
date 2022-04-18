@@ -3,8 +3,8 @@ using NamedGraphs
 using Dictionaries
 using Graphs
 
-g = MultiDimGraph(grid((2, 2)); dims=(2, 2))
-dg = MultiDimDataGraph{String,String}(g)
+g = NamedDimGraph(grid((2, 2)); dims=(2, 2))
+dg = NamedDimDataGraph{String,String}(g)
 
 dg[1, 1] = "X11"
 
@@ -15,17 +15,15 @@ dg[(1, 1) => (1, 2)] = "X11↔X12"
 @show dg[(1, 1) => (1, 2)] == "X11↔X12"
 @show dg[(1, 2) => (1, 1)] == "X11↔X12"
 
-@show isassigned(dg, MultiDimEdge((1, 1), (1, 2)))
-@show !isassigned(dg, MultiDimEdge((1, 1), (2, 2)))
+# XXX: Broken
+#@show isassigned(dg, (1, 1))
+#@show isassigned(dg, 1, 1)
 
-## @show !isassigned(dg, 1 => 2)
-## @show !isassigned(dg, Edge(1 => 2))
-## @show !isassigned(dg, 1 => 3)
-## @show !isassigned(dg, 1)
-## @show !isassigned(dg, 2)
-## @show !isassigned(dg, 3)
-## @show !isassigned(dg, 4)
-## 
+@show isassigned(dg, NamedDimEdge((1, 1), (1, 2)))
+@show !isassigned(dg, NamedDimEdge((1, 1), (2, 2)))
+@show isassigned(dg, (1, 1) => (1, 2))
+@show !isassigned(dg, (1, 1) => (2, 2))
+
 ## @show has_edge(dg, 1, 2)
 ## @show has_edge(dg, 1 => 2)
 ## @show !has_edge(dg, 1, 3)

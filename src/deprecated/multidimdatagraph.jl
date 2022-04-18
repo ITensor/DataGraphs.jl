@@ -1,37 +1,43 @@
-# TODO: define VertexMultiDimDataGraph, a graph with only data on the
-# vertices, and EdgeMultiDimDataGraph, a graph with only data on the edges.
-struct MultiDimDataGraph{VD,ED,V,E,G<:AbstractGraph} <: AbstractDataGraph{VD,ED,V,E}
+# TODO: define VertexNamedDimDataGraph, a graph with only data on the
+# vertices, and EdgeNamedDimDataGraph, a graph with only data on the edges.
+struct NamedDimDataGraph{VD,ED,V,E,G<:AbstractGraph} <: AbstractDataGraph{VD,ED,V,E}
   underlying_graph::G
   vertex_data::MultiDimDictionary{V,VD}
   edge_data::Dictionary{E,ED}
 end
-underlying_graph(graph::MultiDimDataGraph) = graph.underlying_graph
-vertex_data(graph::MultiDimDataGraph) = graph.vertex_data
-edge_data(graph::MultiDimDataGraph) = graph.edge_data
+underlying_graph(graph::NamedDimDataGraph) = graph.underlying_graph
+vertex_data(graph::NamedDimDataGraph) = graph.vertex_data
+edge_data(graph::NamedDimDataGraph) = graph.edge_data
 
-copy(graph::MultiDimDataGraph) = MultiDimDataGraph(copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph)))
+function copy(graph::NamedDimDataGraph)
+  return NamedDimDataGraph(
+    copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph))
+  )
+end
 
-function MultiDimDataGraph{VD,ED}(
+function NamedDimDataGraph{VD,ED}(
   underlying_graph::AbstractGraph,
   vertex_data::MultiDimDictionary{V,VD},
   edge_data::Dictionary{E,ED},
 ) where {VD,ED,V,E}
   G = typeof(underlying_graph)
-  return MultiDimDataGraph{VD,ED,V,E,G}(underlying_graph, vertex_data, edge_data)
+  return NamedDimDataGraph{VD,ED,V,E,G}(underlying_graph, vertex_data, edge_data)
 end
 
-function MultiDimDataGraph{VD,ED}(
-  underlying_graph::AbstractGraph,
-) where {VD,ED}
+function NamedDimDataGraph{VD,ED}(underlying_graph::AbstractGraph) where {VD,ED}
   V = eltype(underlying_graph)
   E = edgetype(underlying_graph)
   vertex_data = MultiDimDictionary{V,VD}()
   edge_data = Dictionary{E,ED}()
-  return MultiDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
+  return NamedDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
 end
 
-MultiDimDataGraph(underlying_graph::AbstractGraph) = MultiDimDataGraph{Any,Any}(underlying_graph)
-MultiDimDataGraph{VD}(underlying_graph::AbstractGraph) where {VD} = MultiDimDataGraph{VD,Any}(underlying_graph)
+function NamedDimDataGraph(underlying_graph::AbstractGraph)
+  return NamedDimDataGraph{Any,Any}(underlying_graph)
+end
+function NamedDimDataGraph{VD}(underlying_graph::AbstractGraph) where {VD}
+  return NamedDimDataGraph{VD,Any}(underlying_graph)
+end
 
 ## function default_data(
 ##   index_type::Type,
@@ -58,7 +64,7 @@ MultiDimDataGraph{VD}(underlying_graph::AbstractGraph) where {VD} = MultiDimData
 ##   return similar(Indices(indices), data_type)
 ## end
 
-## function MultiDimDataGraph{VD,ED}(
+## function NamedDimDataGraph{VD,ED}(
 ##   underlying_graph::G,
 ##   vertex_data,
 ##   edge_data
@@ -71,71 +77,71 @@ MultiDimDataGraph{VD}(underlying_graph::AbstractGraph) where {VD} = MultiDimData
 ##   @show vertex_data
 ##   @show edge_data
 ## 
-##   return MultiDimDataGraph{VD,ED,V,E,G}(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph{VD,ED,V,E,G}(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
-## copy(graph::MultiDimDataGraph) = MultiDimDataGraph(copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph)))
+## copy(graph::NamedDimDataGraph) = NamedDimDataGraph(copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph)))
 ## 
-## function MultiDimDataGraph{VD}(
+## function NamedDimDataGraph{VD}(
 ##   underlying_graph::AbstractGraph,
 ##   vertex_data,
 ##   edge_data
 ## ) where {VD}
 ##   ED = data_type(edge_data)
-##   return MultiDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
-## function (MultiDimDataGraph{VD,ED} where {VD})(
+## function (NamedDimDataGraph{VD,ED} where {VD})(
 ##   underlying_graph::AbstractGraph,
 ##   vertex_data,
 ##   edge_data
 ## ) where {ED}
 ##   VD = data_type(vertex_data)
-##   return MultiDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
-## function MultiDimDataGraph(
+## function NamedDimDataGraph(
 ##   underlying_graph::AbstractGraph,
 ##   vertex_data,
 ##   edge_data
 ## )
 ##   VD = data_type(vertex_data)
 ##   ED = data_type(edge_data)
-##   return MultiDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
 ## #
 # kwarg versions call arg versions
 #
 
-## function MultiDimDataGraph{VD,ED}(
+## function NamedDimDataGraph{VD,ED}(
 ##   underlying_graph::AbstractGraph;
 ##   vertex_data=nothing,
 ##   edge_data=nothing
 ## ) where {VD,ED}
-##   return MultiDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph{VD,ED}(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
-## function MultiDimDataGraph{VD}(
+## function NamedDimDataGraph{VD}(
 ##   underlying_graph::AbstractGraph;
 ##   vertex_data=nothing,
 ##   edge_data=nothing
 ## ) where {VD}
-##   return MultiDimDataGraph{VD}(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph{VD}(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
-## function (MultiDimDataGraph{VD,ED} where {VD})(
+## function (NamedDimDataGraph{VD,ED} where {VD})(
 ##   underlying_graph::AbstractGraph;
 ##   vertex_data=nothing,
 ##   edge_data=nothing
 ## ) where {ED}
-##   return (MultiDimDataGraph{VD,ED} where {VD})(underlying_graph, vertex_data, edge_data)
+##   return (NamedDimDataGraph{VD,ED} where {VD})(underlying_graph, vertex_data, edge_data)
 ## end
 ## 
-## function MultiDimDataGraph(
+## function NamedDimDataGraph(
 ##   underlying_graph::AbstractGraph;
 ##   vertex_data=nothing,
 ##   edge_data=nothing
 ## )
-##   return MultiDimDataGraph(underlying_graph, vertex_data, edge_data)
+##   return NamedDimDataGraph(underlying_graph, vertex_data, edge_data)
 ## end
