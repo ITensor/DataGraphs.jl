@@ -44,7 +44,7 @@ end
 
 include("abstractdatagraph.jl")
 include("datagraph.jl")
-include("multidimdatagraph.jl")
+include("nameddimdatagraph.jl")
 
 #
 # exports
