@@ -51,6 +51,6 @@ include("nameddimdatagraph.jl")
 #
 
 export DataGraph,
-  NamedDimDataGraph, AbstractDataGraph, map_vertex_data, map_edge_data, map_data
+  NamedDimDataGraph, AbstractNamedDimDataGraph, AbstractDataGraph, map_vertex_data, map_edge_data, map_data
 
 end # module DataGraphs

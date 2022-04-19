@@ -76,7 +76,7 @@ function map_edge_data(f, graph::AbstractDataGraph; edges=nothing)
   return graph′
 end
 
-function map_data(f, graph::AbstractDataGraph; vertices, edges)
+function map_data(f, graph::AbstractDataGraph; vertices=nothing, edges=nothing)
   graph = map_vertex_data(f, graph; vertices)
   return map_edge_data(f, graph; edges)
 end

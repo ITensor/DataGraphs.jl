@@ -1,6 +1,26 @@
+abstract type AbstractNamedDimDataGraph{VD,ED,V,E} <: AbstractDataGraph{VD,ED,V,E} end
+
+#
+# Specializations for AbstractNamedDimDataGraph
+#
+
+function is_vertex_or_edge(graph::AbstractNamedDimDataGraph, v_or_e)
+  (tuple_convert(v_or_e) isa eltype(graph)) && return IsVertex()
+  return error("$v_or_e doesn't represent a vertex or an edge for graph:\n$graph.")
+end
+
+# Ambiguity error with AbstractGraph version
+is_vertex_or_edge(::AbstractNamedDimDataGraph{VD,ED,V}, ::V) where {VD,ED,V} = IsVertex()
+
+# Ambiguity error with AbstractGraph version
+is_vertex_or_edge(::AbstractNamedDimDataGraph, ::AbstractEdge) = IsEdge()
+
+# Ambiguity error with AbstractGraph version
+is_vertex_or_edge(::AbstractNamedDimDataGraph, ::Pair) = IsEdge()
+
 # TODO: define VertexNamedDimDataGraph, a graph with only data on the
 # vertices, and EdgeNamedDimDataGraph, a graph with only data on the edges.
-struct NamedDimDataGraph{VD,ED,V,E,G<:AbstractGraph} <: AbstractDataGraph{VD,ED,V,E}
+struct NamedDimDataGraph{VD,ED,V,E,G<:AbstractGraph} <: AbstractNamedDimDataGraph{VD,ED,V,E}
   underlying_graph::G
   vertex_data::MultiDimDictionary{V,VD}
   edge_data::Dictionary{E,ED}
@@ -35,21 +55,7 @@ end
 function NamedDimDataGraph(underlying_graph::AbstractGraph)
   return NamedDimDataGraph{Any,Any}(underlying_graph)
 end
+
 function NamedDimDataGraph{VD}(underlying_graph::AbstractGraph) where {VD}
   return NamedDimDataGraph{VD,Any}(underlying_graph)
 end
-
-#
-# Specializations for NamedDimDataGraph
-#
-
-function is_vertex_or_edge(graph::NamedDimDataGraph, v_or_e)
-  (tuple_convert(v_or_e) isa eltype(graph)) && return IsVertex()
-  return error("$v_or_e doesn't represent a vertex or an edge for graph:\n$graph.")
-end
-
-# Ambiguity error with AbstractGraph version
-is_vertex_or_edge(graph::NamedDimDataGraph, ::AbstractEdge) = IsEdge()
-
-# Ambiguity error with AbstractGraph version
-is_vertex_or_edge(graph::NamedDimDataGraph, ::Pair) = IsEdge()
