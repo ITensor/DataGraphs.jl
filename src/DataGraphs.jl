@@ -4,7 +4,7 @@ using Graphs
 using MultiDimDictionaries
 using SimpleTraits
 
-using MultiDimDictionaries: tuple_convert
+using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
 
 #
 # imports
@@ -23,6 +23,7 @@ import Graphs:
   induced_subgraph,
   is_directed,
   adjacency_matrix
+import MultiDimDictionaries: IndexType
 
 # Dictionaries.jl patch
 # TODO: delete once fixed in Dictionaries.jl

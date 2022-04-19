@@ -30,31 +30,30 @@ end
 neighbors(graph::AbstractDataGraph, v::Integer) = neighbors(underlying_graph(graph), v)
 
 # Vertex or Edge trait
-abstract type VertexOrEdge end
-struct IsVertex <: VertexOrEdge end
-struct IsEdge <: VertexOrEdge end
+struct VertexIndex <: IndexType end
+struct EdgeIndex <: IndexType end
 
 # TODO: To allow the syntax `g[1, 1]` as a shorthand for the index `g[(1, 1)]`,
-# define `is_vertex_or_edge(graph::AbstractGraph, args...) = is_vertex_or_edge(graph::AbstractGraph, args)`.
-function is_vertex_or_edge(graph::AbstractGraph, v_or_e)
-  return error("$v_or_e doesn't represent a vertex or an edge for graph:\n$graph.")
+# define `IndexType(graph::AbstractGraph, args...) = IndexType(graph::AbstractGraph, args)`.
+function IndexType(graph::AbstractGraph, index)
+  return error("$index doesn't represent a vertex or an edge for graph:\n$graph.")
 end
-is_vertex_or_edge(graph::AbstractGraph{V}, ::V) where {V} = IsVertex()
-is_vertex_or_edge(graph::AbstractGraph, ::AbstractEdge) = IsEdge()
-is_vertex_or_edge(graph::AbstractGraph, ::Pair) = IsEdge()
+IndexType(graph::AbstractGraph{V}, ::V) where {V} = VertexIndex()
+IndexType(graph::AbstractGraph, ::AbstractEdge) = EdgeIndex()
+IndexType(graph::AbstractGraph, ::Pair) = EdgeIndex()
 
 # Handles multi-dimensional indexing.
 # XXX: Maybe only define for `NamedDimDataGraph`?
-is_vertex_or_edge(graph::AbstractGraph, ::Any...) = IsVertex()
+IndexType(graph::AbstractGraph, ::Any...) = VertexIndex()
 
-data(::IsVertex, graph::AbstractDataGraph) = vertex_data(graph)
-data(::IsEdge, graph::AbstractDataGraph) = edge_data(graph)
-index_type(::IsVertex, graph::AbstractDataGraph, v) = eltype(graph)(v)
-index_type(::IsEdge, graph::AbstractDataGraph, e) = edgetype(graph)(e)
+data(::VertexIndex, graph::AbstractDataGraph) = vertex_data(graph)
+data(::EdgeIndex, graph::AbstractDataGraph) = edge_data(graph)
+index_type(::VertexIndex, graph::AbstractDataGraph, v) = eltype(graph)(v)
+index_type(::EdgeIndex, graph::AbstractDataGraph, e) = edgetype(graph)(e)
 
 # Handles multi-dimensional indexing.
 # XXX: Maybe only define for `NamedDimDataGraph`?
-function index_type(::IsVertex, graph::AbstractDataGraph, v1, v2, vs...)
+function index_type(::VertexIndex, graph::AbstractDataGraph, v1, v2, vs...)
   return eltype(graph)(tuple(v1, v2, vs...))
 end
 
@@ -82,26 +81,26 @@ function map_data(f, graph::AbstractDataGraph; vertices=nothing, edges=nothing)
 end
 
 # Data access
-function getindex(graph::AbstractDataGraph, v_or_e...)
-  return getindex(is_vertex_or_edge(graph, v_or_e...), graph, v_or_e...)
+function getindex(graph::AbstractDataGraph, index...)
+  return getindex(IndexType(graph, index...), graph, index...)
 end
-function getindex(ve::VertexOrEdge, graph::AbstractDataGraph, v_or_e...)
-  return getindex(data(ve, graph), index_type(ve, graph, v_or_e...))
-end
-
-function isassigned(graph::AbstractDataGraph, v_or_e)
-  return isassigned(is_vertex_or_edge(graph, v_or_e), graph, v_or_e)
-end
-function isassigned(ve::VertexOrEdge, graph::AbstractDataGraph, v_or_e)
-  return isassigned(data(ve, graph), index_type(ve, graph, v_or_e))
+function getindex(ve::IndexType, graph::AbstractDataGraph, index...)
+  return getindex(data(ve, graph), index_type(ve, graph, index...))
 end
 
-function setindex!(graph::AbstractDataGraph, x, v_or_e...)
-  return setindex!(is_vertex_or_edge(graph, v_or_e...), graph, x, v_or_e...)
+function isassigned(graph::AbstractDataGraph, index)
+  return isassigned(IndexType(graph, index), graph, index)
 end
-function setindex!(ve::IsVertex, graph::AbstractDataGraph, x, v_or_e...)
-  @assert has_vertex(graph, v_or_e...)
-  set!(data(ve, graph), index_type(ve, graph, v_or_e...), x)
+function isassigned(ve::IndexType, graph::AbstractDataGraph, index)
+  return isassigned(data(ve, graph), index_type(ve, graph, index))
+end
+
+function setindex!(graph::AbstractDataGraph, x, index...)
+  return setindex!(IndexType(graph, index...), graph, x, index...)
+end
+function setindex!(ve::VertexIndex, graph::AbstractDataGraph, x, index...)
+  @assert has_vertex(graph, index...)
+  set!(data(ve, graph), index_type(ve, graph, index...), x)
   return graph
 end
 
@@ -133,7 +132,7 @@ end
 # Overload this to have custom behavior for the data in different directions,
 # such as complex conjugation.
 reverse_direction(x) = x
-function setindex!(ve::IsEdge, graph::AbstractDataGraph, x, args...)
+function setindex!(ve::EdgeIndex, graph::AbstractDataGraph, x, args...)
   i = index_type(ve, graph, args...)
   @assert has_edge(graph, i)
   # Handles edges in both directions. Assumes data is the same, potentially
