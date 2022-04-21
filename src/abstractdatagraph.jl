@@ -48,6 +48,10 @@ IndexType(graph::AbstractGraph, ::Any...) = VertexIndex()
 
 data(::VertexIndex, graph::AbstractDataGraph) = vertex_data(graph)
 data(::EdgeIndex, graph::AbstractDataGraph) = edge_data(graph)
+
+# Slicing is assumed to slice vertices (vertex-induced subgraph)
+data(::SliceIndex, graph::AbstractDataGraph) = vertex_data(graph)
+
 index_type(::VertexIndex, graph::AbstractDataGraph, v) = eltype(graph)(v)
 index_type(::EdgeIndex, graph::AbstractDataGraph, e) = edgetype(graph)(e)
 
@@ -105,29 +109,29 @@ function setindex!(ve::VertexIndex, graph::AbstractDataGraph, x, index...)
 end
 
 # Induced subgraph
-function getindex(g::AbstractDataGraph, sub_vertices::Vector)
-  return induced_subgraph(g, sub_vertices)[1]
-end
+## function getindex(g::AbstractDataGraph, sub_vertices::Vector)
+##   return induced_subgraph(g, sub_vertices)[1]
+## end
 
-function _induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
-  parent_induced_subgraph = induced_subgraph(underlying_graph(graph), vlist_or_elist)
-  # TODO: Get the data of the subgraph.
-  return _not_implemented()
-end
+## function _induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
+##   parent_induced_subgraph = induced_subgraph(underlying_graph(graph), vlist_or_elist)
+##   # TODO: Get the data of the subgraph.
+##   return _not_implemented()
+## end
 
-function induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
-  return _induced_subgraph(graph, vlist_or_elist)
-end
+## function induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
+##   return _induced_subgraph(graph, vlist_or_elist)
+## end
 
 # fix ambiguity error:
 # ERROR: MethodError: induced_subgraph(::ITensorNetwork{Int64}, ::Vector{Int64}) is ambiguous. Candidates:
 # induced_subgraph(g::T, vlist::AbstractVector{U}) where {U<:Integer, T<:Graphs.AbstractGraph} in Graphs at /home/mfishman/.julia/packages/Graphs/Mih78/src/operators.jl:639
 # induced_subgraph(graph::ITensorNetworks.DataGraphs.AbstractDataGraph, vlist_or_elist) in ITensorNetworks.DataGraphs at /home/mfishman/.julia/dev/ITensorNetworks/src/DataGraphs/src/DataGraphs.jl:96
-function induced_subgraph(
-  graph::AbstractDataGraph, vlist_or_elist::AbstractVector{<:Integer}
-)
-  return _induced_subgraph(graph, vlist_or_elist)
-end
+## function induced_subgraph(
+##   graph::AbstractDataGraph, vlist_or_elist::AbstractVector{<:Integer}
+## )
+##   return _induced_subgraph(graph, vlist_or_elist)
+## end
 
 # Overload this to have custom behavior for the data in different directions,
 # such as complex conjugation.
