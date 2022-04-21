@@ -23,6 +23,15 @@ IndexType(::AbstractNamedDimDataGraph, ::AbstractEdge) = EdgeIndex()
 # Ambiguity error with AbstractGraph version
 IndexType(::AbstractNamedDimDataGraph, ::Pair) = EdgeIndex()
 
+function getindex(::SliceIndex, graph::AbstractNamedDimDataGraph, index...)
+  underlying_subgraph = getindex(underlying_graph(graph), index...)
+  subvertices = vertices(underlying_subgraph)
+  subvertex_data = vertex_data(graph)[subvertices]
+  subedge_data_indices = filter(e -> src(e) ∈ subvertices && dst(e) ∈ subvertices, keys(edge_data(graph)))
+  subedge_data = getindices(edge_data(graph), subedge_data_indices)
+  return typeof(graph)(underlying_subgraph, subvertex_data, subedge_data)
+end
+
 # TODO: define VertexNamedDimDataGraph, a graph with only data on the
 # vertices, and EdgeNamedDimDataGraph, a graph with only data on the edges.
 struct NamedDimDataGraph{VD,ED,V,E,G<:AbstractGraph} <: AbstractNamedDimDataGraph{VD,ED,V,E}
@@ -63,12 +72,4 @@ end
 
 function NamedDimDataGraph{VD}(underlying_graph::AbstractGraph) where {VD}
   return NamedDimDataGraph{VD,Any}(underlying_graph)
-end
-
-function getindex(::SliceIndex, graph::NamedDimDataGraph, index...)
-  underlying_subgraph = getindex(underlying_graph(graph), index...)
-  subvertices = vertices(underlying_subgraph)
-  subvertex_data = vertex_data(graph)[subvertices]
-  subedge_data = filter(e -> src(e) ∈ subvertices && dst(e) ∈ subvertices, keys(edge_data(graph)))
-  return NamedDimDataGraph(underlying_subgraph, subvertex_data, getindices(edge_data(graph), subedge_data))
 end
