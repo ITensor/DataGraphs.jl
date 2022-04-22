@@ -7,19 +7,25 @@ edge_data(graph::AbstractDataGraph) = _not_implemented()
 
 # Graphs overloads
 for f in [
-  :edgetype,
-  :nv,
-  :ne,
-  :vertices,
+  :add_edge!,
+  :add_vertex!,
+  :adjacency_matrix,
+  :bfs_tree,
+  :dfs_tree,
   :edges,
+  :edgetype,
   :eltype,
   :has_edge,
   :has_vertex,
-  :neighbors,
+  :is_connected,
+  :is_cyclic,
   :is_directed,
-  :adjacency_matrix,
-  :add_vertex!,
-  :add_edge!,
+  :is_strongly_connected,
+  :is_weakly_connected,
+  :ne,
+  :neighbors,
+  :nv,
+  :vertices,
 ]
   @eval begin
     $f(graph::AbstractDataGraph, args...) = $f(underlying_graph(graph), args...)

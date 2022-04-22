@@ -13,19 +13,25 @@ using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
 
 import Base: get, getindex, setindex!, convert, show, isassigned, eltype, copy, hvncat, hcat, vcat
 import Graphs:
+  adjacency_matrix,
   add_edge!,
   add_vertex!,
-  edgetype,
-  ne,
-  nv,
-  vertices,
+  bfs_tree,
+  dfs_tree,
   edges,
+  edgetype,
   has_edge,
   has_vertex,
-  neighbors,
   induced_subgraph,
+  is_connected,
+  is_cyclic,
   is_directed,
-  adjacency_matrix
+  is_strongly_connected,
+  is_weakly_connected,
+  ne,
+  neighbors,
+  nv,
+  vertices
 import MultiDimDictionaries: IndexType
 import NamedGraphs: disjoint_union, ⊔
 
