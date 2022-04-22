@@ -44,8 +44,10 @@ vertex_data(graph::NamedDimDataGraph) = graph.vertex_data
 edge_data(graph::NamedDimDataGraph) = graph.edge_data
 
 function copy(graph::NamedDimDataGraph)
+  # Need to use deepcopy of Dictionaries, see:
+  # https://github.com/andyferris/Dictionaries.jl/issues/98
   return NamedDimDataGraph(
-    copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph))
+    copy(underlying_graph(graph)), deepcopy(vertex_data(graph)), deepcopy(edge_data(graph))
   )
 end
 
