@@ -2,6 +2,7 @@ module DataGraphs
 using Dictionaries
 using Graphs
 using MultiDimDictionaries
+using NamedGraphs
 using SimpleTraits
 
 using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
@@ -10,8 +11,10 @@ using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
 # imports
 #
 
-import Base: get, getindex, setindex!, convert, show, isassigned, eltype, copy
+import Base: get, getindex, setindex!, convert, show, isassigned, eltype, copy, hvncat, hcat, vcat
 import Graphs:
+  add_edge!,
+  add_vertex!,
   edgetype,
   ne,
   nv,
@@ -24,6 +27,7 @@ import Graphs:
   is_directed,
   adjacency_matrix
 import MultiDimDictionaries: IndexType
+import NamedGraphs: disjoint_union, ⊔
 
 # Dictionaries.jl patch
 # TODO: delete once fixed in Dictionaries.jl
@@ -52,6 +56,7 @@ include("nameddimdatagraph.jl")
 #
 
 export DataGraph,
-  NamedDimDataGraph, AbstractNamedDimDataGraph, AbstractDataGraph, map_vertex_data, map_edge_data, map_data
+  NamedDimDataGraph, AbstractNamedDimDataGraph, AbstractDataGraph, map_vertex_data, map_edge_data, map_data,
+  disjoint_union, ⊔
 
 end # module DataGraphs

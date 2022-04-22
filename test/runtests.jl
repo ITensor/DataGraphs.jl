@@ -64,3 +64,45 @@ using Test
   # TODO: is this needed?
   #@test DataGraph{<:Any,String}(g) isa DataGraph{Any,String}
 end
+
+@testset "Disjoint unions" begin
+  g = NamedDimDataGraph{String,String}(grid((2, 2)); dims=(2, 2))
+
+  for v in vertices(g)
+    g[v] = "V$v"
+  end
+  for e in edges(g)
+    g[e] = "E$e"
+  end
+
+  gg = g ⊔ g
+
+  @test has_vertex(gg, 1, 1, 1)
+  @test has_vertex(gg, 2, 1, 1)
+  @test has_edge(gg, (1, 1, 1) => (1, 1, 2))
+  @test has_edge(gg, (2, 1, 1) => (2, 1, 2))
+  @test nv(gg) == 2nv(g)
+  @test ne(gg) == 2ne(g)
+
+  gg = [g; g]
+
+  @test has_vertex(gg, 1, 1)
+  @test has_vertex(gg, 2, 1)
+  @test has_vertex(gg, 3, 1)
+  @test has_vertex(gg, 4, 1)
+  @test has_edge(gg, (1, 1) => (1, 2))
+  @test has_edge(gg, (3, 1) => (3, 2))
+  @test nv(gg) == 2nv(g)
+  @test ne(gg) == 2ne(g)
+
+  gg = [g;; g]
+
+  @test has_vertex(gg, 1, 1)
+  @test has_vertex(gg, 1, 2)
+  @test has_vertex(gg, 1, 3)
+  @test has_vertex(gg, 1, 4)
+  @test has_edge(gg, (1, 1) => (1, 2))
+  @test has_edge(gg, (1, 3) => (1, 4))
+  @test nv(gg) == 2nv(g)
+  @test ne(gg) == 2ne(g)
+end

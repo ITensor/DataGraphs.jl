@@ -18,6 +18,8 @@ for f in [
   :neighbors,
   :is_directed,
   :adjacency_matrix,
+  :add_vertex!,
+  :add_edge!,
 ]
   @eval begin
     $f(graph::AbstractDataGraph, args...) = $f(underlying_graph(graph), args...)
