@@ -138,7 +138,8 @@ function hvncat(
   new_edges2 = getindices(map_edges2, keys(edge_data(graph2)))
   new_edge_data2 = Dictionary(new_edges2, edge_data(graph2))
 
-  new_edge_data = merge(new_edge_data1, new_edge_data2)
+  # convert is needed because type information is lost by Dictionaries.jl
+  new_edge_data = convert(typeof(edge_data(graph1)), merge(new_edge_data1, new_edge_data2))
 
   return NamedDimDataGraph(new_underlying_graph, new_vertex_data, new_edge_data)
 end
