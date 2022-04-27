@@ -33,16 +33,18 @@ import Graphs:
   ne,
   neighbors,
   nv,
+  rem_edge!,
+  rem_vertex!,
   vertices
 import MultiDimDictionaries: IndexType
-import NamedGraphs: disjoint_union, ⊔
+import NamedGraphs: disjoint_union, ⊔, to_vertex
 
 # Dictionaries.jl patch
 # TODO: delete once fixed in Dictionaries.jl
 convert(::Type{Dictionary{I,T}}, dict::Dictionary{I,T}) where {I,T} = dict
 
 # General functions
-_not_implemented() = error("Not implemented")
+not_implemented() = error("Not implemented")
 
 # Returns just the edges of a directed graph,
 # but both edge directions of an undirected graph.

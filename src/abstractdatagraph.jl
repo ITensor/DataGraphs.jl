@@ -1,9 +1,11 @@
 abstract type AbstractDataGraph{VD,ED,V,E} <: AbstractGraph{V} end
 
 # Field access
-underlying_graph(graph::AbstractDataGraph) = _not_implemented()
-vertex_data(graph::AbstractDataGraph) = _not_implemented()
-edge_data(graph::AbstractDataGraph) = _not_implemented()
+underlying_graph(graph::AbstractDataGraph) = not_implemented()
+vertex_data(graph::AbstractDataGraph) = not_implemented()
+edge_data(graph::AbstractDataGraph) = not_implemented()
+
+is_directed(G::Type{<:AbstractDataGraph}) = not_implemented()
 
 # Graphs overloads
 for f in [
@@ -30,14 +32,31 @@ for f in [
   :vertices,
 ]
   @eval begin
-    $f(graph::AbstractDataGraph, args...) = $f(underlying_graph(graph), args...)
+    $f(graph::AbstractDataGraph, args...; kwargs...) = $f(underlying_graph(graph), args...; kwargs...)
   end
 end
 
+function rem_vertex!(graph::AbstractDataGraph, vertex...)
+  neighbor_edges = incident_edges(graph, vertex...)
+  rem_vertex!(underlying_graph(graph), vertex...)
+  unset!(vertex_data(graph), to_vertex(graph, vertex...))
+  for neighbor_edge in neighbor_edges
+    unset!(edge_data(graph), neighbor_edge)
+  end
+  return graph
+end
+
 # Fix ambiguity with:
-# neighbors(g::Graphs.AbstractGraph, v::Integer)
-# in Graphs
+# Graphs.neighbors(graph::AbstractGraph, v::Integer)
 neighbors(graph::AbstractDataGraph, v::Integer) = neighbors(underlying_graph(graph), v)
+
+# Fix ambiguity with:
+# Graphs.bfs_tree(graph::AbstractGraph, s::Integer; dir)
+bfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...) = bfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+
+# Fix ambiguity with:
+# Graphs.dfs_tree(graph::AbstractGraph, s::Integer; dir)
+dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...) = dfs_tree(underlying_graph(graph), tuple(s); kwargs...)
 
 # Vertex or Edge trait
 struct VertexIndex <: IndexType end
@@ -126,7 +145,7 @@ end
 ## function _induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
 ##   parent_induced_subgraph = induced_subgraph(underlying_graph(graph), vlist_or_elist)
 ##   # TODO: Get the data of the subgraph.
-##   return _not_implemented()
+##   return not_implemented()
 ## end
 
 ## function induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)

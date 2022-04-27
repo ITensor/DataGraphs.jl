@@ -43,6 +43,10 @@ underlying_graph(graph::NamedDimDataGraph) = graph.underlying_graph
 vertex_data(graph::NamedDimDataGraph) = graph.vertex_data
 edge_data(graph::NamedDimDataGraph) = graph.edge_data
 
+function is_directed(::Type{<:NamedDimDataGraph{VD,ED,V,E,G}}) where {VD,ED,V,E,G}
+  return is_directed(G)
+end
+
 function copy(graph::NamedDimDataGraph)
   # Need to use deepcopy of Dictionaries, see:
   # https://github.com/andyferris/Dictionaries.jl/issues/98

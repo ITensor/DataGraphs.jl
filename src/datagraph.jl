@@ -15,6 +15,10 @@ function copy(graph::DataGraph)
   )
 end
 
+function is_directed(::Type{<:DataGraph{VD,ED,V,E,G}}) where {VD,ED,V,E,G}
+  return is_directed(G)
+end
+
 function DataGraph{VD,ED}(
   underlying_graph::AbstractGraph,
   vertex_data::Dictionary{V,VD},
