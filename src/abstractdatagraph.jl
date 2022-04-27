@@ -38,11 +38,17 @@ end
 
 function rem_vertex!(graph::AbstractDataGraph, vertex...)
   neighbor_edges = incident_edges(graph, vertex...)
-  rem_vertex!(underlying_graph(graph), vertex...)
   unset!(vertex_data(graph), to_vertex(graph, vertex...))
   for neighbor_edge in neighbor_edges
     unset!(edge_data(graph), neighbor_edge)
   end
+  rem_vertex!(underlying_graph(graph), vertex...)
+  return graph
+end
+
+function rem_edge!(graph::AbstractDataGraph, edge)
+  unset!(edge_data(graph), edge)
+  rem_edge!(underlying_graph(graph), edge)
   return graph
 end
 
