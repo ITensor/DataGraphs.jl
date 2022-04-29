@@ -27,7 +27,9 @@ function getindex(::SliceIndex, graph::AbstractNamedDimDataGraph, index...)
   underlying_subgraph = getindex(underlying_graph(graph), index...)
   subvertices = vertices(underlying_subgraph)
   subvertex_data = vertex_data(graph)[subvertices]
-  subedge_data_indices = filter(e -> src(e) ∈ subvertices && dst(e) ∈ subvertices, keys(edge_data(graph)))
+  subedge_data_indices = filter(
+    e -> src(e) ∈ subvertices && dst(e) ∈ subvertices, keys(edge_data(graph))
+  )
   subedge_data = getindices(edge_data(graph), subedge_data_indices)
   return typeof(graph)(underlying_subgraph, subvertex_data, subedge_data)
 end
@@ -108,7 +110,9 @@ function hvncat(
   dim::Int, graph1::NamedDimDataGraph, graph2::NamedDimDataGraph; new_dim_names=(1, 2)
 )
   # Concatenate the underlying graph
-  new_underlying_graph = hvncat(dim, underlying_graph(graph1), underlying_graph(graph2); new_dim_names)
+  new_underlying_graph = hvncat(
+    dim, underlying_graph(graph1), underlying_graph(graph2); new_dim_names
+  )
 
   # The new vertices of the graph.
   # This can introduce new dimensions, shift values, etc.

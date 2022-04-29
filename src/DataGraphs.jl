@@ -11,7 +11,8 @@ using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
 # imports
 #
 
-import Base: get, getindex, setindex!, convert, show, isassigned, eltype, copy, hvncat, hcat, vcat
+import Base:
+  get, getindex, setindex!, convert, show, isassigned, eltype, copy, hvncat, hcat, vcat
 import Graphs:
   adjacency_matrix,
   add_edge!,
@@ -66,7 +67,13 @@ include("nameddimdatagraph.jl")
 #
 
 export DataGraph,
-  NamedDimDataGraph, AbstractNamedDimDataGraph, AbstractDataGraph, map_vertex_data, map_edge_data, map_data,
-  disjoint_union, ⊔
+  NamedDimDataGraph,
+  AbstractNamedDimDataGraph,
+  AbstractDataGraph,
+  map_vertex_data,
+  map_edge_data,
+  map_data,
+  disjoint_union,
+  ⊔
 
 end # module DataGraphs

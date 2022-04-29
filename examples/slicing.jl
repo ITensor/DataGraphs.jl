@@ -33,4 +33,3 @@ dg_nn = dg[[(1, 1), (2, 2)]]
 
 @show nv(dg_nn) == 2
 @show ne(dg_nn) == 0
-

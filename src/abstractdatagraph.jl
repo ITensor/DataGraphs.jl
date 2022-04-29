@@ -32,7 +32,9 @@ for f in [
   :vertices,
 ]
   @eval begin
-    $f(graph::AbstractDataGraph, args...; kwargs...) = $f(underlying_graph(graph), args...; kwargs...)
+    function $f(graph::AbstractDataGraph, args...; kwargs...)
+      return $f(underlying_graph(graph), args...; kwargs...)
+    end
   end
 end
 
@@ -58,11 +60,15 @@ neighbors(graph::AbstractDataGraph, v::Integer) = neighbors(underlying_graph(gra
 
 # Fix ambiguity with:
 # Graphs.bfs_tree(graph::AbstractGraph, s::Integer; dir)
-bfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...) = bfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+function bfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
+  return bfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+end
 
 # Fix ambiguity with:
 # Graphs.dfs_tree(graph::AbstractGraph, s::Integer; dir)
-dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...) = dfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+function dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
+  return dfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+end
 
 # Vertex or Edge trait
 struct VertexIndex <: IndexType end
