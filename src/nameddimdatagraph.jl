@@ -49,11 +49,14 @@ function is_directed(::Type{<:NamedDimDataGraph{VD,ED,V,E,G}}) where {VD,ED,V,E,
   return is_directed(G)
 end
 
+# Workaround for: https://github.com/andyferris/Dictionaries.jl/issues/98
+copy_keys_values(d::Dictionary) = Dictionary(copy(d.indices), copy(d.values))
+
 function copy(graph::NamedDimDataGraph)
   # Need to use deepcopy of Dictionaries, see:
   # https://github.com/andyferris/Dictionaries.jl/issues/98
   return NamedDimDataGraph(
-    copy(underlying_graph(graph)), deepcopy(vertex_data(graph)), deepcopy(edge_data(graph))
+    copy(underlying_graph(graph)), copy(vertex_data(graph)), copy_keys_values(edge_data(graph))
   )
 end
 
