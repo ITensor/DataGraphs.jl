@@ -39,7 +39,7 @@ jobs:
         shell: julia --project=dev {0}
         run: |
           using Pkg;
-          pkg"dev https://github.com/mtfishman/NamedGraphs.jl.git ."
+          pkg"dev ."
       - name: Run the tests
         shell: julia --project=dev {0}
         run: |
@@ -62,7 +62,7 @@ jobs:
 #        shell: julia --project=dev {0}
 #        run: |
 #          using Pkg;
-#          pkg"dev https://github.com/mtfishman/NamedGraphs.jl.git ."
+#          pkg"dev ."
 #      - uses: julia-actions/julia-docdeploy@v1
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
