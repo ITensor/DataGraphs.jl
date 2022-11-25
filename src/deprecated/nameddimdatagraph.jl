@@ -1,4 +1,6 @@
-abstract type AbstractNamedDimDataGraph{VD,ED,V,E} <: AbstractDataGraph{VD,ED,V,E} end
+abstract type AbstractVertexDataGraph{V,VD} <: AbstractDataGraph{V,VD,Any} end
+
+abstract type AbstractNamedDimDataGraph{V,VD,ED} <: AbstractDataGraph{V,VD,ED} end
 
 #
 # Specializations for AbstractNamedDimDataGraph
@@ -36,17 +38,17 @@ end
 
 # TODO: define VertexNamedDimDataGraph, a graph with only data on the
 # vertices, and EdgeNamedDimDataGraph, a graph with only data on the edges.
-struct NamedDimDataGraph{VD,ED,V,E,G<:AbstractGraph} <: AbstractNamedDimDataGraph{VD,ED,V,E}
+struct NamedDimDataGraph{V,VD,ED,G<:AbstractGraph} <: AbstractNamedDimDataGraph{V,VD,ED}
   underlying_graph::G
   vertex_data::MultiDimDictionary{V,VD}
-  edge_data::Dictionary{E,ED}
+  edge_data::Dictionary{Pair{V,V},ED}
 end
 underlying_graph(graph::NamedDimDataGraph) = graph.underlying_graph
 vertex_data(graph::NamedDimDataGraph) = graph.vertex_data
 edge_data(graph::NamedDimDataGraph) = graph.edge_data
 
-function is_directed(::Type{<:NamedDimDataGraph{VD,ED,V,E,G}}) where {VD,ED,V,E,G}
-  return is_directed(G)
+function is_directed(G::Type{<:NamedDimDataGraph})
+  return is_directed(underlying_graph_type(G))
 end
 
 # Workaround for: https://github.com/andyferris/Dictionaries.jl/issues/98
