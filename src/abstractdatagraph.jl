@@ -86,13 +86,13 @@ end
 function union(
   graph1::AbstractDataGraph,
   graph2::AbstractDataGraph;
-  merge_data=merge,
+  merge_data=(x, y) -> y,
   merge_vertex_data=merge_data,
   merge_edge_data=merge_data,
 )
   underlying_graph_union = union(underlying_graph(graph1), underlying_graph(graph2))
-  vertex_data_merge = merge_vertex_data(vertex_data(graph1), vertex_data(graph2))
-  edge_data_merge = merge_edge_data(edge_data(graph1), edge_data(graph2))
+  vertex_data_merge = mergewith(merge_vertex_data, vertex_data(graph1), vertex_data(graph2))
+  edge_data_merge = mergewith(merge_edge_data, edge_data(graph1), edge_data(graph2))
   # TODO: Convert to `promote_type(typeof(graph1), typeof(graph2))`
   return DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
@@ -113,17 +113,6 @@ function rename_vertices(
   end
   return renamed_graph
 end
-
-# # https://en.wikipedia.org/wiki/Disjoint_union
-# function disjoint_union(
-#   graph1::AbstractDataGraph,
-#   graph2::AbstractDataGraph;
-#   subscripts=(1, 2),
-# )
-#   renamed_graph1 = rename_vertices(v -> (v, subscripts[1]), graph1)
-#   renamed_graph2 = rename_vertices(v -> (v, subscripts[2]), graph2)
-#   return union(renamed_graph1, renamed_graph2)
-# end
 
 function rem_vertex!(graph::AbstractDataGraph, vertex)
   neighbor_edges = incident_edges(graph, vertex)
@@ -158,38 +147,6 @@ function dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
   return dfs_tree(underlying_graph(graph), tuple(s); kwargs...)
 end
 
-# # Vertex or Edge trait
-# struct VertexIndex <: IndexType end
-# struct EdgeIndex <: IndexType end
-# 
-# # TODO: To allow the syntax `g[1, 1]` as a shorthand for the index `g[(1, 1)]`,
-# # define `IndexType(graph::AbstractGraph, args...) = IndexType(graph::AbstractGraph, args)`.
-# function IndexType(graph::AbstractGraph, index)
-#   return error("$index doesn't represent a vertex or an edge for graph:\n$graph.")
-# end
-# IndexType(graph::AbstractGraph{V}, ::V) where {V} = VertexIndex()
-# IndexType(graph::AbstractGraph, ::AbstractEdge) = EdgeIndex()
-# IndexType(graph::AbstractGraph, ::Pair) = EdgeIndex()
-# 
-# # Handles multi-dimensional indexing.
-# # XXX: Maybe only define for `NamedDimDataGraph`?
-# IndexType(graph::AbstractGraph, ::Any...) = VertexIndex()
-# 
-# data(::VertexIndex, graph::AbstractDataGraph) = vertex_data(graph)
-# data(::EdgeIndex, graph::AbstractDataGraph) = edge_data(graph)
-# 
-# # Slicing is assumed to slice vertices (vertex-induced subgraph)
-# data(::SliceIndex, graph::AbstractDataGraph) = vertex_data(graph)
-# 
-# index_type(::VertexIndex, graph::AbstractDataGraph, v) = eltype(graph)(v)
-# index_type(::EdgeIndex, graph::AbstractDataGraph, e) = edgetype(graph)(e)
-# 
-# # Handles multi-dimensional indexing.
-# # XXX: Maybe only define for `NamedDimDataGraph`?
-# function index_type(::VertexIndex, graph::AbstractDataGraph, v1, v2, vs...)
-#   return eltype(graph)(tuple(v1, v2, vs...))
-# end
-
 function map_vertex_data(f, graph::AbstractDataGraph; vertices=nothing)
   graph′ = copy(graph)
   vs = isnothing(vertices) ? Graphs.vertices(graph) : vertices
@@ -212,12 +169,6 @@ function map_data(f, graph::AbstractDataGraph; vertices=nothing, edges=nothing)
   graph = map_vertex_data(f, graph; vertices)
   return map_edge_data(f, graph; edges)
 end
-
-# Data access
-# function getindex(ve::IndexType, graph::AbstractDataGraph, index)
-#   # return getindex(data(ve, graph), index_type(ve, graph, index...))
-#   return getindex(data(ve, graph), index)
-# end
 
 function getindex(graph::AbstractDataGraph, index)
   return vertex_data(graph)[index]
@@ -261,14 +212,6 @@ function isassigned(graph::AbstractDataGraph, index::Pair)
   return isassigned(graph, edgetype(graph)(index))
 end
 
-# function isassigned(graph::AbstractDataGraph, index)
-#   return isassigned(IndexType(graph, index), graph, index)
-# end
-# function isassigned(ve::IndexType, graph::AbstractDataGraph, index)
-#   # return isassigned(data(ve, graph), index_type(ve, graph, index))
-#   return isassigned(data(ve, graph), index)
-# end
-
 function setindex!(graph::AbstractDataGraph, x, index)
   set!(vertex_data(graph), index, x)
   return graph
@@ -292,6 +235,88 @@ function setindex!(graph::AbstractDataGraph, x, i1, i2, i...)
   graph[(i1, i2, i...)] = x
   return graph
 end
+
+#
+# Printing
+#
+
+function show(io::IO, mime::MIME"text/plain", graph::AbstractDataGraph)
+  println(io, "$(typeof(graph)) with $(nv(graph)) vertices:")
+  show(io, mime, vertices(graph))
+  println(io, "\n")
+  println(io, "and $(ne(graph)) edge(s):")
+  for e in edges(graph)
+    show(io, mime, e)
+    println(io)
+  end
+  println(io)
+  println(io, "with vertex data:")
+  show(io, mime, vertex_data(graph))
+  println(io)
+  println(io)
+  println(io, "and edge data:")
+  show(io, mime, edge_data(graph))
+  return nothing
+end
+
+show(io::IO, graph::AbstractDataGraph) = show(io, MIME"text/plain"(), graph)
+
+# # https://en.wikipedia.org/wiki/Disjoint_union
+# function disjoint_union(
+#   graph1::AbstractDataGraph,
+#   graph2::AbstractDataGraph;
+#   subscripts=(1, 2),
+# )
+#   renamed_graph1 = rename_vertices(v -> (v, subscripts[1]), graph1)
+#   renamed_graph2 = rename_vertices(v -> (v, subscripts[2]), graph2)
+#   return union(renamed_graph1, renamed_graph2)
+# end
+
+# # Vertex or Edge trait
+# struct VertexIndex <: IndexType end
+# struct EdgeIndex <: IndexType end
+# 
+# # TODO: To allow the syntax `g[1, 1]` as a shorthand for the index `g[(1, 1)]`,
+# # define `IndexType(graph::AbstractGraph, args...) = IndexType(graph::AbstractGraph, args)`.
+# function IndexType(graph::AbstractGraph, index)
+#   return error("$index doesn't represent a vertex or an edge for graph:\n$graph.")
+# end
+# IndexType(graph::AbstractGraph{V}, ::V) where {V} = VertexIndex()
+# IndexType(graph::AbstractGraph, ::AbstractEdge) = EdgeIndex()
+# IndexType(graph::AbstractGraph, ::Pair) = EdgeIndex()
+# 
+# # Handles multi-dimensional indexing.
+# # XXX: Maybe only define for `NamedDimDataGraph`?
+# IndexType(graph::AbstractGraph, ::Any...) = VertexIndex()
+# 
+# data(::VertexIndex, graph::AbstractDataGraph) = vertex_data(graph)
+# data(::EdgeIndex, graph::AbstractDataGraph) = edge_data(graph)
+# 
+# # Slicing is assumed to slice vertices (vertex-induced subgraph)
+# data(::SliceIndex, graph::AbstractDataGraph) = vertex_data(graph)
+# 
+# index_type(::VertexIndex, graph::AbstractDataGraph, v) = eltype(graph)(v)
+# index_type(::EdgeIndex, graph::AbstractDataGraph, e) = edgetype(graph)(e)
+# 
+# # Handles multi-dimensional indexing.
+# # XXX: Maybe only define for `NamedDimDataGraph`?
+# function index_type(::VertexIndex, graph::AbstractDataGraph, v1, v2, vs...)
+#   return eltype(graph)(tuple(v1, v2, vs...))
+# end
+
+# Data access
+# function getindex(ve::IndexType, graph::AbstractDataGraph, index)
+#   # return getindex(data(ve, graph), index_type(ve, graph, index...))
+#   return getindex(data(ve, graph), index)
+# end
+
+# function isassigned(graph::AbstractDataGraph, index)
+#   return isassigned(IndexType(graph, index), graph, index)
+# end
+# function isassigned(ve::IndexType, graph::AbstractDataGraph, index)
+#   # return isassigned(data(ve, graph), index_type(ve, graph, index))
+#   return isassigned(data(ve, graph), index)
+# end
 
 ## function setindex!(ve::VertexIndex, graph::AbstractDataGraph, x, index)
 ##   @assert has_vertex(graph, index)
@@ -336,28 +361,3 @@ end
 #   set!(data(ve, graph), reverse(i), reverse_direction(x))
 #   return graph
 # end
-
-#
-# Printing
-#
-
-function show(io::IO, mime::MIME"text/plain", graph::AbstractDataGraph)
-  println(io, "$(typeof(graph)) with $(nv(graph)) vertices:")
-  show(io, mime, vertices(graph))
-  println(io, "\n")
-  println(io, "and $(ne(graph)) edge(s):")
-  for e in edges(graph)
-    show(io, mime, e)
-    println(io)
-  end
-  println(io)
-  println(io, "with vertex data:")
-  show(io, mime, vertex_data(graph))
-  println(io)
-  println(io)
-  println(io, "and edge data:")
-  show(io, mime, edge_data(graph))
-  return nothing
-end
-
-show(io::IO, graph::AbstractDataGraph) = show(io, MIME"text/plain"(), graph)
