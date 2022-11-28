@@ -236,6 +236,22 @@ function setindex!(graph::AbstractDataGraph, x, i1, i2, i...)
   return graph
 end
 
+function induced_subgraph(graph::AbstractDataGraph, subvertices::Vector)
+  underlying_subgraph, vlist = induced_subgraph(underlying_graph(graph), subvertices)
+  subgraph = typeof(graph)(underlying_subgraph)
+  for v in vertices(subgraph)
+    if isassigned(graph, v)
+      subgraph[v] = graph[v]
+    end
+  end
+  for e in edges(subgraph)
+    if isassigned(graph, e)
+      subgraph[e] = graph[e]
+    end
+  end
+  return subgraph, vlist
+end
+
 #
 # Printing
 #

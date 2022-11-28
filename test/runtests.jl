@@ -2,9 +2,19 @@ using DataGraphs
 using Dictionaries
 using Graphs
 using NamedGraphs
+using Suppressor
 using Test
 
 @testset "DataGraphs.jl" begin
+  @testset "Examples" begin
+    examples_path = joinpath(pkgdir(DataGraphs), "examples")
+    @testset "Run examples: $filename" for filename in readdir(examples_path)
+      if endswith(filename, ".jl")
+        @suppress include(joinpath(examples_path, filename))
+      end
+    end
+  end
+
   @testset "Basics" begin
     g = grid((4,))
     dg = DataGraph{String,Symbol}(g)
