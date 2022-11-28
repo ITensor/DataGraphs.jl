@@ -97,14 +97,13 @@ function union(
   return DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
 
-function rename_vertices(
-  f::Function,
-  graph::AbstractDataGraph,
-)
+function rename_vertices(f::Function, graph::AbstractDataGraph)
   renamed_underlying_graph = rename_vertices(f, underlying_graph(graph))
   # TODO: Base the ouput type on `typeof(graph)`, for example:
   # convert_vertextype(eltype(renamed_vertices), typeof(graph))(renamed_underlying_graph)
-  renamed_graph = DataGraph{vertex_data_type(graph),edge_data_type(graph)}(renamed_underlying_graph)
+  renamed_graph = DataGraph{vertex_data_type(graph),edge_data_type(graph)}(
+    renamed_underlying_graph
+  )
   for v in keys(vertex_data(graph))
     renamed_graph[f(v)] = graph[v]
   end
@@ -219,6 +218,7 @@ end
 
 # TODO: Store `reverse_direction` inside `AbstractDataGraph`.
 reverse_direction(x) = x
+# TODO: Only for undirected graphs
 function setindex!(graph::AbstractDataGraph, x, index::AbstractEdge)
   set!(edge_data(graph), index, x)
   set!(edge_data(graph), reverse(index), reverse_direction(x))
@@ -276,104 +276,3 @@ function show(io::IO, mime::MIME"text/plain", graph::AbstractDataGraph)
 end
 
 show(io::IO, graph::AbstractDataGraph) = show(io, MIME"text/plain"(), graph)
-
-# # https://en.wikipedia.org/wiki/Disjoint_union
-# function disjoint_union(
-#   graph1::AbstractDataGraph,
-#   graph2::AbstractDataGraph;
-#   subscripts=(1, 2),
-# )
-#   renamed_graph1 = rename_vertices(v -> (v, subscripts[1]), graph1)
-#   renamed_graph2 = rename_vertices(v -> (v, subscripts[2]), graph2)
-#   return union(renamed_graph1, renamed_graph2)
-# end
-
-# # Vertex or Edge trait
-# struct VertexIndex <: IndexType end
-# struct EdgeIndex <: IndexType end
-# 
-# # TODO: To allow the syntax `g[1, 1]` as a shorthand for the index `g[(1, 1)]`,
-# # define `IndexType(graph::AbstractGraph, args...) = IndexType(graph::AbstractGraph, args)`.
-# function IndexType(graph::AbstractGraph, index)
-#   return error("$index doesn't represent a vertex or an edge for graph:\n$graph.")
-# end
-# IndexType(graph::AbstractGraph{V}, ::V) where {V} = VertexIndex()
-# IndexType(graph::AbstractGraph, ::AbstractEdge) = EdgeIndex()
-# IndexType(graph::AbstractGraph, ::Pair) = EdgeIndex()
-# 
-# # Handles multi-dimensional indexing.
-# # XXX: Maybe only define for `NamedDimDataGraph`?
-# IndexType(graph::AbstractGraph, ::Any...) = VertexIndex()
-# 
-# data(::VertexIndex, graph::AbstractDataGraph) = vertex_data(graph)
-# data(::EdgeIndex, graph::AbstractDataGraph) = edge_data(graph)
-# 
-# # Slicing is assumed to slice vertices (vertex-induced subgraph)
-# data(::SliceIndex, graph::AbstractDataGraph) = vertex_data(graph)
-# 
-# index_type(::VertexIndex, graph::AbstractDataGraph, v) = eltype(graph)(v)
-# index_type(::EdgeIndex, graph::AbstractDataGraph, e) = edgetype(graph)(e)
-# 
-# # Handles multi-dimensional indexing.
-# # XXX: Maybe only define for `NamedDimDataGraph`?
-# function index_type(::VertexIndex, graph::AbstractDataGraph, v1, v2, vs...)
-#   return eltype(graph)(tuple(v1, v2, vs...))
-# end
-
-# Data access
-# function getindex(ve::IndexType, graph::AbstractDataGraph, index)
-#   # return getindex(data(ve, graph), index_type(ve, graph, index...))
-#   return getindex(data(ve, graph), index)
-# end
-
-# function isassigned(graph::AbstractDataGraph, index)
-#   return isassigned(IndexType(graph, index), graph, index)
-# end
-# function isassigned(ve::IndexType, graph::AbstractDataGraph, index)
-#   # return isassigned(data(ve, graph), index_type(ve, graph, index))
-#   return isassigned(data(ve, graph), index)
-# end
-
-## function setindex!(ve::VertexIndex, graph::AbstractDataGraph, x, index)
-##   @assert has_vertex(graph, index)
-##   # set!(data(ve, graph), index_type(ve, graph, index...), x)
-##   set!(data(ve, graph), index, x)
-##   return graph
-## end
-
-# Induced subgraph
-## function getindex(g::AbstractDataGraph, sub_vertices::Vector)
-##   return induced_subgraph(g, sub_vertices)[1]
-## end
-
-## function _induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
-##   parent_induced_subgraph = induced_subgraph(underlying_graph(graph), vlist_or_elist)
-##   # TODO: Get the data of the subgraph.
-##   return not_implemented()
-## end
-
-## function induced_subgraph(graph::AbstractDataGraph, vlist_or_elist)
-##   return _induced_subgraph(graph, vlist_or_elist)
-## end
-
-# fix ambiguity error:
-# ERROR: MethodError: induced_subgraph(::ITensorNetwork{Int64}, ::Vector{Int64}) is ambiguous. Candidates:
-# induced_subgraph(g::T, vlist::AbstractVector{U}) where {U<:Integer, T<:Graphs.AbstractGraph} in Graphs at /home/mfishman/.julia/packages/Graphs/Mih78/src/operators.jl:639
-# induced_subgraph(graph::ITensorNetworks.DataGraphs.AbstractDataGraph, vlist_or_elist) in ITensorNetworks.DataGraphs at /home/mfishman/.julia/dev/ITensorNetworks/src/DataGraphs/src/DataGraphs.jl:96
-## function induced_subgraph(
-##   graph::AbstractDataGraph, vlist_or_elist::AbstractVector{<:Integer}
-## )
-##   return _induced_subgraph(graph, vlist_or_elist)
-## end
-
-# Overload this to have custom behavior for the data in different directions,
-# such as complex conjugation.
-# function setindex!(ve::EdgeIndex, graph::AbstractDataGraph, x, args...)
-#   i = index_type(ve, graph, args...)
-#   @assert has_edge(graph, i)
-#   # Handles edges in both directions. Assumes data is the same, potentially
-#   # up to `reverse_direction(x)`.
-#   set!(data(ve, graph), i, x)
-#   set!(data(ve, graph), reverse(i), reverse_direction(x))
-#   return graph
-# end

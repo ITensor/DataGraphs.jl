@@ -8,7 +8,9 @@ struct DataGraph{V,VD,ED,G<:AbstractGraph,E} <: AbstractDataGraph{V,VD,ED}
   underlying_graph::G
   vertex_data::Dictionary{V,VD}
   edge_data::Dictionary{E,ED}
-  function DataGraph{V,VD,ED,G,E}(underlying_graph::G, vertex_data::Dictionary{V,VD}, edge_data::Dictionary{E,ED}) where {V,VD,ED,G<:AbstractGraph,E}
+  function DataGraph{V,VD,ED,G,E}(
+    underlying_graph::G, vertex_data::Dictionary{V,VD}, edge_data::Dictionary{E,ED}
+  ) where {V,VD,ED,G<:AbstractGraph,E}
     @assert vertextype(underlying_graph) == V
     return new{V,VD,ED,G,E}(underlying_graph, vertex_data, edge_data)
   end
@@ -41,7 +43,9 @@ function copy(graph::DataGraph)
   # Need to manually copy the keys of Dictionaries, see:
   # https://github.com/andyferris/Dictionaries.jl/issues/98
   return DataGraph(
-    copy(underlying_graph(graph)), copy_keys_values(vertex_data(graph)), copy_keys_values(edge_data(graph))
+    copy(underlying_graph(graph)),
+    copy_keys_values(vertex_data(graph)),
+    copy_keys_values(edge_data(graph)),
   )
 end
 
@@ -51,22 +55,24 @@ function DataGraph{V,VD,ED,G,E}() where {V,VD,ED,G<:AbstractGraph,E<:AbstractEdg
 end
 
 function DataGraph{VD,ED}(
-  underlying_graph::AbstractGraph,
-  vertex_data::Dictionary,
-  edge_data::Dictionary,
+  underlying_graph::AbstractGraph, vertex_data::Dictionary, edge_data::Dictionary
 ) where {VD,ED}
   G = typeof(underlying_graph)
   V = vertextype(underlying_graph)
   E = edgetype(underlying_graph)
-  return DataGraph{V,VD,ED,G,E}(underlying_graph, convert(Dictionary{V,VD}, vertex_data), convert(Dictionary{E,ED}, edge_data))
+  return DataGraph{V,VD,ED,G,E}(
+    underlying_graph,
+    convert(Dictionary{V,VD}, vertex_data),
+    convert(Dictionary{E,ED}, edge_data),
+  )
 end
 
 function DataGraph(
-  underlying_graph::AbstractGraph,
-  vertex_data::Dictionary,
-  edge_data::Dictionary,
+  underlying_graph::AbstractGraph, vertex_data::Dictionary, edge_data::Dictionary
 )
-  return DataGraph{eltype(vertex_data),eltype(edge_data)}(underlying_graph, vertex_data, edge_data)
+  return DataGraph{eltype(vertex_data),eltype(edge_data)}(
+    underlying_graph, vertex_data, edge_data
+  )
 end
 
 function DataGraph{V,VD,ED,G,E}(underlying_graph::AbstractGraph) where {V,VD,ED,G,E}
@@ -89,7 +95,9 @@ function convert_vertextype(V::Type, graph::AbstractGraph)
 end
 # TODO: Move to NamedGraphs.jl
 function convert_vertextype(V::Type, graph::NamedGraphs.GenericNamedGraph)
-  return NamedGraphs.GenericNamedGraph(NamedGraphs.parent_graph(graph), convert(Vector{V}, vertices(graph)))
+  return NamedGraphs.GenericNamedGraph(
+    NamedGraphs.parent_graph(graph), convert(Vector{V}, vertices(graph))
+  )
 end
 
 function DataGraph{V,VD,ED}(underlying_graph::AbstractGraph) where {V,VD,ED}

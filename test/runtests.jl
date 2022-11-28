@@ -69,9 +69,12 @@ using Test
     @test dg[2 => 3] == "E23"
     @test dg[3 => 4] == "E34"
 
-    @test DataGraph(g) isa DataGraph{Int,Any,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-    @test DataGraph{String}(g) isa DataGraph{Int,String,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-    @test DataGraph{Any,String}(g) isa DataGraph{Int,Any,String,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
+    @test DataGraph(g) isa
+      DataGraph{Int,Any,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
+    @test DataGraph{String}(g) isa
+      DataGraph{Int,String,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
+    @test DataGraph{Any,String}(g) isa
+      DataGraph{Int,Any,String,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
 
     # TODO: is this needed?
     #@test DataGraph{<:Any,String}(g) isa DataGraph{Any,String}
@@ -151,5 +154,4 @@ using Test
     @test g[1] == ["A", "B", "C", "D", "E"]
     @test g[1 => 2] == ["E", "F"]
   end
-
 end

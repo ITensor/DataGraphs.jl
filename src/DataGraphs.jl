@@ -1,12 +1,8 @@
 module DataGraphs
 using Dictionaries
 using Graphs
-# using MultiDimDictionaries # TODO: Remove once IndexType is removed
 using NamedGraphs
 using SimpleTraits
-
-# TODO: Remove
-# using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
 
 ###############################################################################
 # Patches and extensions for dependent packages
@@ -42,7 +38,18 @@ end
 #
 
 import Base:
-  get, getindex, setindex!, convert, show, isassigned, eltype, copy, hvncat, hcat, vcat, union
+  get,
+  getindex,
+  setindex!,
+  convert,
+  show,
+  isassigned,
+  eltype,
+  copy,
+  hvncat,
+  hcat,
+  vcat,
+  union
 import Graphs:
   adjacency_matrix,
   add_edge!,
@@ -67,25 +74,22 @@ import Graphs:
   rem_edge!,
   rem_vertex!,
   vertices
-# import MultiDimDictionaries: IndexType # TODO: Remove
 
-# TODO: Can we remove this?
-# Maybe need a `GraphsExtensions.jl` package
+# TODO: Can we remove the dependency on `NamedGraphs`?
+# Maybe need a `GraphExtensions.jl` or
+# `GraphInterfaces.jl` package.
 import NamedGraphs:
   rename_vertices,
   disjoint_union,
   ⊔,
-#  to_vertex, # TODO: Deprecate
   directed_graph,
   vertextype
-  #=vertex_type,=#
 
 # General functions
 not_implemented() = error("Not implemented")
 
 include("abstractdatagraph.jl")
 include("datagraph.jl")
-# include("nameddimdatagraph.jl")
 
 #
 # exports
@@ -94,10 +98,6 @@ include("datagraph.jl")
 export DataGraph,
   vertex_type,
   directed_graph,
-#  VertexDataGraph,
-#  AbstractVertexDataGraph,
-#  NamedDimDataGraph,
-#  AbstractNamedDimDataGraph,
   AbstractDataGraph,
   map_vertex_data,
   map_edge_data,
