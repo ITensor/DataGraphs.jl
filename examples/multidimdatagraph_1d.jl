@@ -1,10 +1,9 @@
 using DataGraphs
 using Graphs
-using MultiDimDictionaries
 using NamedGraphs
 
-g = NamedDimGraph(grid((4,)), ["A", "B", "C", "D"])
-dg = NamedDimDataGraph{String,Symbol}(g)
+g = NamedGraph(grid((4,)), ["A", "B", "C", "D"])
+dg = DataGraph{String,Symbol}(g)
 
 @show has_vertex(dg, "A")
 @show has_vertex(dg, "D")
@@ -21,9 +20,9 @@ dg = NamedDimDataGraph{String,Symbol}(g)
 @show !isassigned(dg, "C")
 @show !isassigned(dg, "D")
 
-@show !isassigned(dg, NamedDimEdge("A", "B"))
+@show !isassigned(dg, NamedEdge("A", "B"))
 @show !isassigned(dg, "A" => "B")
-@show !isassigned(dg, NamedDimEdge("A" => "B"))
+@show !isassigned(dg, NamedEdge("A" => "B"))
 @show !isassigned(dg, "A" => "C")
 
 dg["A"] = "V1"
@@ -42,9 +41,9 @@ dg["D"] = "V4"
 
 dg["A" => "B"] = :E12
 dg["B" => "C"] = :E23
-dg[NamedDimEdge("C", "D")] = :E34
-@show isassigned(dg, NamedDimEdge("B", "C"))
+dg[NamedEdge("C", "D")] = :E34
+@show isassigned(dg, NamedEdge("B", "C"))
 @show isassigned(dg, "C" => "D")
-@show dg[NamedDimEdge("A", "B")] == :E12
+@show dg[NamedEdge("A", "B")] == :E12
 @show dg["B" => "C"] == :E23
 @show dg["C" => "D"] == :E34
