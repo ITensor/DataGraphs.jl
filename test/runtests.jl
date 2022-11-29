@@ -17,7 +17,7 @@ using Test
 
   @testset "Basics" begin
     g = grid((4,))
-    dg = DataGraph{String,Symbol}(g)
+    dg = DataGraph{<:Any,String,Symbol}(g)
     @test !isassigned(dg, Edge(1, 2))
     @test !isassigned(dg, 1 => 2)
     @test !isassigned(dg, Edge(1 => 2))
@@ -71,9 +71,9 @@ using Test
 
     @test DataGraph(g) isa
       DataGraph{Int,Any,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-    @test DataGraph{String}(g) isa
+    @test DataGraph{<:Any,String}(g) isa
       DataGraph{Int,String,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-    @test DataGraph{Any,String}(g) isa
+    @test DataGraph{<:Any,Any,String}(g) isa
       DataGraph{Int,Any,String,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
 
     # TODO: is this needed?
@@ -81,7 +81,7 @@ using Test
   end
 
   @testset "Disjoint unions" begin
-    g = DataGraph{String,String}(named_grid((2, 2)))
+    g = DataGraph{<:Any,String,String}(named_grid((2, 2)))
 
     for v in vertices(g)
       g[v] = "V$v"

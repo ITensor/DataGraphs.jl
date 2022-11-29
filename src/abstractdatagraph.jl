@@ -67,15 +67,7 @@ end
     add_edge!(digraph, reverse(e))
     if isassigned(graph, e)
       digraph[e] = graph[e]
-    end
-    if isassigned(graph, reverse(e))
-      # TODO: Use a function `arrange` like in MetaGraphsNext:
-      # https://github.com/JuliaGraphs/MetaGraphsNext.jl/blob/1539095ee6088aba0d5b1cb057c339ad92557889/src/metagraph.jl#L75-L80
-      # to sort the vertices, only directed graphs should have store data
-      # in both edge directions. Also, define `reverse_data_direction` as a function
-      # stored in directed AbstractDataGraph types (which by default returns nothing,
-      # indicating not to automatically store data in both directions)
-      digraph[reverse(e)] = reverse_direction(graph[e])
+      digraph[reverse(e)] = reverse_data_direction(graph, graph[e])
     end
   end
   return digraph
@@ -101,7 +93,7 @@ function rename_vertices(f::Function, graph::AbstractDataGraph)
   renamed_underlying_graph = rename_vertices(f, underlying_graph(graph))
   # TODO: Base the ouput type on `typeof(graph)`, for example:
   # convert_vertextype(eltype(renamed_vertices), typeof(graph))(renamed_underlying_graph)
-  renamed_graph = DataGraph{vertex_data_type(graph),edge_data_type(graph)}(
+  renamed_graph = DataGraph{vertextype(renamed_underlying_graph),vertex_data_type(graph),edge_data_type(graph)}(
     renamed_underlying_graph
   )
   for v in keys(vertex_data(graph))
@@ -169,29 +161,33 @@ function map_data(f, graph::AbstractDataGraph; vertices=nothing, edges=nothing)
   return map_edge_data(f, graph; edges)
 end
 
-function getindex(graph::AbstractDataGraph, index)
-  return vertex_data(graph)[index]
+function getindex(graph::AbstractDataGraph, vertex)
+  return vertex_data(graph)[vertex]
 end
 
-function get(graph::AbstractDataGraph, index, default)
-  return get(vertex_data(graph), index, default)
+function get(graph::AbstractDataGraph, vertex, default)
+  return get(vertex_data(graph), vertex, default)
 end
 
-function getindex(graph::AbstractDataGraph, index::AbstractEdge)
-  return edge_data(graph)[index]
+function getindex(graph::AbstractDataGraph, edge::AbstractEdge)
+  is_edge_arranged = is_arranged(graph, edge)
+  data = edge_data(graph)[arrange(is_edge_arranged, edge)]
+  return reverse_data_direction(is_edge_arranged, graph, data)
 end
 
 # Support syntax `g[v1 => v2]`
-function getindex(graph::AbstractDataGraph, index::Pair)
-  return graph[edgetype(graph)(index)]
+function getindex(graph::AbstractDataGraph, edge::Pair)
+  return graph[edgetype(graph)(edge)]
 end
 
-function get(graph::AbstractDataGraph, index::AbstractEdge, default)
-  return get(edge_data(graph), index, default)
+function get(graph::AbstractDataGraph, edge::AbstractEdge, default)
+  is_edge_arranged = is_arranged(graph, edge)
+  data = get(edge_data(graph), arrange(is_edge_arranged, edge), default)
+  return reverse_data_direction(is_edge_arranged, graph, data)
 end
 
-function get(graph::AbstractDataGraph, index::Pair, default)
-  return get(graph, edgetype(graph)(index), default)
+function get(graph::AbstractDataGraph, edge::Pair, default)
+  return get(graph, edgetype(graph)(edge), default)
 end
 
 # Support syntax `g[1, 2] = g[(1, 2)]`
@@ -199,34 +195,33 @@ function getindex(graph::AbstractDataGraph, i1, i2, i...)
   return graph[(i1, i2, i...)]
 end
 
-function isassigned(graph::AbstractDataGraph, index)
-  return isassigned(vertex_data(graph), index)
+function isassigned(graph::AbstractDataGraph, vertex)
+  return isassigned(vertex_data(graph), vertex)
 end
 
-function isassigned(graph::AbstractDataGraph, index::AbstractEdge)
-  return isassigned(edge_data(graph), index)
+function isassigned(graph::AbstractDataGraph, vertex::AbstractEdge)
+  return isassigned(edge_data(graph), arrange(graph, vertex))
 end
 
-function isassigned(graph::AbstractDataGraph, index::Pair)
-  return isassigned(graph, edgetype(graph)(index))
+function isassigned(graph::AbstractDataGraph, vertex::Pair)
+  return isassigned(graph, edgetype(graph)(vertex))
 end
 
-function setindex!(graph::AbstractDataGraph, x, index)
-  set!(vertex_data(graph), index, x)
+function setindex!(graph::AbstractDataGraph, data, vertex)
+  set!(vertex_data(graph), vertex, data)
   return graph
 end
 
-# TODO: Store `reverse_direction` inside `AbstractDataGraph`.
-reverse_direction(x) = x
-# TODO: Only for undirected graphs
-function setindex!(graph::AbstractDataGraph, x, index::AbstractEdge)
-  set!(edge_data(graph), index, x)
-  set!(edge_data(graph), reverse(index), reverse_direction(x))
+function setindex!(graph::AbstractDataGraph, data, edge::AbstractEdge)
+  is_edge_arranged = is_arranged(graph, edge)
+  arranged_edge = arrange(is_edge_arranged, edge)
+  arranged_data = reverse_data_direction(is_edge_arranged, graph, data)
+  set!(edge_data(graph), arranged_edge, arranged_data)
   return graph
 end
 
-function setindex!(graph::AbstractDataGraph, x, index::Pair)
-  graph[edgetype(graph)(index)] = x
+function setindex!(graph::AbstractDataGraph, data, edge::Pair)
+  graph[edgetype(graph)(edge)] = data
   return graph
 end
 

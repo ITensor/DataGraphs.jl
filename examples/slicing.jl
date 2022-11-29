@@ -4,7 +4,7 @@ using Dictionaries
 using Graphs
 
 g = named_grid((2, 2))
-dg = DataGraph{String,String}(g)
+dg = DataGraph(g, String, String)
 
 dg[1, 1] = "V11"
 dg[1, 2] = "V12"

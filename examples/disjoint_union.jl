@@ -2,7 +2,7 @@ using Graphs
 using NamedGraphs
 using DataGraphs
 
-g = DataGraph{String,String}(named_grid((2, 2)))
+g = DataGraph(named_grid((2, 2)), String, String)
 
 for v in vertices(g)
   g[v] = "V$v"

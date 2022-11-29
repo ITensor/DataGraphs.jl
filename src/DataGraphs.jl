@@ -4,34 +4,7 @@ using Graphs
 using NamedGraphs
 using SimpleTraits
 
-###############################################################################
-# Patches and extensions for dependent packages
-#
-
-# Workaround for: https://github.com/andyferris/Dictionaries.jl/issues/98
-# TODO: Move to Dictionaries.jl file in NamedGraphs.jl
-copy_keys_values(d::Dictionary) = Dictionary(copy(d.indices), copy(d.values))
-
-# Dictionaries.jl patch
-# TODO: delete once fixed in Dictionaries.jl
-# TODO: Move to Dictionaries.jl file in NamedGraphs.jl
-Base.convert(::Type{Dictionary{I,T}}, dict::Dictionary{I,T}) where {I,T} = dict
-
-# Returns just the edges of a directed graph,
-# but both edge directions of an undirected graph.
-# TODO: Move to NamedGraphs.jl
-@traitfn function all_edges(g::::IsDirected)
-  return edges(g)
-end
-
-@traitfn function all_edges(g::::(!IsDirected))
-  e = edges(g)
-  return Iterators.flatten(zip(e, reverse.(e)))
-end
-
-#
-# Patches and extensions for dependent packages
-###############################################################################
+using NamedGraphs: copy_keys_values, all_edges
 
 #
 # imports
@@ -83,12 +56,14 @@ import NamedGraphs:
   disjoint_union,
   ⊔,
   directed_graph,
-  vertextype
+  vertextype,
+  convert_vertextype
 
 # General functions
 not_implemented() = error("Not implemented")
 
 include("abstractdatagraph.jl")
+include("arrange.jl")
 include("datagraph.jl")
 
 #
@@ -96,6 +71,7 @@ include("datagraph.jl")
 #
 
 export DataGraph,
+  DataDiGraph,
   vertex_type,
   directed_graph,
   AbstractDataGraph,
