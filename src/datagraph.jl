@@ -12,6 +12,7 @@ struct DataGraph{V,VD,ED,G<:AbstractGraph,E<:AbstractEdge} <: AbstractDataGraph{
     underlying_graph::G, vertex_data::Dictionary{V,VD}, edge_data::Dictionary{E,ED}
   ) where {V,VD,ED,G<:AbstractGraph,E<:AbstractEdge}
     @assert vertextype(underlying_graph) == V
+    @assert edgetype(underlying_graph) == E
     return new{V,VD,ED,G,E}(underlying_graph, vertex_data, edge_data)
   end
 end
@@ -44,7 +45,7 @@ end
 #
 
 function DataGraph{V,VD,ED,G,E}(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph=G(),
   vertex_data::Dictionary=Dictionary{V,VD}(),
   edge_data::Dictionary=Dictionary{E,ED}(),
 ) where {V,VD,ED,G,E}
@@ -56,7 +57,7 @@ function DataGraph{V,VD,ED,G,E}(
 end
 
 function DataGraph{V,VD,ED}(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph{V},
   vertex_data::Dictionary=Dictionary{V,VD}(),
   edge_data::Dictionary=Dictionary{edgetype(underlying_graph),ED}(),
 ) where {V,VD,ED}
@@ -65,8 +66,16 @@ function DataGraph{V,VD,ED}(
   return DataGraph{V,VD,ED,G,E}(underlying_graph, vertex_data, edge_data)
 end
 
+function DataGraph{V,VD,ED}(
+  underlying_graph::AbstractGraph=NamedGraph{V}(),
+  vertex_data::Dictionary=Dictionary{V,VD}(),
+  edge_data::Dictionary=Dictionary{edgetype(underlying_graph),ED}(),
+) where {V,VD,ED}
+  return DataGraph{V,VD,ED}(convert_vertextype(V, underlying_graph), vertex_data, edge_data)
+end
+
 function DataGraph{<:Any,VD,ED}(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph,
   vertex_data::Dictionary=Dictionary{vertextype(underlying_graph),VD}(),
   edge_data::Dictionary=Dictionary{edgetype(underlying_graph),ED}(),
 ) where {VD,ED}
@@ -75,7 +84,7 @@ function DataGraph{<:Any,VD,ED}(
 end
 
 function DataGraph{V,VD}(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph=NamedGraph{V}(),
   vertex_data::Dictionary=Dictionary{V,VD}(),
   edge_data::Dictionary=Dictionary{edgetype(underlying_graph),Any}(),
 ) where {V,VD}
@@ -84,7 +93,7 @@ function DataGraph{V,VD}(
 end
 
 function DataGraph{<:Any,VD}(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph,
   vertex_data::Dictionary=Dictionary{vertextype(underlying_graph),VD}(),
   edge_data::Dictionary=Dictionary{edgetype(underlying_graph),Any}(),
 ) where {VD}
@@ -94,7 +103,7 @@ function DataGraph{<:Any,VD}(
 end
 
 function DataGraph{V}(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph=NamedGraph{V}(),
   vertex_data::Dictionary=Dictionary{V,Any}(),
   edge_data::Dictionary=Dictionary{edgetype(underlying_graph),Any}(),
 ) where {V}
@@ -104,7 +113,7 @@ function DataGraph{V}(
 end
 
 function DataGraph(
-  underlying_graph::AbstractGraph=SimpleGraph(),
+  underlying_graph::AbstractGraph=NamedGraph{Any}(),
   vertex_data::Dictionary=Dictionary{vertextype(underlying_graph),Any}(),
   edge_data::Dictionary=Dictionary{edgetype(underlying_graph),Any}(),
 )
@@ -156,6 +165,11 @@ function DataGraph{V}(graph::DataGraph) where {V}
   converted_vertex_data = Dictionary{V}(vertex_data(graph))
   converted_edge_data = Dictionary{E}(edge_data(graph))
   return DataGraph{V}(converted_underlying_graph, converted_vertex_data, converted_edge_data)
+end
+
+convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
+function convert_vertextype(V::Type, graph::DataGraph)
+  return DataGraph{V}(graph)
 end
 
 # TODO: implement generic version in terms of `set_underlying_graph_type`
