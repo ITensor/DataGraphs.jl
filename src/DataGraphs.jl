@@ -1,18 +1,28 @@
 module DataGraphs
 using Dictionaries
 using Graphs
-using MultiDimDictionaries
 using NamedGraphs
 using SimpleTraits
 
-using MultiDimDictionaries: tuple_convert, SliceIndex, ElementIndex
+using NamedGraphs: copy_keys_values, all_edges
 
 #
 # imports
 #
 
 import Base:
-  get, getindex, setindex!, convert, show, isassigned, eltype, copy, hvncat, hcat, vcat
+  get,
+  getindex,
+  setindex!,
+  convert,
+  show,
+  isassigned,
+  eltype,
+  copy,
+  hvncat,
+  hcat,
+  vcat,
+  union
 import Graphs:
   adjacency_matrix,
   add_edge!,
@@ -37,38 +47,28 @@ import Graphs:
   rem_edge!,
   rem_vertex!,
   vertices
-import MultiDimDictionaries: IndexType
-import NamedGraphs: disjoint_union, ⊔, to_vertex
 
-# Dictionaries.jl patch
-# TODO: delete once fixed in Dictionaries.jl
-convert(::Type{Dictionary{I,T}}, dict::Dictionary{I,T}) where {I,T} = dict
+# TODO: Can we remove the dependency on `NamedGraphs`?
+# Maybe need a `GraphExtensions.jl` or
+# `GraphInterfaces.jl` package.
+import NamedGraphs:
+  rename_vertices, disjoint_union, ⊔, directed_graph, vertextype, convert_vertextype
 
 # General functions
 not_implemented() = error("Not implemented")
 
-# Returns just the edges of a directed graph,
-# but both edge directions of an undirected graph.
-@traitfn function all_edges(g::::IsDirected)
-  return edges(g)
-end
-
-@traitfn function all_edges(g::::(!IsDirected))
-  e = edges(g)
-  return Iterators.flatten(zip(e, reverse.(e)))
-end
-
 include("abstractdatagraph.jl")
+include("arrange.jl")
 include("datagraph.jl")
-include("nameddimdatagraph.jl")
 
 #
 # exports
 #
 
 export DataGraph,
-  NamedDimDataGraph,
-  AbstractNamedDimDataGraph,
+  DataDiGraph,
+  vertex_type,
+  directed_graph,
   AbstractDataGraph,
   map_vertex_data,
   map_edge_data,

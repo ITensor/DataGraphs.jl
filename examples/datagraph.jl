@@ -3,7 +3,7 @@ using Dictionaries
 using Graphs
 
 g = grid((4,))
-dg = DataGraph{String,Symbol}(g)
+dg = DataGraph(g, String, Symbol)
 @show !isassigned(dg, Edge(1, 2))
 @show !isassigned(dg, 1 => 2)
 @show !isassigned(dg, Edge(1 => 2))
