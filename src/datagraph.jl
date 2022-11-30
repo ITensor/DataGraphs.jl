@@ -16,17 +16,19 @@ struct DataGraph{V,VD,ED,G<:AbstractGraph,E<:AbstractEdge} <: AbstractDataGraph{
     return new{V,VD,ED,G,E}(underlying_graph, vertex_data, edge_data)
   end
 end
-underlying_graph(graph::DataGraph) = graph.underlying_graph
-underlying_graph_type(::Type{<:DataGraph{V,VD,ED,G}}) where {V,VD,ED,G} = G
-vertex_data(graph::DataGraph) = graph.vertex_data
-vertex_data_type(::Type{<:DataGraph{V,VD}}) where {V,VD} = VD
-edge_data(graph::DataGraph) = graph.edge_data
-edge_data_type(::Type{<:DataGraph{V,VD,ED}}) where {V,VD,ED} = ED
+underlying_graph_type(G::Type{<:DataGraph}) = fieldtype(G, :underlying_graph)
+# TODO: rename vertex_data_eltype
+vertex_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :vertex_data))
+# TODO: rename edge_data_eltype
+edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
+underlying_graph(graph::DataGraph) = getfield(graph, :underlying_graph)
+vertex_data(graph::DataGraph) = getfield(graph, :vertex_data)
+edge_data(graph::DataGraph) = getfield(graph, :edge_data)
 
 # TODO: Is this needed?
 underlying_graph_type(graph::DataGraph) = typeof(underlying_graph(graph))
 # TODO: Is this needed?
-is_directed(::Type{<:DataGraph{V,VD,ED,G}}) where {V,VD,ED,G} = is_directed(G)
+is_directed(G::Type{<:DataGraph}) = is_directed(underlying_graph_type(G))
 
 # TODO: Implement in terms of `set_underlying_graph`, `set_vertex_data`, etc.
 # TODO: Use `https://github.com/JuliaObjects/Accessors.jl`?
@@ -157,12 +159,13 @@ DataGraph{V}(nv::Integer, args...) where {V} = DataGraph{V}(SimpleGraph(nv), arg
 DataGraph(nv::Integer, args...) = DataGraph(SimpleGraph(nv), args...)
 
 # Type conversions
-DataGraph{V,VD,ED,G}(graph::DataGraph{V,VD,ED,G}) where {V,VD,ED,G} = graph
-DataGraph{V,VD,ED}(graph::DataGraph{V,VD,ED}) where {V,VD,ED} = graph
-DataGraph{V,VD}(graph::DataGraph{V,VD}) where {V,VD} = graph
-DataGraph{V}(graph::DataGraph{V}) where {V} = graph
+DataGraph{V,VD,ED,G}(graph::DataGraph{V,VD,ED,G}) where {V,VD,ED,G} = copy(graph)
+DataGraph{V,VD,ED}(graph::DataGraph{V,VD,ED}) where {V,VD,ED} = copy(graph)
+DataGraph{V,VD}(graph::DataGraph{V,VD}) where {V,VD} = copy(graph)
+DataGraph{V}(graph::DataGraph{V}) where {V} = copy(graph)
 function DataGraph{V}(graph::DataGraph) where {V}
   E = convert_vertextype(V, edgetype(graph))
+  # TODO: Make sure this properly copies
   converted_underlying_graph = convert_vertextype(V, underlying_graph(graph))
   converted_vertex_data = Dictionary{V}(vertex_data(graph))
   converted_edge_data = Dictionary{E}(edge_data(graph))
