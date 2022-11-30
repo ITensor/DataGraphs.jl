@@ -125,19 +125,11 @@ end
 # Type interface
 #
 
-function DataGraph{V}(
-  underlying_graph::AbstractGraph,
-  VD::Type,
-  ED::Type=Any,
-) where {V}
+function DataGraph{V}(underlying_graph::AbstractGraph, VD::Type, ED::Type=Any) where {V}
   return DataGraph{V,VD,ED}(underlying_graph)
 end
 
-function DataGraph(
-  underlying_graph::AbstractGraph,
-  VD::Type,
-  ED::Type=Any,
-)
+function DataGraph(underlying_graph::AbstractGraph, VD::Type, ED::Type=Any)
   V = vertextype(underlying_graph)
   return DataGraph{V,VD,ED}(underlying_graph)
 end
@@ -146,11 +138,21 @@ end
 # Convenience constructors for simple graphs
 #
 
-DataGraph{V,VD,ED,G,E}(nv::Integer, args...) where {V,VD,ED,G,E} = DataGraph{V,VD,ED,G,E}(SimpleGraph(nv), args...)
-DataGraph{V,VD,ED}(nv::Integer, args...) where {V,VD,ED} = DataGraph{V,VD,ED}(SimpleGraph(nv), args...)
-DataGraph{<:Any,VD,ED}(nv::Integer, args...) where {VD,ED} = DataGraph{<:Any,VD,ED}(SimpleGraph(nv), args...)
-DataGraph{V,VD}(nv::Integer, args...) where {V,VD} = DataGraph{V,VD}(SimpleGraph(nv), args...)
-DataGraph{<:Any,VD}(nv::Integer, args...) where {VD} = DataGraph{<:Any,VD}(SimpleGraph(nv), args...)
+function DataGraph{V,VD,ED,G,E}(nv::Integer, args...) where {V,VD,ED,G,E}
+  return DataGraph{V,VD,ED,G,E}(SimpleGraph(nv), args...)
+end
+function DataGraph{V,VD,ED}(nv::Integer, args...) where {V,VD,ED}
+  return DataGraph{V,VD,ED}(SimpleGraph(nv), args...)
+end
+function DataGraph{<:Any,VD,ED}(nv::Integer, args...) where {VD,ED}
+  return DataGraph{<:Any,VD,ED}(SimpleGraph(nv), args...)
+end
+function DataGraph{V,VD}(nv::Integer, args...) where {V,VD}
+  return DataGraph{V,VD}(SimpleGraph(nv), args...)
+end
+function DataGraph{<:Any,VD}(nv::Integer, args...) where {VD}
+  return DataGraph{<:Any,VD}(SimpleGraph(nv), args...)
+end
 DataGraph{V}(nv::Integer, args...) where {V} = DataGraph{V}(SimpleGraph(nv), args...)
 DataGraph(nv::Integer, args...) = DataGraph(SimpleGraph(nv), args...)
 
@@ -164,7 +166,9 @@ function DataGraph{V}(graph::DataGraph) where {V}
   converted_underlying_graph = convert_vertextype(V, underlying_graph(graph))
   converted_vertex_data = Dictionary{V}(vertex_data(graph))
   converted_edge_data = Dictionary{E}(edge_data(graph))
-  return DataGraph{V}(converted_underlying_graph, converted_vertex_data, converted_edge_data)
+  return DataGraph{V}(
+    converted_underlying_graph, converted_vertex_data, converted_edge_data
+  )
 end
 
 convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph

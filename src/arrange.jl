@@ -28,4 +28,6 @@ end
 # to control data direction reversal by instance instead of
 # just by type.
 reverse_data_direction(graph::AbstractDataGraph, data) = data
-reverse_data_direction(is_arranged::Bool, graph::AbstractDataGraph, data) = is_arranged ? data : reverse_data_direction(graph, data)
+function reverse_data_direction(is_arranged::Bool, graph::AbstractDataGraph, data)
+  return is_arranged ? data : reverse_data_direction(graph, data)
+end

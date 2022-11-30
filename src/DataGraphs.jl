@@ -52,12 +52,7 @@ import Graphs:
 # Maybe need a `GraphExtensions.jl` or
 # `GraphInterfaces.jl` package.
 import NamedGraphs:
-  rename_vertices,
-  disjoint_union,
-  ⊔,
-  directed_graph,
-  vertextype,
-  convert_vertextype
+  rename_vertices, disjoint_union, ⊔, directed_graph, vertextype, convert_vertextype
 
 # General functions
 not_implemented() = error("Not implemented")

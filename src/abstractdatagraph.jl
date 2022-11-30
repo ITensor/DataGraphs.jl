@@ -93,7 +93,9 @@ function rename_vertices(f::Function, graph::AbstractDataGraph)
   renamed_underlying_graph = rename_vertices(f, underlying_graph(graph))
   # TODO: Base the ouput type on `typeof(graph)`, for example:
   # convert_vertextype(eltype(renamed_vertices), typeof(graph))(renamed_underlying_graph)
-  renamed_graph = DataGraph{vertextype(renamed_underlying_graph),vertex_data_type(graph),edge_data_type(graph)}(
+  renamed_graph = DataGraph{
+    vertextype(renamed_underlying_graph),vertex_data_type(graph),edge_data_type(graph)
+  }(
     renamed_underlying_graph
   )
   for v in keys(vertex_data(graph))
