@@ -3,21 +3,28 @@ using NamedGraphs
 using Dictionaries
 using Graphs
 
-g = NamedDimGraph(grid((2, 2)); dims=(2, 2))
-dg = NamedDimDataGraph{String,String}(g)
+g = named_grid((2, 2))
+dg = DataGraph(g, String, String)
 
-for v in vertices(dg)
-  dg[v] = "V$v"
-end
-for e in edges(dg)
-  dg[e] = "E$e"
-end
+dg[1, 1] = "V11"
+dg[1, 2] = "V12"
+dg[(1, 1) => (1, 2)] = "E11↔12"
 
-dg_1c = dg[1, :]
-dg_2c = dg[2, :]
-dg_c1 = dg[:, 1]
-dg_c2 = dg[:, 2]
+@show dg[1, 1] == "V11"
+@show dg[1, 2] == "V12"
+@show isnothing(get(dg, (2, 1), nothing))
+@show dg[(1, 1) => (1, 2)] == "E11↔12"
+@show dg[(1, 2) => (1, 1)] == "E11↔12"
+@show isnothing(get(dg, (1, 1) => (2, 1), nothing))
 
+dg_1c = subgraph(v -> v[1] == 1, dg) # dg[1, :]
+dg_2c = subgraph(v -> v[1] == 2, dg) # dg[2, :]
+dg_c1 = subgraph(v -> v[2] == 1, dg) # dg[:, 1]
+dg_c2 = subgraph(v -> v[2] == 2, dg) # dg[:, 2]
+
+@show dg_1c[1, 1] == "V11"
+@show dg_1c[1, 2] == "V12"
+@show dg_1c[(1, 1) => (1, 2)] == "E11↔12"
 @show nv(dg) == 4
 @show ne(dg) == 4
 @show nv(dg_1c) == 2
@@ -29,7 +36,7 @@ dg_c2 = dg[:, 2]
 @show nv(dg_c2) == 2
 @show ne(dg_c2) == 1
 
-dg_nn = dg[[(1, 1), (2, 2)]]
+dg_nn = subgraph(dg, [(1, 1), (2, 2)])
 
 @show nv(dg_nn) == 2
 @show ne(dg_nn) == 0
