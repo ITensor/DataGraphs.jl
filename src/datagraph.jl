@@ -188,12 +188,3 @@ function directed_graph(G::Type{<:DataGraph})
   UG = underlying_graph_type(G)
   return DataGraph{V,VD,ED,directed_graph(UG),E}
 end
-
-# Convenience function for making a directed graph
-# TODO: Turn into a type so and define constructors
-# where vertex and data types can be specified.
-# It will act as a dummy type that has no actual fields
-# and is only used to construct `DataGraph` instances.
-function DataDiGraph(underlying_graph::AbstractGraph)
-  return DataGraph(directed_graph(underlying_graph))
-end
