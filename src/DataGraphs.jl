@@ -66,7 +66,6 @@ include("datagraph.jl")
 #
 
 export DataGraph,
-  DataDiGraph,
   vertex_type,
   directed_graph,
   AbstractDataGraph,
