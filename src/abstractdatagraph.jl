@@ -33,6 +33,7 @@ for f in [
   :eltype,
   :has_edge,
   :has_vertex,
+  :inneighbors,
   :is_connected,
   :is_cyclic,
   :is_directed,
@@ -41,6 +42,7 @@ for f in [
   :ne,
   :neighbors,
   :nv,
+  :outneighbors,
   :vertices,
 ]
   @eval begin
