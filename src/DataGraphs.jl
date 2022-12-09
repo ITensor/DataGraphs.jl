@@ -36,6 +36,7 @@ import Graphs:
   has_edge,
   has_vertex,
   induced_subgraph,
+  inneighbors,
   is_connected,
   is_cyclic,
   is_directed,
@@ -44,6 +45,7 @@ import Graphs:
   ne,
   neighbors,
   nv,
+  outneighbors,
   rem_edge!,
   rem_vertex!,
   vertices
