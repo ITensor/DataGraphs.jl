@@ -4,6 +4,7 @@
 # in both edge directions. Also, define `reverse_data_direction` as a function
 # stored in directed AbstractDataGraph types (which by default returns nothing,
 # indicating not to automatically store data in both directions)
+# TODO: Use `Graphs.is_ordered`? https://juliagraphs.org/Graphs.jl/v1.7/core_functions/core/#Graphs.is_ordered-Tuple{AbstractEdge}
 @traitfn function is_arranged(graph::AbstractDataGraph::IsDirected, src, dst)
   return true
 end
