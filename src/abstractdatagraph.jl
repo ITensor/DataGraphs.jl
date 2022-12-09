@@ -19,6 +19,8 @@ edge_data_type(graph::AbstractDataGraph) = edge_data_type(typeof(graph))
 vertextype(G::Type{<:AbstractDataGraph}) = vertextype(underlying_graph_type(G))
 vertextype(graph::AbstractDataGraph) = vertextype(typeof(graph))
 
+zero(G::Type{<:AbstractDataGraph}) = G()
+
 # Graphs overloads
 for f in [
   :add_edge!,
@@ -26,12 +28,16 @@ for f in [
   :adjacency_matrix,
   :bfs_parents,
   :bfs_tree,
+  :common_neighbors,
+  :degree,
+  :degree_histogram,
   :dfs_parents,
   :dfs_tree,
   :edges,
   :edgetype,
   :eltype,
   :has_edge,
+  :has_path,
   :has_vertex,
   :inneighbors,
   :is_connected,
@@ -41,6 +47,20 @@ for f in [
   :is_weakly_connected,
   :ne,
   :neighbors,
+  :neighborhood,
+  :neighborhood_dists,
+  :a_star,
+  :bellman_ford_shortest_paths,
+  :enumerate_paths,
+  :desopo_pape_shortest_paths,
+  :dijkstra_shortest_paths,
+  :floyd_warshall_shortest_paths,
+  :johnson_shortest_paths,
+  :spfa_shortest_paths,
+  :yen_k_shortest_paths,
+  :boruvka_mst,
+  :kruskal_mst,
+  :prim_mst,
   :nv,
   :outneighbors,
   :vertices,
@@ -73,6 +93,21 @@ end
     end
   end
   return digraph
+end
+
+function reverse(graph::AbstractDataGraph)
+  reversed_graph = typeof(graph)(reverse(underlying_graph(graph)))
+  for v in vertices(graph)
+    if isassigned(graph, v)
+      reversed_graph[v] = graph[v]
+    end
+  end
+  for e in edges(graph)
+    if isassigned(graph, e)
+      reversed_graph[reverse(e)] = graph[e]
+    end
+  end
+  return reversed_graph
 end
 
 # Union the vertices and edges of the graphs and

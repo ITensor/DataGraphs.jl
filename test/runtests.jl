@@ -154,4 +154,20 @@ using Test
     @test g[1] == ["A", "B", "C", "D", "E"]
     @test g[1 => 2] == ["E", "F"]
   end
+  @testset "reverse" begin
+    g = DataGraph(SimpleDiGraph(4))
+    add_edge!(g, 1 => 2)
+    add_edge!(g, 3 => 4)
+    g[1 => 2] = :A
+    g[3 => 4] = "X"
+    rg = reverse(g)
+    @test has_edge(rg, 2 => 1)
+    @test has_edge(rg, 4 => 3)
+    @test rg[2 => 1] == :A
+    @test isassigned(rg, 2 => 1)
+    @test !isassigned(rg, 1 => 2)
+    @test rg[4 => 3] == "X"
+    @test !isassigned(rg, 3 => 4)
+    @test isassigned(rg, 4 => 3)
+  end
 end
