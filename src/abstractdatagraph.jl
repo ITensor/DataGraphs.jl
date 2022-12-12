@@ -110,6 +110,31 @@ function reverse(graph::AbstractDataGraph)
   return reversed_graph
 end
 
+function merge_vertices(
+  graph::AbstractDataGraph,
+  merge_vertices;
+  merge_data=(x, y) -> y,
+  merge_vertex_data=merge_data,
+  merge_edge_data=merge_data,
+  kwargs...,
+)
+  underlying_merged_graph = merge_vertices(underlying_graph(graph); kwargs...)
+  return not_implemented()
+end
+
+function merge_vertices!(
+  graph::AbstractDataGraph,
+  merge_vertices;
+  merge_data=(x, y) -> y,
+  merge_vertex_data=merge_data,
+  merge_edge_data=merge_data,
+  kwargs...,
+)
+  underlying_merged_graph = copy(underlying_graph(graph))
+  merge_vertices!(underlying_merged_graph; kwargs...)
+  return not_implemented()
+end
+
 # Union the vertices and edges of the graphs and
 # merge the vertex and edge metadata.
 function union(
