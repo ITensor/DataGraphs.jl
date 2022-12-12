@@ -31,6 +31,8 @@ import Graphs:
   bfs_parents,
   bfs_tree,
   common_neighbors,
+  connected_components,
+  connected_components!,
   degree,
   degree_histogram,
   dfs_parents,
@@ -47,6 +49,8 @@ import Graphs:
   is_directed,
   is_strongly_connected,
   is_weakly_connected,
+  merge_vertices,
+  merge_vertices!,
   ne,
   neighbors,
   neighborhood,
@@ -74,7 +78,13 @@ import Graphs:
 # Maybe need a `GraphExtensions.jl` or
 # `GraphInterfaces.jl` package.
 import NamedGraphs:
-  rename_vertices, disjoint_union, ⊔, directed_graph, vertextype, convert_vertextype
+  ⊔,
+  convert_vertextype,
+  directed_graph,
+  disjoint_union,
+  incident_edges,
+  rename_vertices,
+  vertextype
 
 # General functions
 not_implemented() = error("Not implemented")
