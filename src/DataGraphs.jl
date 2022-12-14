@@ -1,6 +1,7 @@
 module DataGraphs
 using Dictionaries
 using Graphs
+using GraphsFlows
 using NamedGraphs
 using SimpleTraits
 
@@ -51,6 +52,7 @@ import Graphs:
   is_weakly_connected,
   merge_vertices,
   merge_vertices!,
+  mincut,
   ne,
   neighbors,
   neighborhood,
@@ -83,6 +85,7 @@ import NamedGraphs:
   directed_graph,
   disjoint_union,
   incident_edges,
+  mincut_partitions,
   rename_vertices,
   vertextype
 
