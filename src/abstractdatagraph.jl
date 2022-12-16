@@ -28,11 +28,15 @@ for f in [
   :adjacency_matrix,
   :bfs_parents,
   :bfs_tree,
+  :center,
   :common_neighbors,
   :degree,
   :degree_histogram,
   :dfs_parents,
   :dfs_tree,
+  :diameter,
+  :eccentricity,
+  :eccentricities,
   :edges,
   :edgetype,
   :eltype,
@@ -66,6 +70,9 @@ for f in [
   :prim_mst,
   :nv,
   :outneighbors,
+  :periphery,
+  :radius,
+  :tree,
   :vertices,
 ]
   @eval begin
@@ -73,6 +80,11 @@ for f in [
       return $f(underlying_graph(graph), args...; kwargs...)
     end
   end
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
+function eccentricity(graph::AbstractDataGraph, distmx::AbstractMatrix)
+  return eccentricity(underlying_graph(graph), distmx)
 end
 
 @traitfn directed_graph(graph::AbstractDataGraph::IsDirected) = graph
@@ -154,6 +166,16 @@ function union(
   return DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
 
+function union(
+  graph1::AbstractDataGraph,
+  graph2::AbstractDataGraph,
+  graph3::AbstractDataGraph,
+  graphs_tail::AbstractDataGraph...;
+  kwargs...,
+)
+  return union(union(graph1, graph2; kwargs...), graph3, graphs_tail...; kwargs...)
+end
+
 function rename_vertices(f::Function, graph::AbstractDataGraph)
   renamed_underlying_graph = rename_vertices(f, underlying_graph(graph))
   # TODO: Base the ouput type on `typeof(graph)`, for example:
@@ -218,7 +240,9 @@ function map_edge_data(f, graph::AbstractDataGraph; edges=nothing)
   graph′ = copy(graph)
   es = isnothing(edges) ? Graphs.edges(graph) : edges
   for e in es
-    graph′[e] = f(graph[e])
+    if isassigned(graph, e)
+      graph′[e] = f(graph[e])
+    end
   end
   return graph′
 end
