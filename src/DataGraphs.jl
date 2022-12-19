@@ -89,13 +89,19 @@ import Graphs:
 # `GraphInterfaces.jl` package.
 import NamedGraphs:
   ⊔,
+  boundary_edges,
+  boundary_vertices,
   convert_vertextype,
   directed_graph,
   disjoint_union,
   eccentricities,
   incident_edges,
+  inner_boundary_vertices,
+  outer_boundary_vertices,
   mincut_partitions,
   rename_vertices,
+  symrcm,
+  symrcm_permute,
   vertextype
 
 # General functions
