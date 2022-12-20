@@ -81,6 +81,7 @@ import Graphs:
   rem_edge!,
   rem_vertex!,
   reverse,
+  steiner_tree,
   tree,
   vertices
 

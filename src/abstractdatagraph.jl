@@ -78,6 +78,7 @@ for f in [
   :radius,
   :symrcm,
   :symrcm_permute,
+  :steiner_tree,
   :tree,
   :vertices,
 ]
