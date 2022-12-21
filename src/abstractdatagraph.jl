@@ -23,46 +23,64 @@ zero(G::Type{<:AbstractDataGraph}) = G()
 
 # Graphs overloads
 for f in [
+  :a_star,
   :add_edge!,
   :add_vertex!,
   :adjacency_matrix,
+  :bellman_ford_shortest_paths,
   :bfs_parents,
   :bfs_tree,
+  :boundary_edges,
+  :boundary_vertices,
+  :boruvka_mst,
+  :center,
   :common_neighbors,
   :degree,
   :degree_histogram,
+  :desopo_pape_shortest_paths,
   :dfs_parents,
   :dfs_tree,
+  :diameter,
+  :dijkstra_shortest_paths,
+  :eccentricity,
+  :eccentricities,
   :edges,
   :edgetype,
   :eltype,
+  :enumerate_paths,
+  :floyd_warshall_shortest_paths,
   :has_edge,
   :has_path,
   :has_vertex,
   :inneighbors,
+  :inner_boundary_vertices,
   :is_connected,
   :is_cyclic,
   :is_directed,
   :is_strongly_connected,
   :is_weakly_connected,
+  :mincut,
+  :(GraphsFlows.mincut),
+  :mincut_partitions,
   :ne,
   :neighbors,
   :neighborhood,
   :neighborhood_dists,
-  :a_star,
-  :bellman_ford_shortest_paths,
-  :enumerate_paths,
-  :desopo_pape_shortest_paths,
-  :dijkstra_shortest_paths,
-  :floyd_warshall_shortest_paths,
+  :outer_boundary_vertices,
   :johnson_shortest_paths,
   :spfa_shortest_paths,
   :yen_k_shortest_paths,
-  :boruvka_mst,
   :kruskal_mst,
   :prim_mst,
   :nv,
   :outneighbors,
+  :periphery,
+  :radius,
+  :symrcm,
+  :symrcm_permute,
+  :steiner_tree,
+  :topological_sort_by_dfs,
+  :tree,
   :vertices,
 ]
   @eval begin
@@ -70,6 +88,11 @@ for f in [
       return $f(underlying_graph(graph), args...; kwargs...)
     end
   end
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
+function eccentricity(graph::AbstractDataGraph, distmx::AbstractMatrix)
+  return eccentricity(underlying_graph(graph), distmx)
 end
 
 @traitfn directed_graph(graph::AbstractDataGraph::IsDirected) = graph
@@ -151,6 +174,16 @@ function union(
   return DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
 
+function union(
+  graph1::AbstractDataGraph,
+  graph2::AbstractDataGraph,
+  graph3::AbstractDataGraph,
+  graphs_tail::AbstractDataGraph...;
+  kwargs...,
+)
+  return union(union(graph1, graph2; kwargs...), graph3, graphs_tail...; kwargs...)
+end
+
 function rename_vertices(f::Function, graph::AbstractDataGraph)
   renamed_underlying_graph = rename_vertices(f, underlying_graph(graph))
   # TODO: Base the ouput type on `typeof(graph)`, for example:
@@ -215,7 +248,9 @@ function map_edge_data(f, graph::AbstractDataGraph; edges=nothing)
   graph′ = copy(graph)
   es = isnothing(edges) ? Graphs.edges(graph) : edges
   for e in es
-    graph′[e] = f(graph[e])
+    if isassigned(graph, e)
+      graph′[e] = f(graph[e])
+    end
   end
   return graph′
 end
