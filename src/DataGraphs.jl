@@ -62,6 +62,7 @@ import Graphs:
   is_strongly_connected,
   is_weakly_connected,
   johnson_shortest_paths,
+  kruskal_mst,
   merge_vertices,
   merge_vertices!,
   mincut,
@@ -69,21 +70,20 @@ import Graphs:
   neighbors,
   neighborhood,
   neighborhood_dists,
-  periphery,
-  radius,
-  spfa_shortest_paths,
-  yen_k_shortest_paths,
-  kruskal_mst,
-  prim_mst,
   nv,
   outneighbors,
   periphery,
+  prim_mst,
+  radius,
   rem_edge!,
   rem_vertex!,
   reverse,
+  spfa_shortest_paths,
   steiner_tree,
+  topological_sort_by_dfs,
   tree,
-  vertices
+  vertices,
+  yen_k_shortest_paths
 
 # TODO: Can we remove the dependency on `NamedGraphs`?
 # Maybe need a `GraphExtensions.jl` or

@@ -79,6 +79,7 @@ for f in [
   :symrcm,
   :symrcm_permute,
   :steiner_tree,
+  :topological_sort_by_dfs,
   :tree,
   :vertices,
 ]
