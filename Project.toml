@@ -13,6 +13,7 @@ SimpleTraits = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 [compat]
 Dictionaries = "0.3"
 Graphs = "1"
+GraphsFlows = "0.1.1"
 NamedGraphs = "0.1.3"
 SimpleTraits = "0.9"
 julia = "1.7"
