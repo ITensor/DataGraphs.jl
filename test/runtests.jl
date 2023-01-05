@@ -179,7 +179,7 @@ using Test
     @test nv(t) == nv(g)
     @test ne(t) == nv(g) - 1
     @test all(e -> has_edge(t, e), es)
-    
+
     t = dfs_tree(g, 2)
     @test t isa NamedDiGraph{Int}
     @test nv(t) == nv(g)
@@ -217,5 +217,12 @@ using Test
     @test nv(t) == nv(g)
     @test ne(t) == nv(g) - 1
     @test all(e -> has_edge(t, e), es)
+  end
+  @testset "dijkstra_shortest_paths" begin
+    g = DataGraph(named_grid(4))
+    ps = dijkstra_shortest_paths(g, [1])
+    @test ps.dists == dictionary([1 => 0, 2 => 1, 3 => 2, 4 => 3])
+    @test ps.parents == dictionary([1 => 1, 2 => 1, 3 => 2, 4 => 3])
+    @test ps.pathcounts == dictionary([1 => 1.0, 2 => 1.0, 3 => 1.0, 4 => 1.0])
   end
 end
