@@ -170,4 +170,52 @@ using Test
     @test !isassigned(rg, 3 => 4)
     @test isassigned(rg, 4 => 3)
   end
+  @testset "Tree traversal" begin
+    g = DataGraph(named_grid(4))
+
+    t = bfs_tree(g, 2)
+    es = [2 => 1, 2 => 3, 3 => 4]
+    @test t isa NamedDiGraph{Int}
+    @test nv(t) == nv(g)
+    @test ne(t) == nv(g) - 1
+    @test all(e -> has_edge(t, e), es)
+    
+    t = dfs_tree(g, 2)
+    @test t isa NamedDiGraph{Int}
+    @test nv(t) == nv(g)
+    @test ne(t) == nv(g) - 1
+    @test all(e -> has_edge(t, e), es)
+
+    g = DataGraph(named_grid((4, 2)))
+
+    t = bfs_tree(g, (1, 1))
+    es = [
+      (1, 1) => (1, 2),
+      (1, 1) => (2, 1),
+      (2, 1) => (2, 2),
+      (2, 1) => (3, 1),
+      (3, 1) => (3, 2),
+      (3, 1) => (4, 1),
+      (4, 1) => (4, 2),
+    ]
+    @test t isa NamedDiGraph{Tuple{Int,Int}}
+    @test nv(t) == nv(g)
+    @test ne(t) == nv(g) - 1
+    @test all(e -> has_edge(t, e), es)
+
+    t = dfs_tree(g, (1, 1))
+    es = [
+      (1, 1) => (2, 1),
+      (2, 1) => (3, 1),
+      (3, 1) => (4, 1),
+      (4, 1) => (4, 2),
+      (4, 2) => (3, 2),
+      (3, 2) => (2, 2),
+      (2, 2) => (1, 2),
+    ]
+    @test t isa NamedDiGraph{Tuple{Int,Int}}
+    @test nv(t) == nv(g)
+    @test ne(t) == nv(g) - 1
+    @test all(e -> has_edge(t, e), es)
+  end
 end

@@ -226,13 +226,13 @@ neighbors(graph::AbstractDataGraph, v::Integer) = neighbors(underlying_graph(gra
 # Fix ambiguity with:
 # Graphs.bfs_tree(graph::AbstractGraph, s::Integer; dir)
 function bfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
-  return bfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+  return bfs_tree(underlying_graph(graph), s; kwargs...)
 end
 
 # Fix ambiguity with:
 # Graphs.dfs_tree(graph::AbstractGraph, s::Integer; dir)
 function dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
-  return dfs_tree(underlying_graph(graph), tuple(s); kwargs...)
+  return dfs_tree(underlying_graph(graph), s; kwargs...)
 end
 
 function map_vertex_data(f, graph::AbstractDataGraph; vertices=nothing)
