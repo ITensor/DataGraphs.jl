@@ -10,7 +10,15 @@
 end
 
 @traitfn function is_arranged(graph::AbstractDataGraph::(!IsDirected), src, dst)
-  return src < dst
+  if !hasmethod(isless, typeof.((src, dst)))
+    src_hash = hash(src)
+    dst_hash = hash(dst)
+    if (src_hash == dst_hash) && (src ≠ dst)
+      @warn "Hash collision when arranging vertices to extract edge data. Setting or extracting data may be ill-defined."
+    end
+    return isless(src_hash, dst_hash)
+  end
+  return isless(src, dst)
 end
 
 function is_arranged(graph::AbstractDataGraph, edge::AbstractEdge)

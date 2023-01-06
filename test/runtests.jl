@@ -78,6 +78,39 @@ using Test
 
     # TODO: is this needed?
     #@test DataGraph{<:Any,String}(g) isa DataGraph{Any,String}
+
+    # Vertices with mixed types
+    dg = DataGraph(NamedGraph(grid((4,)), [1, "X", 2, "Y"]))
+    @test nv(dg) == 4
+    @test ne(dg) == 3
+    dg[1] = "vertex_1"
+    dg["X"] = "vertex_X"
+    dg[2] = "vertex_2"
+    dg["Y"] = "vertex_Y"
+    @test dg[1] == "vertex_1"
+    @test dg["X"] == "vertex_X"
+    @test dg[2] == "vertex_2"
+    @test dg["Y"] == "vertex_Y"
+
+    dg[1 => "X"] = "edge_1X"
+    dg["X" => 2] = "edge_X2"
+    dg[2 => "Y"] = "edge_2Y"
+    @test dg[1 => "X"] == "edge_1X"
+    @test dg["X" => 1] == "edge_1X"
+    @test dg["X" => 2] == "edge_X2"
+    @test dg[2 => "X"] == "edge_X2"
+    @test dg[2 => "Y"] == "edge_2Y"
+    @test dg["Y" => 2] == "edge_2Y"
+
+    dg["X" => 1] = "edge_X1"
+    dg[2 => "X"] = "edge_2X"
+    dg["Y" => 2] = "edge_Y2"
+    @test dg[1 => "X"] == "edge_X1"
+    @test dg["X" => 1] == "edge_X1"
+    @test dg["X" => 2] == "edge_2X"
+    @test dg[2 => "X"] == "edge_2X"
+    @test dg[2 => "Y"] == "edge_Y2"
+    @test dg["Y" => 2] == "edge_Y2"
   end
 
   @testset "Disjoint unions" begin
