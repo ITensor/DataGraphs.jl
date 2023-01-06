@@ -1,11 +1,12 @@
 module DataGraphs
 using Dictionaries
 using Graphs
+using Graphs.SimpleGraphs # AbstractSimpleGraph
 using GraphsFlows
 using NamedGraphs
 using SimpleTraits
 
-using NamedGraphs: copy_keys_values, all_edges
+using NamedGraphs: AbstractNamedGraph, copy_keys_values, all_edges
 
 #
 # imports
@@ -108,6 +109,7 @@ import NamedGraphs:
 # General functions
 not_implemented() = error("Not implemented")
 
+include(joinpath("traits", "isunderlyinggraph.jl"))
 include("abstractdatagraph.jl")
 include("arrange.jl")
 include("datagraph.jl")

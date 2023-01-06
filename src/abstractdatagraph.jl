@@ -91,6 +91,11 @@ for f in [
 end
 
 # Fix for ambiguity error with `AbstractGraph` version
+function dijkstra_shortest_paths(graph::AbstractDataGraph, vertices::Vector{<:Integer})
+  return dijkstra_shortest_paths(underlying_graph(graph), vertices)
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
 function eccentricity(graph::AbstractDataGraph, distmx::AbstractMatrix)
   return eccentricity(underlying_graph(graph), distmx)
 end
