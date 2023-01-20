@@ -91,6 +91,11 @@ for f in [
 end
 
 # Fix for ambiguity error with `AbstractGraph` version
+function degree(graph::AbstractDataGraph, vertex::Integer)
+  return degree(underlying_graph(graph), vertex)
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
 function dijkstra_shortest_paths(graph::AbstractDataGraph, vertices::Vector{<:Integer})
   return dijkstra_shortest_paths(underlying_graph(graph), vertices)
 end
@@ -98,6 +103,16 @@ end
 # Fix for ambiguity error with `AbstractGraph` version
 function eccentricity(graph::AbstractDataGraph, distmx::AbstractMatrix)
   return eccentricity(underlying_graph(graph), distmx)
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
+function indegree(graph::AbstractDataGraph, vertex::Integer)
+  return indegree(underlying_graph(graph), vertex)
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
+function outdegree(graph::AbstractDataGraph, vertex::Integer)
+  return outdegree(underlying_graph(graph), vertex)
 end
 
 @traitfn directed_graph(graph::AbstractDataGraph::IsDirected) = graph
