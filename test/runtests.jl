@@ -27,6 +27,13 @@ using Test
     @test !isassigned(dg, 3)
     @test !isassigned(dg, 4)
 
+    @test degree(g, 1) == 1
+    @test indegree(g, 1) == 1
+    @test outdegree(g, 1) == 1
+    @test degree(g, 2) == 2
+    @test indegree(g, 2) == 2
+    @test outdegree(g, 2) == 2
+
     @test has_edge(dg, 1, 2)
     @test has_edge(dg, 1 => 2)
     @test !has_edge(dg, 1, 3)
