@@ -63,6 +63,12 @@ using Test
     @test dg[2 => 3] == :E23
     @test dg[3 => 4] == :E34
 
+    # Regression test
+    # g = NamedGraph([(1, 1), (1, (1, 1))])
+    dg = DataGraph(NamedGraph([(1, 1), (1, (1, 1))]))
+    dg[(1, 1) => (1, (1, 1))] = "X"
+    @test dg[(1, 1) => (1, (1, 1))] == "X"
+
     vdata = map(v -> "V$v", Indices(1:4))
     edata = map(e -> "E$(src(e))$(dst(e))", Indices([Edge(1, 2), Edge(2, 3), Edge(3, 4)]))
     dg = DataGraph(g, vdata, edata)

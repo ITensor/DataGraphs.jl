@@ -21,6 +21,12 @@ end
   return isless(src, dst)
 end
 
+@traitfn function is_arranged(graph::AbstractDataGraph::(!IsDirected), t1::Tuple, t2::Tuple)
+  a, b = t1[1], t2[1]
+  return is_arranged(graph, a, b) ||
+         (isequal(a, b) && is_arranged(graph, Base.tail(t1), Base.tail(t2)))
+end
+
 function is_arranged(graph::AbstractDataGraph, edge::AbstractEdge)
   return is_arranged(graph, src(edge), dst(edge))
 end
