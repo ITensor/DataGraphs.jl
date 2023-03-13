@@ -5,34 +5,46 @@
 # stored in directed AbstractDataGraph types (which by default returns nothing,
 # indicating not to automatically store data in both directions)
 # TODO: Use `Graphs.is_ordered`? https://juliagraphs.org/Graphs.jl/v1.7/core_functions/core/#Graphs.is_ordered-Tuple{AbstractEdge}
-@traitfn function is_arranged(graph::AbstractDataGraph::IsDirected, src, dst)
-  return true
-end
-
-@traitfn function is_arranged(graph::AbstractDataGraph::(!IsDirected), src, dst)
+function is_arranged(src, dst)
   if !hasmethod(isless, typeof.((src, dst)))
-    src_hash = hash(src)
-    dst_hash = hash(dst)
-    if (src_hash == dst_hash) && (src ≠ dst)
-      @warn "Hash collision when arranging vertices to extract edge data. Setting or extracting data may be ill-defined."
-    end
-    return isless(src_hash, dst_hash)
+    return is_arranged_by_hash(src, dst)
   end
   return isless(src, dst)
 end
 
-@traitfn function is_arranged(graph::AbstractDataGraph::(!IsDirected), t1::Tuple, t2::Tuple)
-  a, b = t1[1], t2[1]
-  return is_arranged(graph, a, b) ||
-         (isequal(a, b) && is_arranged(graph, Base.tail(t1), Base.tail(t2)))
+function is_arranged_by_hash(src, dst)
+  src_hash = hash(src)
+  dst_hash = hash(dst)
+  if (src_hash == dst_hash) && (src ≠ dst)
+    @warn "Hash collision when arranging vertices to extract edge data. Setting or extracting data may be ill-defined."
+  end
+  return isless(src_hash, dst_hash)
 end
 
-function is_arranged(graph::AbstractDataGraph, edge::AbstractEdge)
-  return is_arranged(graph, src(edge), dst(edge))
+# https://github.com/JuliaLang/julia/blob/v1.8.5/base/tuple.jl#L470-L482
+is_arranged(::Tuple{}, ::Tuple{}) = false
+is_arranged(::Tuple{}, ::Tuple) = true
+is_arranged(::Tuple, ::Tuple{}) = false
+
+function is_arranged(t1::Tuple, t2::Tuple)
+  a, b = t1[1], t2[1]
+  return is_arranged(a, b) || (isequal(a, b) && is_arranged(Base.tail(t1), Base.tail(t2)))
+end
+
+@traitfn function is_edge_arranged(graph::AbstractDataGraph::IsDirected, src, dst)
+  return true
+end
+
+@traitfn function is_edge_arranged(graph::AbstractDataGraph::(!IsDirected), src, dst)
+  return is_arranged(src, dst)
+end
+
+function is_edge_arranged(graph::AbstractDataGraph, edge::AbstractEdge)
+  return is_edge_arranged(graph, src(edge), dst(edge))
 end
 
 function arrange(graph::AbstractDataGraph, edge::AbstractEdge)
-  return arrange(is_arranged(graph, edge), edge)
+  return arrange(is_edge_arranged(graph, edge), edge)
 end
 
 function arrange(is_arranged::Bool, edge::AbstractEdge)

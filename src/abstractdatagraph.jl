@@ -289,9 +289,9 @@ function get(graph::AbstractDataGraph, vertex, default)
 end
 
 function getindex(graph::AbstractDataGraph, edge::AbstractEdge)
-  is_edge_arranged = is_arranged(graph, edge)
-  data = edge_data(graph)[arrange(is_edge_arranged, edge)]
-  return reverse_data_direction(is_edge_arranged, graph, data)
+  is_edge_arranged_ = is_edge_arranged(graph, edge)
+  data = edge_data(graph)[arrange(is_edge_arranged_, edge)]
+  return reverse_data_direction(is_edge_arranged_, graph, data)
 end
 
 # Support syntax `g[v1 => v2]`
@@ -300,9 +300,9 @@ function getindex(graph::AbstractDataGraph, edge::Pair)
 end
 
 function get(graph::AbstractDataGraph, edge::AbstractEdge, default)
-  is_edge_arranged = is_arranged(graph, edge)
-  data = get(edge_data(graph), arrange(is_edge_arranged, edge), default)
-  return reverse_data_direction(is_edge_arranged, graph, data)
+  is_edge_arranged_ = is_edge_arranged(graph, edge)
+  data = get(edge_data(graph), arrange(is_edge_arranged_, edge), default)
+  return reverse_data_direction(is_edge_arranged_, graph, data)
 end
 
 function get(graph::AbstractDataGraph, edge::Pair, default)
@@ -332,9 +332,9 @@ function setindex!(graph::AbstractDataGraph, data, vertex)
 end
 
 function setindex!(graph::AbstractDataGraph, data, edge::AbstractEdge)
-  is_edge_arranged = is_arranged(graph, edge)
-  arranged_edge = arrange(is_edge_arranged, edge)
-  arranged_data = reverse_data_direction(is_edge_arranged, graph, data)
+  is_edge_arranged_ = is_edge_arranged(graph, edge)
+  arranged_edge = arrange(is_edge_arranged_, edge)
+  arranged_data = reverse_data_direction(is_edge_arranged_, graph, data)
   set!(edge_data(graph), arranged_edge, arranged_data)
   return graph
 end
