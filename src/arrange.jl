@@ -28,8 +28,7 @@ is_arranged(::Tuple, ::Tuple{}) = false
 
 function is_arranged(t1::Tuple, t2::Tuple)
   a, b = t1[1], t2[1]
-  return is_arranged(a, b) ||
-         (isequal(a, b) && is_arranged(Base.tail(t1), Base.tail(t2)))
+  return is_arranged(a, b) || (isequal(a, b) && is_arranged(Base.tail(t1), Base.tail(t2)))
 end
 
 
