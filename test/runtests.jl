@@ -5,6 +5,8 @@ using NamedGraphs
 using Suppressor
 using Test
 
+using DataGraphs: is_arranged
+
 @testset "DataGraphs.jl" begin
   @testset "Examples" begin
     examples_path = joinpath(pkgdir(DataGraphs), "examples")
@@ -12,6 +14,25 @@ using Test
       if endswith(filename, ".jl")
         @suppress include(joinpath(examples_path, filename))
       end
+    end
+  end
+
+  @testset "is_arranged" begin
+    for (a, b) in [
+      (1, 2),
+      ([1], [2]),
+      ([1, 2], [2, 1]),
+      ([1, 2], [2]),
+      ([2], [2, 1]),
+      ((1,), (2,)),
+      ((1, 2), (2, 1)),
+      ((1, 2), (2,)),
+      ((2,), (2, 1)),
+      ("X", 1),
+      (("X",), (1, 2)),
+    ]
+      @test is_arranged(a, b)
+      @test !is_arranged(b, a)
     end
   end
 
