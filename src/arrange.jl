@@ -31,7 +31,6 @@ function is_arranged(t1::Tuple, t2::Tuple)
   return is_arranged(a, b) || (isequal(a, b) && is_arranged(Base.tail(t1), Base.tail(t2)))
 end
 
-
 @traitfn function is_edge_arranged(graph::AbstractDataGraph::IsDirected, src, dst)
   return true
 end
