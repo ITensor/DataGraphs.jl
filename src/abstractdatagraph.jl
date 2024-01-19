@@ -90,6 +90,15 @@ for f in [
   end
 end
 
+# NamedGraphs overloads
+for f in [:parent_graph, :parent_vertices_to_vertices]
+  @eval begin
+    function $f(graph::AbstractDataGraph, args...; kwargs...)
+      return $f(underlying_graph(graph), args...; kwargs...)
+    end
+  end
+end
+
 # Fix for ambiguity error with `AbstractGraph` version
 function degree(graph::AbstractDataGraph, vertex::Integer)
   return degree(underlying_graph(graph), vertex)
