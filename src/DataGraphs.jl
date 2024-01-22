@@ -104,7 +104,9 @@ import NamedGraphs:
   rename_vertices,
   symrcm,
   symrcm_permute,
-  vertextype
+  vertextype,
+  parent_graph,
+  parent_vertices_to_vertices
 
 # General functions
 not_implemented() = error("Not implemented")
