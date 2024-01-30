@@ -37,8 +37,8 @@ function copy(graph::DataGraph)
   # https://github.com/andyferris/Dictionaries.jl/issues/98
   return DataGraph(
     copy(underlying_graph(graph)),
-    copy_keys_values(vertex_data(graph)),
-    copy_keys_values(edge_data(graph)),
+    copy(vertex_data(graph)),
+    copy(edge_data(graph)),
   )
 end
 
