@@ -6,7 +6,7 @@ using GraphsFlows
 using NamedGraphs
 using SimpleTraits
 
-using NamedGraphs: AbstractNamedGraph, copy_keys_values, all_edges
+using NamedGraphs: AbstractNamedGraph, all_edges
 
 #
 # imports
