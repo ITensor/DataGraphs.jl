@@ -221,6 +221,27 @@ using DataGraphs: is_arranged
     @test g[1] == ["A", "B", "C", "D", "E"]
     @test g[1 => 2] == ["E", "F"]
   end
+  @testset "connected_components" begin
+    g1 = named_path_graph(3)
+    g2 = rename_vertices(v -> nv(g1) + v, g1)
+    dg1 = DataGraph(g1)
+    dg1[1] = "A1"
+    dg1[2] = "B1"
+    dg1[3] = "C1"
+    dg1[1 => 2] = "A1" => "B1"
+    dg1[2 => 3] = "B1" => "C1"
+    dg2 = DataGraph(g2)
+    dg2[1] = "A2"
+    dg2[2] = "B2"
+    dg2[3] = "C2"
+    dg2[1 => 2] = "A2" => "B2"
+    dg2[2 => 3] = "B2" => "C2"
+    dg = union(dg1, dg2)
+    comps = connected_components(dg)
+    @test length(comps) == 2
+    @test issetequal(comps[1], [1, 2, 3])
+    @test issetequal(comps[2], [4, 5, 6])
+  end
   @testset "reverse" begin
     g = DataGraph(SimpleDiGraph(4))
     add_edge!(g, 1 => 2)

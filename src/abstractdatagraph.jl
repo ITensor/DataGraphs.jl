@@ -35,6 +35,7 @@ for f in [
   :boruvka_mst,
   :center,
   :common_neighbors,
+  :connected_components,
   :degree,
   :degree_histogram,
   :desopo_pape_shortest_paths,
