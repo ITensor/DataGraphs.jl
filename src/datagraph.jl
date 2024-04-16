@@ -1,3 +1,8 @@
+using Dictionaries: Dictionary
+using Graphs: Graphs, edgetype
+using Graphs.SimpleGraphs: SimpleGraph
+using NamedGraphs.GraphsExtensions: directed_graph, vertextype
+
 # TODO: define VertexDataGraph, a graph with only data on the
 # vertices, and EdgeDataGraph, a graph with only data on the edges.
 # TODO: Constrain `E<:AbstractEdge`.
@@ -28,11 +33,11 @@ edge_data(graph::DataGraph) = getfield(graph, :edge_data)
 # TODO: Is this needed?
 underlying_graph_type(graph::DataGraph) = typeof(underlying_graph(graph))
 # TODO: Is this needed?
-is_directed(G::Type{<:DataGraph}) = is_directed(underlying_graph_type(G))
+Graphs.is_directed(G::Type{<:DataGraph}) = Graphs.is_directed(underlying_graph_type(G))
 
 # TODO: Implement in terms of `set_underlying_graph`, `set_vertex_data`, etc.
 # TODO: Use `https://github.com/JuliaObjects/Accessors.jl`?
-function copy(graph::DataGraph)
+function Base.copy(graph::DataGraph)
   # Need to manually copy the keys of Dictionaries, see:
   # https://github.com/andyferris/Dictionaries.jl/issues/98
   return DataGraph(
@@ -172,13 +177,13 @@ function DataGraph{V}(graph::DataGraph) where {V}
   )
 end
 
-convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
-function convert_vertextype(V::Type, graph::DataGraph)
+GraphsExtensions.convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
+function GraphsExtensions.convert_vertextype(V::Type, graph::DataGraph)
   return DataGraph{V}(graph)
 end
 
 # TODO: implement generic version in terms of `set_underlying_graph_type`
-function directed_graph(G::Type{<:DataGraph})
+function GraphsExtensions.directed_graph(G::Type{<:DataGraph})
   V = vertextype(G)
   VD = vertex_data_type(G)
   E = edgetype(G)

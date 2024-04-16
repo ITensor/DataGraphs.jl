@@ -1,7 +1,7 @@
-using DataGraphs
-using NamedGraphs
-using Dictionaries
-using Graphs
+using DataGraphs: DataGraph
+using NamedGraphs.GraphsExtensions: subgraph
+using NamedGraphs.NamedGraphGenerators: named_grid
+using Graphs: ne, nv
 
 g = named_grid((2, 2))
 dg = DataGraph(g, String, String)

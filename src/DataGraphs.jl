@@ -6,7 +6,7 @@ using GraphsFlows
 using NamedGraphs
 using SimpleTraits
 
-using NamedGraphs: AbstractNamedGraph, all_edges
+using NamedGraphs: AbstractNamedGraph
 
 #
 # imports
@@ -86,27 +86,27 @@ import Graphs:
   vertices,
   yen_k_shortest_paths
 
-# TODO: Can we remove the dependency on `NamedGraphs`?
-# Maybe need a `GraphExtensions.jl` or
-# `GraphInterfaces.jl` package.
-import NamedGraphs:
-  ⊔,
-  boundary_edges,
-  boundary_vertices,
-  convert_vertextype,
-  directed_graph,
-  disjoint_union,
-  eccentricities,
-  incident_edges,
-  inner_boundary_vertices,
-  outer_boundary_vertices,
-  mincut_partitions,
-  rename_vertices,
-  symrcm,
-  symrcm_permute,
-  vertextype,
-  parent_graph,
-  parent_vertices_to_vertices
+## # TODO: Can we remove the dependency on `NamedGraphs`?
+## # Maybe need a `GraphExtensions.jl` or
+## # `GraphInterfaces.jl` package.
+## import NamedGraphs:
+##   ⊔,
+##   boundary_edges,
+##   boundary_vertices,
+##   convert_vertextype,
+##   directed_graph,
+##   disjoint_union,
+##   eccentricities,
+##   incident_edges,
+##   inner_boundary_vertices,
+##   outer_boundary_vertices,
+##   mincut_partitions,
+##   rename_vertices,
+##   symrcm,
+##   symrcm_permute,
+##   vertextype,
+##   parent_graph,
+##   parent_vertices_to_vertices
 
 # General functions
 not_implemented() = error("Not implemented")

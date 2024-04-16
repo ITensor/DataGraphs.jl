@@ -1,14 +1,16 @@
-using DataGraphs
-using Graphs
-using NamedGraphs
+using DataGraphs: DataGraph
+using Graphs: grid, has_edge, has_vertex
+using NamedGraphs: NamedGraph, NamedEdge
 
 g = NamedGraph(grid((4,)), ["A", "B", "C", "D"])
 dg = DataGraph(g, String, Symbol)
 
 @show has_vertex(dg, "A")
 @show has_vertex(dg, "D")
-@show !has_vertex(dg, 0)
-@show !has_vertex(dg, 5)
+
+# Broken, see https://github.com/andyferris/Dictionaries.jl/issues/143.
+# @show !has_vertex(dg, 0)
+# @show !has_vertex(dg, 5)
 
 @show has_edge(dg, "A", "B")
 @show has_edge(dg, "A" => "B")

@@ -1,7 +1,9 @@
+@eval module $(gensym())
 using DataGraphs
 using Dictionaries
 using Graphs
-using NamedGraphs
+using NamedGraphs.GraphsExtensions: ⊔, rename_vertices
+using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
 using Suppressor
 using Test
 
@@ -313,4 +315,5 @@ using DataGraphs: is_arranged
     @test ps.parents == dictionary([1 => 1, 2 => 1, 3 => 2, 4 => 3])
     @test ps.pathcounts == dictionary([1 => 1.0, 2 => 1.0, 3 => 1.0, 4 => 1.0])
   end
+end
 end
