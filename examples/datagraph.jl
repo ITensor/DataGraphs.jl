@@ -2,7 +2,8 @@ using DataGraphs: DataGraph
 using Graphs: Edge, grid, has_edge, has_vertex
 
 g = grid((4,))
-# TODO: Change to `DataGraph(g; vertex_data_type=String, edge_data_type=String)
+# TODO: Change to `DataGraph(g; vertex_data_eltype=String, edge_data_eltype=String)
+# See: https://github.com/mtfishman/DataGraphs.jl/issues/26
 dg = DataGraph(g, String, Symbol)
 @show !isassigned(dg, Edge(1, 2))
 @show !isassigned(dg, 1 => 2)

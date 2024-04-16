@@ -3,7 +3,8 @@ using NamedGraphs.GraphsExtensions: ⊔
 using NamedGraphs.NamedGraphGenerators: named_grid
 using DataGraphs: DataGraph
 
-# TODO: Change to `DataGraph(g; vertex_data_type=String, edge_data_type=String)
+# TODO: Change to `DataGraph(g; vertex_data_eltype=String, edge_data_eltype=String)
+# See: https://github.com/mtfishman/DataGraphs.jl/issues/26
 g = DataGraph(named_grid((2, 2)), String, String)
 
 for v in vertices(g)
