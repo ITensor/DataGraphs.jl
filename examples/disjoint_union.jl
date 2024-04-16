@@ -1,7 +1,9 @@
-using Graphs
-using NamedGraphs
-using DataGraphs
+using Graphs: edges, has_edge, has_vertex, ne, nv, vertices
+using NamedGraphs.GraphsExtensions: ⊔
+using NamedGraphs.NamedGraphGenerators: named_grid
+using DataGraphs: DataGraph
 
+# TODO: Change to `DataGraph(g; vertex_data_type=String, edge_data_type=String)
 g = DataGraph(named_grid((2, 2)), String, String)
 
 for v in vertices(g)

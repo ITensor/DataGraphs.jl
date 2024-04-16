@@ -1,20 +1,43 @@
 @eval module $(gensym())
-using DataGraphs
-using Dictionaries
-using Graphs
+using DataGraphs: DataGraph, is_arranged
+using Dictionaries: Indices, dictionary
+using Graphs:
+  add_edge!,
+  bfs_tree,
+  connected_components,
+  degree,
+  dfs_tree,
+  dijkstra_shortest_paths,
+  dst,
+  edges,
+  grid,
+  has_edge,
+  has_vertex,
+  indegree,
+  ne,
+  nv,
+  outdegree,
+  src,
+  vertices
+using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
+using NamedGraphs: NamedDiGraph, NamedGraph
 using NamedGraphs.GraphsExtensions: ⊔, rename_vertices
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
-using Suppressor
-using Test
+using Test: @test, @test_broken, @testset
 
 using DataGraphs: is_arranged
 
 @testset "DataGraphs.jl" begin
-  @testset "Examples" begin
-    examples_path = joinpath(pkgdir(DataGraphs), "examples")
-    @testset "Run examples: $filename" for filename in readdir(examples_path)
-      if endswith(filename, ".jl")
-        @suppress include(joinpath(examples_path, filename))
+  @eval module $(gensym())
+    using DataGraphs: DataGraphs
+    using Suppressor: @suppress
+    using Test: @testset
+    @testset "Examples" begin
+      examples_path = joinpath(pkgdir(DataGraphs), "examples")
+      @testset "Run examples: $filename" for filename in readdir(examples_path)
+        if endswith(filename, ".jl")
+          @suppress include(joinpath(examples_path, filename))
+        end
       end
     end
   end
@@ -41,9 +64,9 @@ using DataGraphs: is_arranged
   @testset "Basics" begin
     g = grid((4,))
     dg = DataGraph{<:Any,String,Symbol}(g)
-    @test !isassigned(dg, Edge(1, 2))
+    @test !isassigned(dg, SimpleEdge(1, 2))
     @test !isassigned(dg, 1 => 2)
-    @test !isassigned(dg, Edge(1 => 2))
+    @test !isassigned(dg, SimpleEdge(1 => 2))
     @test !isassigned(dg, 1 => 3)
     @test !isassigned(dg, 1)
     @test !isassigned(dg, 2)
@@ -78,11 +101,11 @@ using DataGraphs: is_arranged
 
     dg[1 => 2] = :E12
     dg[2 => 3] = :E23
-    dg[Edge(3, 4)] = :E34
+    dg[SimpleEdge(3, 4)] = :E34
     #@test isassigned(dg, (1, 2))
-    @test isassigned(dg, Edge(2, 3))
+    @test isassigned(dg, SimpleEdge(2, 3))
     @test isassigned(dg, 3 => 4)
-    @test dg[Edge(1, 2)] == :E12
+    @test dg[SimpleEdge(1, 2)] == :E12
     @test dg[2 => 3] == :E23
     @test dg[3 => 4] == :E34
 
@@ -93,7 +116,7 @@ using DataGraphs: is_arranged
     @test dg[(1, 1) => (1, (1, 1))] == "X"
 
     vdata = map(v -> "V$v", Indices(1:4))
-    edata = map(e -> "E$(src(e))$(dst(e))", Indices([Edge(1, 2), Edge(2, 3), Edge(3, 4)]))
+    edata = map(e -> "E$(src(e))$(dst(e))", Indices(SimpleEdge.([1 => 2, 2 => 3, 3 => 4])))
     dg = DataGraph(g, vdata, edata)
 
     @test dg[1] == "V1"
@@ -105,12 +128,11 @@ using DataGraphs: is_arranged
     @test dg[2 => 3] == "E23"
     @test dg[3 => 4] == "E34"
 
-    @test DataGraph(g) isa
-      DataGraph{Int,Any,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
+    @test DataGraph(g) isa DataGraph{Int,Any,Any,SimpleGraph{Int},SimpleEdge{Int}}
     @test DataGraph{<:Any,String}(g) isa
-      DataGraph{Int,String,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
+      DataGraph{Int,String,Any,SimpleGraph{Int},SimpleEdge{Int}}
     @test DataGraph{<:Any,Any,String}(g) isa
-      DataGraph{Int,Any,String,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
+      DataGraph{Int,Any,String,SimpleGraph{Int},SimpleEdge{Int}}
 
     # TODO: is this needed?
     #@test DataGraph{<:Any,String}(g) isa DataGraph{Any,String}
@@ -197,7 +219,7 @@ using DataGraphs: is_arranged
     g1[1] = ["A", "B", "C"]
     g1[1 => 2] = ["E", "F"]
 
-    g2 = DataGraph(Graph(5))
+    g2 = DataGraph(SimpleGraph(5))
     add_edge!(g2, 1 => 5)
     g2[1] = ["C", "D", "E"]
 

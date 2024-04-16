@@ -1,9 +1,9 @@
-using DataGraphs
-using NamedGraphs
-using Dictionaries
-using Graphs
+using DataGraphs: DataGraph
+using NamedGraphs: NamedEdge
+using NamedGraphs.NamedGraphGenerators: named_grid
 
 g = named_grid((2, 2))
+# TODO: Change to `DataGraph(g; vertex_data_type=String, edge_data_type=String)
 dg = DataGraph(g, String, String)
 
 dg[1, 1] = "X11"

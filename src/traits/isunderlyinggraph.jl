@@ -1,3 +1,5 @@
+using SimpleTraits: SimpleTraits, @traitdef, @traitimpl
+
 @traitdef IsUnderlyingGraph{X}
 #! format: off
 @traitimpl IsUnderlyingGraph{X} <- is_underlying_graph(X)

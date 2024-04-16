@@ -1,7 +1,8 @@
 using Dictionaries: set!, unset!
-using Graphs: Graphs, AbstractGraph, IsDirected, add_edge!, edges, vertices
+using Graphs: Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, vertices
 using NamedGraphs: NamedGraphs
 using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
+using SimpleTraits: SimpleTraits, @traitfn
 
 abstract type AbstractDataGraph{V,VD,ED} <: AbstractGraph{V} end
 

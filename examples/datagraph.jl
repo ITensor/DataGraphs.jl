@@ -1,8 +1,8 @@
-using DataGraphs
-using Dictionaries
-using Graphs
+using DataGraphs: DataGraph
+using Graphs: Edge, grid, has_edge, has_vertex
 
 g = grid((4,))
+# TODO: Change to `DataGraph(g; vertex_data_type=String, edge_data_type=String)
 dg = DataGraph(g, String, Symbol)
 @show !isassigned(dg, Edge(1, 2))
 @show !isassigned(dg, 1 => 2)
