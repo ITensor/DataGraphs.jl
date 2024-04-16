@@ -58,11 +58,7 @@ end
 
 function DataGraph{V,VD,ED,G,E}(underlying_graph::AbstractGraph) where {V,VD,ED,G,E}
   @assert edgetype(underlying_graph) === E
-  return _DataGraph(
-    convert(G, underlying_graph),
-    Dictionary{V,VD}(),
-    Dictionary{E,ED}(),
-  )
+  return _DataGraph(convert(G, underlying_graph), Dictionary{V,VD}(), Dictionary{E,ED}())
 end
 
 # Type conversions
