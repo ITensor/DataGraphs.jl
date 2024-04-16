@@ -3,7 +3,7 @@ using NamedGraphs.GraphsExtensions: ⊔
 using NamedGraphs.NamedGraphGenerators: named_grid
 using DataGraphs: DataGraph
 
-g = DataGraph(g; vertex_data_eltype=String, edge_data_eltype=String)
+g = DataGraph(named_grid((2, 2)); vertex_data_eltype=String, edge_data_eltype=String)
 
 for v in vertices(g)
   g[v] = "V$v"
