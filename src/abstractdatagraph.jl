@@ -16,26 +16,28 @@ end
 underlying_graph(::AbstractDataGraph) = not_implemented()
 underlying_graph_type(::Type{<:AbstractDataGraph}) = not_implemented()
 vertex_data(::AbstractDataGraph) = not_implemented()
-vertex_data_type(::Type{<:AbstractDataGraph}) = not_implemented()
+vertex_data_eltype(::Type{<:AbstractDataGraph}) = not_implemented()
 edge_data(::AbstractDataGraph) = not_implemented()
-edge_data_type(::Type{<:AbstractDataGraph}) = not_implemented()
+edge_data_eltype(::Type{<:AbstractDataGraph}) = not_implemented()
 
 # Derived interface
-Graphs.edgetype(G::Type{<:AbstractDataGraph}) = Graphs.edgetype(underlying_graph_type(G))
-function Graphs.is_directed(G::Type{<:AbstractDataGraph})
-  return Graphs.is_directed(underlying_graph_type(G))
+function Graphs.edgetype(graph_type::Type{<:AbstractDataGraph})
+  return Graphs.edgetype(underlying_graph_type(graph_type))
+end
+function Graphs.is_directed(graph_type::Type{<:AbstractDataGraph})
+  return Graphs.is_directed(underlying_graph_type(graph_type))
 end
 underlying_graph_type(graph::AbstractDataGraph) = typeof(underlying_graph(graph))
-vertex_data_type(graph::AbstractDataGraph) = vertex_data_type(typeof(graph))
-edge_data_type(graph::AbstractDataGraph) = edge_data_type(typeof(graph))
+vertex_data_eltype(graph::AbstractDataGraph) = eltype(vertex_data(graph))
+edge_data_eltype(graph::AbstractDataGraph) = eltype(edge_data(graph))
 
 # TODO: delete, defined for AbstractGraph{V}?
-function GraphsExtensions.vertextype(G::Type{<:AbstractDataGraph})
-  return vertextype(underlying_graph_type(G))
+function GraphsExtensions.vertextype(graph_type::Type{<:AbstractDataGraph})
+  return vertextype(underlying_graph_type(graph_type))
 end
 GraphsExtensions.vertextype(graph::AbstractDataGraph) = vertextype(typeof(graph))
 
-Base.zero(G::Type{<:AbstractDataGraph}) = G()
+Base.zero(graph_type::Type{<:AbstractDataGraph}) = graph_type()
 
 # Graphs overloads
 for f in [
@@ -211,7 +213,7 @@ function Base.union(
   vertex_data_merge = mergewith(merge_vertex_data, vertex_data(graph1), vertex_data(graph2))
   edge_data_merge = mergewith(merge_edge_data, edge_data(graph1), edge_data(graph2))
   # TODO: Convert to `promote_type(typeof(graph1), typeof(graph2))`
-  return DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
+  return _DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
 
 function Base.union(
@@ -228,10 +230,10 @@ function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
   renamed_underlying_graph = GraphsExtensions.rename_vertices(f, underlying_graph(graph))
   # TODO: Base the ouput type on `typeof(graph)`, for example:
   # convert_vertextype(eltype(renamed_vertices), typeof(graph))(renamed_underlying_graph)
-  renamed_graph = DataGraph{
-    vertextype(renamed_underlying_graph),vertex_data_type(graph),edge_data_type(graph)
-  }(
-    renamed_underlying_graph
+  renamed_graph = DataGraph(
+    renamed_underlying_graph;
+    vertex_data_eltype=vertex_data_eltype(graph),
+    edge_data_eltype=edge_data_eltype(graph),
   )
   for v in keys(vertex_data(graph))
     renamed_graph[f(v)] = graph[v]

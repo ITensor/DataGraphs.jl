@@ -1,5 +1,5 @@
 @eval module $(gensym())
-using DataGraphs: DataGraph, is_arranged
+using DataGraphs: DataGraphs, DataGraph, is_arranged
 using Dictionaries: Indices, dictionary
 using Graphs:
   add_edge!,
@@ -63,7 +63,7 @@ using DataGraphs: is_arranged
 
   @testset "Basics" begin
     g = grid((4,))
-    dg = DataGraph{<:Any,String,Symbol}(g)
+    dg = DataGraph(g; vertex_data_eltype=String, edge_data_eltype=Symbol)
     @test !isassigned(dg, SimpleEdge(1, 2))
     @test !isassigned(dg, 1 => 2)
     @test !isassigned(dg, SimpleEdge(1 => 2))
@@ -117,7 +117,16 @@ using DataGraphs: is_arranged
 
     vdata = map(v -> "V$v", Indices(1:4))
     edata = map(e -> "E$(src(e))$(dst(e))", Indices(SimpleEdge.([1 => 2, 2 => 3, 3 => 4])))
-    dg = DataGraph(g, vdata, edata)
+    # TODO: Make a more compact constructor that directly accepts
+    # vertex and edge data? Maybe `DataGraph(g; vertex_data=vdata, edge_data=edata)`
+    # or `DataGraph(g; vertex_data=v -> "V$v", edge_data=e -> "E$(src(e))$(dst(e))")`.
+    dg = DataGraph(g; vertex_data_eltype=eltype(vdata), edge_data_eltype=eltype(edata))
+    for v in vertices(dg)
+      dg[v] = vdata[v]
+    end
+    for e in edges(dg)
+      dg[e] = edata[e]
+    end
 
     @test dg[1] == "V1"
     @test dg[2] == "V2"
@@ -129,13 +138,6 @@ using DataGraphs: is_arranged
     @test dg[3 => 4] == "E34"
 
     @test DataGraph(g) isa DataGraph{Int,Any,Any,SimpleGraph{Int},SimpleEdge{Int}}
-    @test DataGraph{<:Any,String}(g) isa
-      DataGraph{Int,String,Any,SimpleGraph{Int},SimpleEdge{Int}}
-    @test DataGraph{<:Any,Any,String}(g) isa
-      DataGraph{Int,Any,String,SimpleGraph{Int},SimpleEdge{Int}}
-
-    # TODO: is this needed?
-    #@test DataGraph{<:Any,String}(g) isa DataGraph{Any,String}
 
     # Vertices with mixed types
     dg = DataGraph(NamedGraph(grid((4,)), [1, "X", 2, "Y"]))
@@ -172,7 +174,7 @@ using DataGraphs: is_arranged
   end
 
   @testset "Disjoint unions" begin
-    g = DataGraph{<:Any,String,String}(named_grid((2, 2)))
+    g = DataGraph(named_grid((2, 2)); vertex_data_eltype=String, edge_data_eltype=String)
 
     for v in vertices(g)
       g[v] = "V$v"
