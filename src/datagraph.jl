@@ -1,7 +1,7 @@
 using Dictionaries: Dictionary
 using Graphs: Graphs, edgetype
 using Graphs.SimpleGraphs: SimpleGraph
-using NamedGraphs.GraphsExtensions: directed_graph, vertextype
+using NamedGraphs.GraphsExtensions: convert_vertextype, directed_graph, vertextype
 
 # TODO: define VertexDataGraph, a graph with only data on the
 # vertices, and EdgeDataGraph, a graph with only data on the edges.
@@ -46,14 +46,19 @@ function Base.copy(graph::DataGraph)
   )
 end
 
-function DataGraph(
+function DataGraph{V}(
   underlying_graph::AbstractGraph; vertex_data_eltype::Type=Any, edge_data_eltype::Type=Any
-)
+) where {V}
+  converted_underlying_graph = convert_vertextype(V, underlying_graph)
   return _DataGraph(
-    underlying_graph,
-    Dictionary{vertextype(underlying_graph),vertex_data_eltype}(),
-    Dictionary{edgetype(underlying_graph),edge_data_eltype}(),
+    converted_underlying_graph,
+    Dictionary{vertextype(converted_underlying_graph),vertex_data_eltype}(),
+    Dictionary{edgetype(converted_underlying_graph),edge_data_eltype}(),
   )
+end
+
+function DataGraph(underlying_graph::AbstractGraph; kwargs...)
+  return DataGraph{vertextype(underlying_graph)}(underlying_graph; kwargs...)
 end
 
 function DataGraph{V,VD,ED,G,E}(underlying_graph::AbstractGraph) where {V,VD,ED,G,E}
