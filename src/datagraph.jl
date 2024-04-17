@@ -78,9 +78,7 @@ function DataGraph{V}(graph::DataGraph) where {V}
   converted_underlying_graph = convert_vertextype(V, underlying_graph(graph))
   converted_vertex_data = Dictionary{V}(vertex_data(graph))
   converted_edge_data = Dictionary{edgetype(converted_underlying_graph)}(edge_data(graph))
-  return _DataGraph(
-    converted_underlying_graph, converted_vertex_data, converted_edge_data
-  )
+  return _DataGraph(converted_underlying_graph, converted_vertex_data, converted_edge_data)
 end
 
 GraphsExtensions.convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
