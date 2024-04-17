@@ -9,4 +9,9 @@ include("datagraph.jl")
 include("../ext/DataGraphsNamedGraphsExt/DataGraphsNamedGraphsExt.jl")
 
 export AbstractDataGraph, DataGraph
+
+using PackageExtensionCompat: @require_extensions
+function __init__()
+  @require_extensions
+end
 end

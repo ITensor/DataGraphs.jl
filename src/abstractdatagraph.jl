@@ -1,5 +1,6 @@
 using Dictionaries: set!, unset!
-using Graphs: Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, vertices
+using Graphs:
+  Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, ne, nv, vertices
 using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
 using SimpleTraits: SimpleTraits, @traitfn
 
