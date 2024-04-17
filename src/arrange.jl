@@ -1,5 +1,5 @@
 using Graphs: IsDirected, src, dst
-using SimpleTraits: SimpleTraits, @traitfn
+using SimpleTraits: SimpleTraits, Not, @traitfn
 
 # TODO: Use a function `arrange` like in MetaGraphsNext:
 # https://github.com/JuliaGraphs/MetaGraphsNext.jl/blob/1539095ee6088aba0d5b1cb057c339ad92557889/src/metagraph.jl#L75-L80

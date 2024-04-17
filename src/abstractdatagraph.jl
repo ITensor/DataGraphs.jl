@@ -2,7 +2,7 @@ using Dictionaries: set!, unset!
 using Graphs:
   Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, ne, nv, vertices
 using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
-using SimpleTraits: SimpleTraits, @traitfn
+using SimpleTraits: SimpleTraits, Not, @traitfn
 
 abstract type AbstractDataGraph{V,VD,ED} <: AbstractGraph{V} end
 
@@ -273,7 +273,7 @@ end
 
 function map_vertex_data(f, graph::AbstractDataGraph; vertices=nothing)
   graph′ = copy(graph)
-  vs = isnothing(vertices) ? vertices(graph) : vertices
+  vs = isnothing(vertices) ? Graphs.vertices(graph) : vertices
   for v in vs
     graph′[v] = f(graph[v])
   end
@@ -282,7 +282,7 @@ end
 
 function map_edge_data(f, graph::AbstractDataGraph; edges=nothing)
   graph′ = copy(graph)
-  es = isnothing(edges) ? edges(graph) : edges
+  es = isnothing(edges) ? Graphs.edges(graph) : edges
   for e in es
     if isassigned(graph, e)
       graph′[e] = f(graph[e])
