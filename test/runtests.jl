@@ -1,6 +1,13 @@
 @eval module $(gensym())
-using DataGraphs: DataGraphs, DataGraph, is_arranged
-using Dictionaries: Indices, dictionary
+using DataGraphs:
+  DataGraphs,
+  DataGraph,
+  edge_data,
+  edge_data_eltype,
+  is_arranged,
+  vertex_data,
+  vertex_data_eltype
+using Dictionaries: Dictionary, Indices, dictionary
 using Graphs:
   add_edge!,
   bfs_tree,
@@ -10,6 +17,7 @@ using Graphs:
   dijkstra_shortest_paths,
   dst,
   edges,
+  edgetype,
   grid,
   has_edge,
   has_vertex,
@@ -22,8 +30,8 @@ using Graphs:
   vertices
 using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
 using GraphsFlows: GraphsFlows
-using NamedGraphs: NamedDiGraph, NamedGraph
-using NamedGraphs.GraphsExtensions: ⊔, rename_vertices
+using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
+using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, vertextype
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
 using Test: @test, @test_broken, @testset
 
@@ -173,6 +181,32 @@ using DataGraphs: is_arranged
     @test dg[2 => "X"] == "edge_2X"
     @test dg[2 => "Y"] == "edge_Y2"
     @test dg["Y" => 2] == "edge_Y2"
+  end
+
+  @testset "Constructors specifying vertex type" begin
+    dg = DataGraph{Float64}(
+      named_path_graph(4); vertex_data_eltype=String, edge_data_eltype=Symbol
+    )
+    @test nv(dg) == 4
+    @test ne(dg) == 3
+    @test edgetype(dg) === NamedEdge{Float64}
+    @test vertextype(dg) === Float64
+    @test vertex_data_eltype(dg) === String
+    @test edge_data_eltype(dg) === Symbol
+    @test issetequal(vertices(dg), Float64.(1:4))
+    @test vertices(dg) isa Indices{Float64}
+    @test eltype(vertices(dg)) === Float64
+    @test has_edge(dg, 1.0 => 2.0)
+    @test has_edge(dg, 2.0 => 3.0)
+    @test has_edge(dg, 3.0 => 4.0)
+    @test vertex_data(dg) == Dictionary{Float64,String}()
+    @test vertex_data(dg) isa Dictionary{Float64,String}
+    @test keytype(vertex_data(dg)) === Float64
+    @test eltype(vertex_data(dg)) === String
+    @test edge_data(dg) == Dictionary{NamedEdge{Float64},Symbol}()
+    @test edge_data(dg) isa Dictionary{NamedEdge{Float64},Symbol}
+    @test keytype(edge_data(dg)) === NamedEdge{Float64}
+    @test eltype(edge_data(dg)) === Symbol
   end
 
   @testset "Disjoint unions" begin
