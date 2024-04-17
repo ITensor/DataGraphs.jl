@@ -76,13 +76,11 @@ function DataGraph{V}(graph::DataGraph) where {V}
   )
 end
 
-# TODO: Move to `DataGraphsNamedGraphsExt`.
 GraphsExtensions.convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
 function GraphsExtensions.convert_vertextype(vertextype::Type, graph::DataGraph)
   return DataGraph{vertextype}(graph)
 end
 
-# TODO: Move to `DataGraphsNamedGraphsExt`.
 # TODO: implement generic version in terms of `set_underlying_graph_type`.
 function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
   return DataGraph{

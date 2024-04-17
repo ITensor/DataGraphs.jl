@@ -1,16 +1,9 @@
 using Dictionaries: set!, unset!
 using Graphs: Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, vertices
-using NamedGraphs: NamedGraphs
 using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
 using SimpleTraits: SimpleTraits, @traitfn
 
 abstract type AbstractDataGraph{V,VD,ED} <: AbstractGraph{V} end
-
-# TODO: Move to `DataGraphsGraphsFlowsExt`.
-using GraphsFlows: GraphsFlows
-function GraphsFlows.mincut(graph::AbstractDataGraph, args...; kwargs...)
-  return GraphsFlows.mincut(underlying_graph(graph), args...; kwargs...)
-end
 
 # Minimal interface
 underlying_graph(::AbstractDataGraph) = not_implemented()
@@ -100,8 +93,6 @@ for f in [
   :(GraphsExtensions.outer_boundary_vertices),
   :(GraphsExtensions.symrcm_perm),
   :(GraphsExtensions.symrcm_permute),
-  :(NamedGraphs.parent_graph),
-  :(NamedGraphs.parent_vertices_to_vertices),
 ]
   @eval begin
     function $f(graph::AbstractDataGraph, args...; kwargs...)
