@@ -1,18 +1,45 @@
-using DataGraphs
-using Dictionaries
-using Graphs
-using NamedGraphs
-using Suppressor
-using Test
+@eval module $(gensym())
+using DataGraphs: DataGraphs, DataGraph, is_arranged
+using Dictionaries: Indices, dictionary
+using Graphs:
+  add_edge!,
+  bfs_tree,
+  connected_components,
+  degree,
+  dfs_tree,
+  dijkstra_shortest_paths,
+  dst,
+  edges,
+  grid,
+  has_edge,
+  has_vertex,
+  indegree,
+  ne,
+  nv,
+  outdegree,
+  path_graph,
+  src,
+  vertices
+using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
+using GraphsFlows: GraphsFlows
+using NamedGraphs: NamedDiGraph, NamedGraph
+using NamedGraphs.GraphsExtensions: ⊔, rename_vertices
+using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
+using Test: @test, @test_broken, @testset
 
 using DataGraphs: is_arranged
 
 @testset "DataGraphs.jl" begin
-  @testset "Examples" begin
-    examples_path = joinpath(pkgdir(DataGraphs), "examples")
-    @testset "Run examples: $filename" for filename in readdir(examples_path)
-      if endswith(filename, ".jl")
-        @suppress include(joinpath(examples_path, filename))
+  @eval module $(gensym())
+    using DataGraphs: DataGraphs
+    using Suppressor: @suppress
+    using Test: @testset
+    @testset "Examples" begin
+      examples_path = joinpath(pkgdir(DataGraphs), "examples")
+      @testset "Run examples: $filename" for filename in readdir(examples_path)
+        if endswith(filename, ".jl")
+          @suppress include(joinpath(examples_path, filename))
+        end
       end
     end
   end
@@ -38,10 +65,10 @@ using DataGraphs: is_arranged
 
   @testset "Basics" begin
     g = grid((4,))
-    dg = DataGraph{<:Any,String,Symbol}(g)
-    @test !isassigned(dg, Edge(1, 2))
+    dg = DataGraph(g; vertex_data_eltype=String, edge_data_eltype=Symbol)
+    @test !isassigned(dg, SimpleEdge(1, 2))
     @test !isassigned(dg, 1 => 2)
-    @test !isassigned(dg, Edge(1 => 2))
+    @test !isassigned(dg, SimpleEdge(1 => 2))
     @test !isassigned(dg, 1 => 3)
     @test !isassigned(dg, 1)
     @test !isassigned(dg, 2)
@@ -76,11 +103,11 @@ using DataGraphs: is_arranged
 
     dg[1 => 2] = :E12
     dg[2 => 3] = :E23
-    dg[Edge(3, 4)] = :E34
+    dg[SimpleEdge(3, 4)] = :E34
     #@test isassigned(dg, (1, 2))
-    @test isassigned(dg, Edge(2, 3))
+    @test isassigned(dg, SimpleEdge(2, 3))
     @test isassigned(dg, 3 => 4)
-    @test dg[Edge(1, 2)] == :E12
+    @test dg[SimpleEdge(1, 2)] == :E12
     @test dg[2 => 3] == :E23
     @test dg[3 => 4] == :E34
 
@@ -91,8 +118,17 @@ using DataGraphs: is_arranged
     @test dg[(1, 1) => (1, (1, 1))] == "X"
 
     vdata = map(v -> "V$v", Indices(1:4))
-    edata = map(e -> "E$(src(e))$(dst(e))", Indices([Edge(1, 2), Edge(2, 3), Edge(3, 4)]))
-    dg = DataGraph(g, vdata, edata)
+    edata = map(e -> "E$(src(e))$(dst(e))", Indices(SimpleEdge.([1 => 2, 2 => 3, 3 => 4])))
+    # TODO: Make a more compact constructor that directly accepts
+    # vertex and edge data? Maybe `DataGraph(g; vertex_data=vdata, edge_data=edata)`
+    # or `DataGraph(g; vertex_data=v -> "V$v", edge_data=e -> "E$(src(e))$(dst(e))")`.
+    dg = DataGraph(g; vertex_data_eltype=eltype(vdata), edge_data_eltype=eltype(edata))
+    for v in vertices(dg)
+      dg[v] = vdata[v]
+    end
+    for e in edges(dg)
+      dg[e] = edata[e]
+    end
 
     @test dg[1] == "V1"
     @test dg[2] == "V2"
@@ -103,15 +139,7 @@ using DataGraphs: is_arranged
     @test dg[2 => 3] == "E23"
     @test dg[3 => 4] == "E34"
 
-    @test DataGraph(g) isa
-      DataGraph{Int,Any,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-    @test DataGraph{<:Any,String}(g) isa
-      DataGraph{Int,String,Any,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-    @test DataGraph{<:Any,Any,String}(g) isa
-      DataGraph{Int,Any,String,SimpleGraph{Int},Graphs.SimpleGraphs.SimpleEdge{Int}}
-
-    # TODO: is this needed?
-    #@test DataGraph{<:Any,String}(g) isa DataGraph{Any,String}
+    @test DataGraph(g) isa DataGraph{Int,Any,Any,SimpleGraph{Int},SimpleEdge{Int}}
 
     # Vertices with mixed types
     dg = DataGraph(NamedGraph(grid((4,)), [1, "X", 2, "Y"]))
@@ -148,7 +176,7 @@ using DataGraphs: is_arranged
   end
 
   @testset "Disjoint unions" begin
-    g = DataGraph{<:Any,String,String}(named_grid((2, 2)))
+    g = DataGraph(named_grid((2, 2)); vertex_data_eltype=String, edge_data_eltype=String)
 
     for v in vertices(g)
       g[v] = "V$v"
@@ -195,7 +223,7 @@ using DataGraphs: is_arranged
     g1[1] = ["A", "B", "C"]
     g1[1 => 2] = ["E", "F"]
 
-    g2 = DataGraph(Graph(5))
+    g2 = DataGraph(SimpleGraph(5))
     add_edge!(g2, 1 => 5)
     g2[1] = ["C", "D", "E"]
 
@@ -313,4 +341,14 @@ using DataGraphs: is_arranged
     @test ps.parents == dictionary([1 => 1, 2 => 1, 3 => 2, 4 => 3])
     @test ps.pathcounts == dictionary([1 => 1.0, 2 => 1.0, 3 => 1.0, 4 => 1.0])
   end
+  @testset "GraphsFlows.mincut (vertextype=$(eltype(verts))" for verts in (
+    [1, 2, 3, 4], ["A", "B", "C", "D"]
+  )
+    g = DataGraph(NamedGraph(path_graph(4), verts))
+    part1, part2, flow = GraphsFlows.mincut(g, verts[1], verts[4])
+    @test verts[1] ∈ part1
+    @test verts[4] ∈ part2
+    @test flow == 1
+  end
+end
 end
