@@ -342,14 +342,13 @@ using DataGraphs: is_arranged
     @test ps.pathcounts == dictionary([1 => 1.0, 2 => 1.0, 3 => 1.0, 4 => 1.0])
   end
   @testset "GraphsFlows.mincut (vertextype=$(eltype(verts))" for verts in (
-      [1, 2, 3, 4],
-      ["A", "B", "C", "D"],
-    )
-      g = DataGraph(NamedGraph(path_graph(4), verts))
-      part1, part2, flow = GraphsFlows.mincut(g, verts[1], verts[4])
-      @test verts[1] ∈ part1
-      @test verts[4] ∈ part2
-      @test flow == 1
+    [1, 2, 3, 4], ["A", "B", "C", "D"]
+  )
+    g = DataGraph(NamedGraph(path_graph(4), verts))
+    part1, part2, flow = GraphsFlows.mincut(g, verts[1], verts[4])
+    @test verts[1] ∈ part1
+    @test verts[4] ∈ part2
+    @test flow == 1
   end
 end
 end
