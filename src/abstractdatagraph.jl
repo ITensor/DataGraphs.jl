@@ -2,11 +2,13 @@ using Dictionaries: set!, unset!
 using Graphs:
   Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, ne, nv, vertices
 using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
+using NamedGraphs.SimilarType: similar_type
 using SimpleTraits: SimpleTraits, Not, @traitfn
 
 abstract type AbstractDataGraph{V,VD,ED} <: AbstractGraph{V} end
 
 # Minimal interface
+# TODO: Define for `AbstractGraph` as a `DataGraphInterface`.
 underlying_graph(::AbstractDataGraph) = not_implemented()
 underlying_graph_type(::Type{<:AbstractDataGraph}) = not_implemented()
 vertex_data(::AbstractDataGraph) = not_implemented()
@@ -368,7 +370,7 @@ end
 
 function Graphs.induced_subgraph(graph::AbstractDataGraph, subvertices)
   underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
-  subgraph = typeof(graph)(underlying_subgraph)
+  subgraph = similar_type(graph)(underlying_subgraph)
   for v in vertices(subgraph)
     if isassigned(graph, v)
       subgraph[v] = graph[v]
