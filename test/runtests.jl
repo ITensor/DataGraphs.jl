@@ -142,12 +142,26 @@ using DataGraphs: is_arranged
     @test dg[2] == "V2"
     @test dg[3] == "V3"
     @test dg[4] == "V4"
-
     @test dg[1 => 2] == "E12"
     @test dg[2 => 3] == "E23"
     @test dg[3 => 4] == "E34"
 
     @test DataGraph(g) isa DataGraph{Int,Any,Any,SimpleGraph{Int},SimpleEdge{Int}}
+
+    dg_uint16 = DataGraph{UInt16}(dg)
+    @test dg_uint16 isa
+      DataGraph{UInt16,String,String,SimpleGraph{UInt16},SimpleEdge{UInt16}}
+    @test vertextype(dg_uint16) === UInt16
+    @test edgetype(dg_uint16) === SimpleEdge{UInt16}
+    @test vertex_data_eltype(dg_uint16) === String
+    @test edge_data_eltype(dg_uint16) === String
+    @test dg_uint16[1] == "V1"
+    @test dg_uint16[2] == "V2"
+    @test dg_uint16[3] == "V3"
+    @test dg_uint16[4] == "V4"
+    @test dg_uint16[1 => 2] == "E12"
+    @test dg_uint16[2 => 3] == "E23"
+    @test dg_uint16[3 => 4] == "E34"
 
     # Vertices with mixed types
     dg = DataGraph(NamedGraph(grid((4,)), [1, "X", 2, "Y"]))
