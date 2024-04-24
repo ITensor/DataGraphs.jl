@@ -71,14 +71,17 @@ DataGraph{V,VD,ED,G}(graph::DataGraph{V,VD,ED,G}) where {V,VD,ED,G} = copy(graph
 DataGraph{V,VD,ED}(graph::DataGraph{V,VD,ED}) where {V,VD,ED} = copy(graph)
 DataGraph{V,VD}(graph::DataGraph{V,VD}) where {V,VD} = copy(graph)
 DataGraph{V}(graph::DataGraph{V}) where {V} = copy(graph)
+
 function DataGraph{V}(graph::DataGraph) where {V}
   # TODO: Make sure this properly copies
   converted_underlying_graph = convert_vertextype(V, underlying_graph(graph))
   converted_vertex_data = Dictionary{V}(vertex_data(graph))
-  converted_edge_data = Dictionary{edgetype(converted_underlying_graph)}(edge_data(graph))
-  return DataGraph{V}(
-    converted_underlying_graph, converted_vertex_data, converted_edge_data
+  # This doesn't convert properly.
+  # converted_edge_data = Dictionary{edgetype(converted_underlying_graph)}(edge_data(graph))
+  converted_edge_data = Dictionary(
+    edgetype(converted_underlying_graph).(keys(edge_data(graph))), values(edge_data(graph))
   )
+  return _DataGraph(converted_underlying_graph, converted_vertex_data, converted_edge_data)
 end
 
 GraphsExtensions.convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
