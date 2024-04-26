@@ -7,7 +7,7 @@ using DataGraphs:
   is_arranged,
   vertex_data,
   vertex_data_eltype
-using Dictionaries: Dictionary, Indices, dictionary
+using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
 using Graphs:
   add_edge!,
   bfs_tree,
@@ -208,7 +208,7 @@ using DataGraphs: is_arranged
     @test vertex_data_eltype(dg) === String
     @test edge_data_eltype(dg) === Symbol
     @test issetequal(vertices(dg), Float64.(1:4))
-    @test vertices(dg) isa Indices{Float64}
+    @test vertices(dg) isa AbstractIndices{Float64}
     @test eltype(vertices(dg)) === Float64
     @test has_edge(dg, 1.0 => 2.0)
     @test has_edge(dg, 2.0 => 3.0)

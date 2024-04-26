@@ -4,10 +4,10 @@ using NamedGraphs: NamedGraphs, AbstractNamedGraph
 
 DataGraphs.is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
 
-for f in [:(NamedGraphs.ordinal_graph), :(NamedGraphs.ordinal_vertex_to_vertex)]
+for f in [:(NamedGraphs.position_graph), :(NamedGraphs.vertex_positions)]
   @eval begin
-    function $f(graph::AbstractDataGraph, args...; kwargs...)
-      return $f(underlying_graph(graph), args...; kwargs...)
+    function $f(graph::AbstractDataGraph)
+      return $f(underlying_graph(graph))
     end
   end
 end
