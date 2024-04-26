@@ -33,6 +33,7 @@ using GraphsFlows: GraphsFlows
 using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
 using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, vertextype
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
+using NamedGraphs.OrdinalIndexing: nd, st, rd, th
 using Test: @test, @test_broken, @testset
 
 using DataGraphs: is_arranged
@@ -397,6 +398,35 @@ using DataGraphs: is_arranged
     @test verts[1] ∈ part1
     @test verts[4] ∈ part2
     @test flow == 1
+  end
+  @testset "OrdinalIndexing" begin
+    g = DataGraph(
+      NamedGraph(path_graph(3), ["a", "b", "c"]);
+      vertex_data_eltype=String,
+      edge_data_eltype=Symbol,
+    )
+    g[1st] = "v_a"
+    g[2nd] = "v_b"
+    g[3rd] = "v_c"
+    g[1st => 2nd] = :e_ab
+    g[2nd => 3rd] = :e_bc
+    @test g["a"] == "v_a"
+    @test g["b"] == "v_b"
+    @test g["c"] == "v_c"
+    @test g["a" => "b"] === :e_ab
+    @test g["b" => "a"] === :e_ab
+    @test g["b" => "c"] === :e_bc
+    @test g["c" => "b"] === :e_bc
+    @test g[1st] == "v_a"
+    @test g[1th] == "v_a"
+    @test g[2nd] == "v_b"
+    @test g[2th] == "v_b"
+    @test g[3rd] == "v_c"
+    @test g[3th] == "v_c"
+    @test g[1st => 2nd] === :e_ab
+    @test g[2nd => 1st] === :e_ab
+    @test g[2nd => 3rd] === :e_bc
+    @test g[3rd => 2nd] === :e_bc
   end
 end
 end
