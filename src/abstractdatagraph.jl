@@ -306,6 +306,10 @@ function Base.get(graph::AbstractDataGraph, vertex, default)
   return get(vertex_data(graph), vertex, default)
 end
 
+function Base.get!(graph::AbstractDataGraph, vertex, default)
+  return get!(vertex_data(graph), vertex, default)
+end
+
 function Base.getindex(graph::AbstractDataGraph, edge::AbstractEdge)
   is_edge_arranged_ = is_edge_arranged(graph, edge)
   data = edge_data(graph)[arrange(is_edge_arranged_, edge)]
@@ -325,6 +329,16 @@ end
 
 function Base.get(graph::AbstractDataGraph, edge::Pair, default)
   return get(graph, edgetype(graph)(edge), default)
+end
+
+function Base.get!(graph::AbstractDataGraph, edge::AbstractEdge, default)
+  is_edge_arranged_ = is_edge_arranged(graph, edge)
+  data = get!(edge_data(graph), arrange(is_edge_arranged_, edge), default)
+  return reverse_data_direction(is_edge_arranged_, graph, data)
+end
+
+function Base.get!(graph::AbstractDataGraph, edge::Pair, default)
+  return get!(graph, edgetype(graph)(edge), default)
 end
 
 # Support syntax `g[1, 2] = g[(1, 2)]`
