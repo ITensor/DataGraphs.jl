@@ -198,6 +198,27 @@ using DataGraphs: is_arranged
     @test dg["Y" => 2] == "edge_Y2"
   end
 
+  @testset "get and get! functions" begin
+    g = grid((4,))
+    dg = DataGraph(g; vertex_data_eltype=String, edge_data_eltype=Symbol)
+
+    # Test for vertices
+    @test get(dg, 1, "default") == "default"
+    @test !isassigned(dg, 1)
+
+    @test get!(dg, 2, "default") == "default"
+    @test isassigned(dg, 2)
+    @test dg[2] == "default"
+
+    # Test for edges
+    @test get(dg, 1 => 2, :default) == :default
+    @test !isassigned(dg, 1 => 2)
+
+    @test get!(dg, 1 => 2, :default) == :default
+    @test isassigned(dg, 1 => 2)
+    @test dg[1 => 2] == :default
+  end
+
   @testset "Constructors specifying vertex type" begin
     dg = DataGraph{Float64}(
       named_path_graph(4); vertex_data_eltype=String, edge_data_eltype=Symbol
