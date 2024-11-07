@@ -1,6 +1,16 @@
 using Dictionaries: set!, unset!
 using Graphs:
-  Graphs, AbstractEdge, AbstractGraph, IsDirected, add_edge!, edges, ne, nv, vertices
+  Graphs,
+  AbstractEdge,
+  AbstractGraph,
+  IsDirected,
+  add_edge!,
+  a_star,
+  edges,
+  ne,
+  nv,
+  steiner_tree,
+  vertices
 using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
 using NamedGraphs.SimilarType: similar_type
 using SimpleTraits: SimpleTraits, Not, @traitfn
@@ -129,6 +139,20 @@ end
 # Fix for ambiguity error with `AbstractGraph` version
 function outdegree(graph::AbstractDataGraph, vertex::Integer)
   return outdegree(underlying_graph(graph), vertex)
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
+function Graphs.a_star(
+  graph::AbstractDataGraph, source::Integer, destination::Integer, args...
+)
+  return a_star(underlying_graph(graph), source, destination, args...)
+end
+
+# Fix for ambiguity error with `AbstractGraph` version
+@traitfn function Graphs.steiner_tree(
+  graph::AbstractDataGraph::(!IsDirected), term_vert::Vector{<:Integer}, args...
+)
+  return steiner_tree(underlying_graph(graph), term_vert, args...)
 end
 
 @traitfn GraphsExtensions.directed_graph(graph::AbstractDataGraph::IsDirected) = graph

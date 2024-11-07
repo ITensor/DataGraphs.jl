@@ -10,6 +10,7 @@ using DataGraphs:
 using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
 using Graphs:
   add_edge!,
+  a_star,
   bfs_tree,
   connected_components,
   degree,
@@ -27,6 +28,7 @@ using Graphs:
   outdegree,
   path_graph,
   src,
+  steiner_tree,
   vertices
 using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
 using GraphsFlows: GraphsFlows
@@ -410,6 +412,17 @@ using DataGraphs: is_arranged
     @test ps.dists == dictionary([1 => 0, 2 => 1, 3 => 2, 4 => 3])
     @test ps.parents == dictionary([1 => 1, 2 => 1, 3 => 2, 4 => 3])
     @test ps.pathcounts == dictionary([1 => 1.0, 2 => 1.0, 3 => 1.0, 4 => 1.0])
+  end
+  @testset "a_star" begin
+    g = DataGraph(named_grid(4))
+    path = a_star(g, 1, 3)
+    @test path == NamedEdge.([1 => 2, 2 => 3])
+  end
+  @testset "steiner_tree" begin
+    g = DataGraph(named_grid(5))
+    t = steiner_tree(g, [2, 4])
+    @test nv(t) == 3
+    @test ne(t) == 2
   end
   @testset "GraphsFlows.mincut (vertextype=$(eltype(verts))" for verts in (
     [1, 2, 3, 4], ["A", "B", "C", "D"]
