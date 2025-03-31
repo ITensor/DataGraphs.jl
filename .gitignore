@@ -7,8 +7,8 @@
 .benchmarkci
 .tmp
 .vscode/
-/docs/build/
-benchmark/*.json
-docs/build/
 Manifest.toml
-test/Manifest.toml
+benchmark/*.json
+docs/Manifest.toml
+docs/build/
+docs/src/index.md
