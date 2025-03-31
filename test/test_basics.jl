@@ -41,17 +41,17 @@ using DataGraphs: is_arranged
 
 @testset "DataGraphs.jl" begin
   @eval module $(gensym())
-    using DataGraphs: DataGraphs
-    using Suppressor: @suppress
-    using Test: @testset
-    @testset "Examples" begin
-      examples_path = joinpath(pkgdir(DataGraphs), "examples")
-      @testset "Run examples: $filename" for filename in readdir(examples_path)
-        if endswith(filename, ".jl")
-          @suppress include(joinpath(examples_path, filename))
-        end
+  using DataGraphs: DataGraphs
+  using Suppressor: @suppress
+  using Test: @testset
+  @testset "Examples" begin
+    examples_path = joinpath(pkgdir(DataGraphs), "examples")
+    @testset "Run examples: $filename" for filename in readdir(examples_path)
+      if endswith(filename, ".jl")
+        @suppress include(joinpath(examples_path, filename))
       end
     end
+  end
   end
 
   @testset "is_arranged" begin

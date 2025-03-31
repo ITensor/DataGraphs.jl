@@ -1,9 +1,7 @@
 using DataGraphs: DataGraphs
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
-DocMeta.setdocmeta!(
-  DataGraphs, :DocTestSetup, :(using DataGraphs); recursive=true
-)
+DocMeta.setdocmeta!(DataGraphs, :DocTestSetup, :(using DataGraphs); recursive=true)
 
 include("make_index.jl")
 
@@ -19,6 +17,4 @@ makedocs(;
   pages=["Home" => "index.md", "Reference" => "reference.md"],
 )
 
-deploydocs(;
-  repo="github.com/ITensor/DataGraphs.jl", devbranch="main", push_preview=true
-)
+deploydocs(; repo="github.com/ITensor/DataGraphs.jl", devbranch="main", push_preview=true)
