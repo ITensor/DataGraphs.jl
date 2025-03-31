@@ -1,19 +1,20 @@
-using DataGraphs
-using Documenter
+using DataGraphs: DataGraphs
+using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
 DocMeta.setdocmeta!(DataGraphs, :DocTestSetup, :(using DataGraphs); recursive=true)
 
+include("make_index.jl")
+
 makedocs(;
   modules=[DataGraphs],
-  authors="Matthew Fishman <mfishman@flatironinstitute.org> and contributors",
-  repo="https://github.com/mtfishman/DataGraphs.jl/blob/{commit}{path}#{line}",
+  authors="ITensor developers <support@itensor.org> and contributors",
   sitename="DataGraphs.jl",
   format=Documenter.HTML(;
-    prettyurls=get(ENV, "CI", "false") == "true",
-    canonical="https://mtfishman.github.io/DataGraphs.jl",
-    assets=String[],
+    canonical="https://itensor.github.io/DataGraphs.jl",
+    edit_link="main",
+    assets=["assets/favicon.ico", "assets/extras.css"],
   ),
-  pages=["Home" => "index.md"],
+  pages=["Home" => "index.md", "Reference" => "reference.md"],
 )
 
-deploydocs(; repo="github.com/mtfishman/DataGraphs.jl", devbranch="main")
+deploydocs(; repo="github.com/ITensor/DataGraphs.jl", devbranch="main", push_preview=true)

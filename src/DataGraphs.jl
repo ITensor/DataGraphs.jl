@@ -1,4 +1,5 @@
 module DataGraphs
+
 include("utils.jl")
 include("traits/isunderlyinggraph.jl")
 include("abstractdatagraph.jl")
@@ -10,8 +11,4 @@ include("../ext/DataGraphsNamedGraphsExt/DataGraphsNamedGraphsExt.jl")
 
 export AbstractDataGraph, DataGraph
 
-using PackageExtensionCompat: @require_extensions
-function __init__()
-  @require_extensions
-end
 end
