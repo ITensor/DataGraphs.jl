@@ -1,10 +1,5 @@
 using DataGraphs:
-  DataGraphs,
-  DataGraph,
-  edge_data,
-  edge_data_eltype,
-  vertex_data,
-  vertex_data_eltype
+  DataGraphs, DataGraph, edge_data, edge_data_eltype, vertex_data, vertex_data_eltype
 using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
 using Graphs:
   add_edge!,
