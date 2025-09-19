@@ -11,7 +11,8 @@ using Graphs:
   nv,
   steiner_tree,
   vertices
-using NamedGraphs.GraphsExtensions: GraphsExtensions, incident_edges, vertextype
+using NamedGraphs.GraphsExtensions:
+  GraphsExtensions, arrange_edge, incident_edges, is_edge_arranged, vertextype
 using NamedGraphs.SimilarType: similar_type
 using SimpleTraits: SimpleTraits, Not, @traitfn
 
@@ -156,6 +157,11 @@ end
 end
 
 @traitfn GraphsExtensions.directed_graph(graph::AbstractDataGraph::IsDirected) = graph
+
+reverse_data_direction(graph::AbstractDataGraph, data) = data
+function reverse_data_direction(graph::AbstractDataGraph, edge::AbstractEdge, data)
+  return is_edge_arranged(graph, edge) ? data : reverse_data_direction(graph, data)
+end
 
 @traitfn function GraphsExtensions.directed_graph(graph::AbstractDataGraph::(!IsDirected))
   digraph = directed_graph(typeof(graph))(directed_graph(underlying_graph(graph)))
@@ -335,9 +341,8 @@ function Base.get!(graph::AbstractDataGraph, vertex, default)
 end
 
 function Base.getindex(graph::AbstractDataGraph, edge::AbstractEdge)
-  is_edge_arranged_ = is_edge_arranged(graph, edge)
-  data = edge_data(graph)[arrange(is_edge_arranged_, edge)]
-  return reverse_data_direction(is_edge_arranged_, graph, data)
+  data = edge_data(graph)[arrange_edge(graph, edge)]
+  return reverse_data_direction(graph, edge, data)
 end
 
 # Support syntax `g[v1 => v2]`
@@ -346,9 +351,8 @@ function Base.getindex(graph::AbstractDataGraph, edge::Pair)
 end
 
 function Base.get(graph::AbstractDataGraph, edge::AbstractEdge, default)
-  is_edge_arranged_ = is_edge_arranged(graph, edge)
-  data = get(edge_data(graph), arrange(is_edge_arranged_, edge), default)
-  return reverse_data_direction(is_edge_arranged_, graph, data)
+  data = get(edge_data(graph), arrange_edge(graph, edge), default)
+  return reverse_data_direction(graph, edge, data)
 end
 
 function Base.get(graph::AbstractDataGraph, edge::Pair, default)
@@ -356,9 +360,8 @@ function Base.get(graph::AbstractDataGraph, edge::Pair, default)
 end
 
 function Base.get!(graph::AbstractDataGraph, edge::AbstractEdge, default)
-  is_edge_arranged_ = is_edge_arranged(graph, edge)
-  data = get!(edge_data(graph), arrange(is_edge_arranged_, edge), default)
-  return reverse_data_direction(is_edge_arranged_, graph, data)
+  data = get!(edge_data(graph), arrange_edge(graph, edge), default)
+  return reverse_data_direction(graph, edge, data)
 end
 
 function Base.get!(graph::AbstractDataGraph, edge::Pair, default)
@@ -374,12 +377,12 @@ function Base.isassigned(graph::AbstractDataGraph, vertex)
   return isassigned(vertex_data(graph), vertex)
 end
 
-function Base.isassigned(graph::AbstractDataGraph, vertex::AbstractEdge)
-  return isassigned(edge_data(graph), arrange(graph, vertex))
+function Base.isassigned(graph::AbstractDataGraph, edge::AbstractEdge)
+  return isassigned(edge_data(graph), arrange_edge(graph, edge))
 end
 
-function Base.isassigned(graph::AbstractDataGraph, vertex::Pair)
-  return isassigned(graph, edgetype(graph)(vertex))
+function Base.isassigned(graph::AbstractDataGraph, edge::Pair)
+  return isassigned(graph, edgetype(graph)(edge))
 end
 
 function Base.setindex!(graph::AbstractDataGraph, data, vertex)
@@ -388,9 +391,8 @@ function Base.setindex!(graph::AbstractDataGraph, data, vertex)
 end
 
 function Base.setindex!(graph::AbstractDataGraph, data, edge::AbstractEdge)
-  is_edge_arranged_ = is_edge_arranged(graph, edge)
-  arranged_edge = arrange(is_edge_arranged_, edge)
-  arranged_data = reverse_data_direction(is_edge_arranged_, graph, data)
+  arranged_edge = arrange_edge(graph, edge)
+  arranged_data = reverse_data_direction(graph, edge, data)
   set!(edge_data(graph), arranged_edge, arranged_data)
   return graph
 end

@@ -3,7 +3,6 @@ using DataGraphs:
   DataGraph,
   edge_data,
   edge_data_eltype,
-  is_arranged,
   vertex_data,
   vertex_data_eltype
 using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
@@ -37,8 +36,6 @@ using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
 using NamedGraphs.OrdinalIndexing: nd, st, rd, th
 using Test: @test, @test_broken, @testset
 
-using DataGraphs: is_arranged
-
 @testset "DataGraphs.jl" begin
   @eval module $(gensym())
   using DataGraphs: DataGraphs
@@ -52,25 +49,6 @@ using DataGraphs: is_arranged
       end
     end
   end
-  end
-
-  @testset "is_arranged" begin
-    for (a, b) in [
-      (1, 2),
-      ([1], [2]),
-      ([1, 2], [2, 1]),
-      ([1, 2], [2]),
-      ([2], [2, 1]),
-      ((1,), (2,)),
-      ((1, 2), (2, 1)),
-      ((1, 2), (2,)),
-      ((2,), (2, 1)),
-      ("X", 1),
-      (("X",), (1, 2)),
-    ]
-      @test is_arranged(a, b)
-      @test !is_arranged(b, a)
-    end
   end
 
   @testset "Basics" begin
