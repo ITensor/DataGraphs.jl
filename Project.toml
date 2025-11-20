@@ -16,11 +16,11 @@ GraphsFlows = "06909019-6f44-4949-96fc-b9d9aaa02889"
 DataGraphsGraphsFlowsExt = "GraphsFlows"
 
 [compat]
-Dictionaries = "0.4.0"
-Graphs = "1.0.0"
+Dictionaries = "0.4"
+Graphs = "1"
 GraphsFlows = "0.1.1"
-NamedGraphs = "0.6.9, 0.7.0, 0.8"
-SimpleTraits = "0.9.0"
+NamedGraphs = "0.6.9, 0.7, 0.8"
+SimpleTraits = "0.9"
 julia = "1.7"
 
 [extras]
