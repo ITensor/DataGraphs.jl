@@ -3,7 +3,7 @@ using Graphs: grid, has_edge, has_vertex
 using NamedGraphs: NamedGraph, NamedEdge
 
 g = NamedGraph(grid((4,)), ["A", "B", "C", "D"])
-dg = DataGraph(g; vertex_data_eltype=String, edge_data_eltype=Symbol)
+dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
 
 @show has_vertex(dg, "A")
 @show has_vertex(dg, "D")
