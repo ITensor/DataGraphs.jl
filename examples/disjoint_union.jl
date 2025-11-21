@@ -3,13 +3,13 @@ using NamedGraphs.GraphsExtensions: ⊔
 using NamedGraphs.NamedGraphGenerators: named_grid
 using DataGraphs: DataGraph
 
-g = DataGraph(named_grid((2, 2)); vertex_data_eltype=String, edge_data_eltype=String)
+g = DataGraph(named_grid((2, 2)); vertex_data_eltype = String, edge_data_eltype = String)
 
 for v in vertices(g)
-  g[v] = "V$v"
+    g[v] = "V$v"
 end
 for e in edges(g)
-  g[e] = "E$e"
+    g[e] = "E$e"
 end
 
 gg = g ⊔ g
