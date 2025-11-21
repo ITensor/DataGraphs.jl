@@ -38,12 +38,6 @@ underlying_graph_type(graph::AbstractDataGraph) = typeof(underlying_graph(graph)
 vertex_data_eltype(graph::AbstractDataGraph) = eltype(vertex_data(graph))
 edge_data_eltype(graph::AbstractDataGraph) = eltype(edge_data(graph))
 
-# TODO: delete, defined for AbstractGraph{V}?
-function GraphsExtensions.vertextype(graph_type::Type{<:AbstractDataGraph})
-    return vertextype(underlying_graph_type(graph_type))
-end
-GraphsExtensions.vertextype(graph::AbstractDataGraph) = vertextype(typeof(graph))
-
 Base.zero(graph_type::Type{<:AbstractDataGraph}) = graph_type()
 
 # Graphs overloads
