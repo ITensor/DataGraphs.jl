@@ -41,6 +41,11 @@ edge_data_eltype(graph::AbstractDataGraph) = eltype(edge_data(graph))
 Base.zero(graph_type::Type{<:AbstractDataGraph}) = graph_type()
 
 # Graphs overloads
+function Graphs.vertices(graph::AbstractDataGraph)
+    return Graphs.vertices(underlying_graph(graph))
+end
+
+# Graphs overloads
 for f in [
         :(Graphs.a_star),
         :(Graphs.add_edge!),
@@ -92,7 +97,6 @@ for f in [
         :(Graphs.steiner_tree),
         :(Graphs.topological_sort_by_dfs),
         :(Graphs.tree),
-        :(Graphs.vertices),
         :(GraphsExtensions.boundary_edges),
         :(GraphsExtensions.boundary_vertices),
         :(GraphsExtensions.eccentricities),
@@ -402,7 +406,7 @@ function Base.setindex!(graph::AbstractDataGraph, x, i1, i2, i...)
     return graph
 end
 
-function Graphs.induced_subgraph(graph::AbstractDataGraph, subvertices)
+function induced_subgraph_datagraph(graph::AbstractDataGraph, subvertices)
     underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
     subgraph = similar_type(graph)(underlying_subgraph)
     for v in vertices(subgraph)
@@ -416,6 +420,15 @@ function Graphs.induced_subgraph(graph::AbstractDataGraph, subvertices)
         end
     end
     return subgraph, vlist
+end
+function Graphs.induced_subgraph(graph::AbstractDataGraph, subvertices)
+    return induced_subgraph_datagraph(graph, subvertices)
+end
+# Fix ambiguity with Graphs.jl for integer `subvertices`.
+function Graphs.induced_subgraph(
+        graph::AbstractDataGraph, subvertices::AbstractVector{<:Integer}
+    )
+    return induced_subgraph_datagraph(graph, subvertices)
 end
 
 #
