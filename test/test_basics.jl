@@ -26,7 +26,7 @@ using Graphs:
 using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
 using GraphsFlows: GraphsFlows
 using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
-using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, vertextype
+using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
 using NamedGraphs.OrdinalIndexing: nd, st, rd, th
 using Test: @test, @test_broken, @testset
@@ -191,6 +191,40 @@ using Test: @test, @test_broken, @testset
         @test get!(dg, 1 => 2, :default) == :default
         @test isassigned(dg, 1 => 2)
         @test dg[1 => 2] == :default
+    end
+
+    @testset "subgraph" begin
+        dg = DataGraph(named_path_graph(4))
+        dg[1] = "V1"
+        dg[2] = "V2"
+        dg[3] = "V3"
+        dg[4] = "V4"
+        dg[1 => 2] = "E12"
+        dg[2 => 3] = "E23"
+        dg[3 => 4] = "E34"
+        sg = subgraph(dg, [2, 3, 4])
+        @test nv(sg) == 3
+        @test ne(sg) == 2
+        @test !has_vertex(sg, 1)
+        @test has_vertex(sg, 2)
+        @test has_vertex(sg, 3)
+        @test has_vertex(sg, 4)
+        @test !has_edge(sg, 1 => 2)
+        @test !has_edge(sg, 2 => 1)
+        @test has_edge(sg, 2 => 3)
+        @test has_edge(sg, 3 => 2)
+        @test has_edge(sg, 3 => 4)
+        @test has_edge(sg, 4 => 3)
+        @test isnothing(get(sg, 1, nothing))
+        @test sg[2] == "V2"
+        @test sg[3] == "V3"
+        @test sg[4] == "V4"
+        @test isnothing(get(sg, 1 => 2, nothing))
+        @test isnothing(get(sg, 2 => 1, nothing))
+        @test sg[2 => 3] == "E23"
+        @test sg[3 => 2] == "E23"
+        @test sg[3 => 4] == "E34"
+        @test sg[4 => 3] == "E34"
     end
 
     @testset "Constructors specifying vertex type" begin
