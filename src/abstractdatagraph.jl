@@ -80,6 +80,10 @@ underlying_graph_type(graph::AbstractDataGraph) = typeof(underlying_graph(graph)
 vertex_data_eltype(graph::AbstractDataGraph) = vertex_data_eltype(typeof(graph))
 edge_data_eltype(graph::AbstractDataGraph) = edge_data_eltype(typeof(graph))
 
+function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
+    return position_graph_type(underlying_graph_type(type))
+end
+
 Base.zero(graph_type::Type{<:AbstractDataGraph}) = graph_type()
 
 # Graphs overloads
