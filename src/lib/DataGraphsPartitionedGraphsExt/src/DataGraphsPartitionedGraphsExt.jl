@@ -31,23 +31,43 @@ on the quotient graph of `g`. By default, this function returns `value` of the p
 """
 to_quotient_edge_data(::AbstractGraph, data) = last(data)
 
-function Base.getindex(g::AbstractGraph, qv::QuotientVertex)
+# Ambiguity resolution
+function Base.getindex(g::AbstractGraph, qve::Union{QuotientVertex, QuotientEdge})
+    return _getindex(g, qve)
+end
+function Base.getindex(g::AbstractDataGraph, qve::Union{QuotientVertex, QuotientEdge})
+    return _getindex(g, qve)
+end
+function _getindex(g::AbstractGraph, qv::QuotientVertex)
     vs = Indices(vertices(g, qv))
     return to_quotient_vertex_data(g, qv => map(v -> g[v], vs))
 end
-function Base.getindex(g::AbstractGraph, qe::QuotientEdge)
+function _getindex(g::AbstractGraph, qe::QuotientEdge)
     es = Indices(edges(g, qe))
     return to_quotient_edge_data(g, qe => map(e -> g[e], es))
 end
 
-# QuotientView
-Base.getindex(qv::QuotientView, v) = _getindex(qv, v)
+# QuotientView; make sure views of data graphs do data graph indexing.
+function Base.getindex(qv::QuotientView{V, <:AbstractDataGraph}, v) where {V}
+    return _getindex(qv, v)
+end
 
-_getindex(qv::QuotientView, v) = parent(qv)[QuotientVertex(v)]
-_getindex(qv::QuotientView, e::Union{Pair, AbstractEdge}) = parent(qv)[QuotientEdge(e)]
+_getindex(qv::QuotientView, v) = vertex_data(qv)[v]
+_getindex(qv::QuotientView, e::Union{Pair, AbstractEdge}) = edge_data(qv)[e]
 
-DataGraphs.vertex_data(qv::QuotientView) = Dictionary(map(v -> qv[v], Indices(vertices(qv))))
-DataGraphs.edge_data(qv::QuotientView) = Dictionary(map(e -> qv[e], Indices(edges(qv))))
+# QuotientView DataGraphs interface
+function DataGraphs.vertex_data(qv::QuotientView)
+    return Dictionary(map(v -> parent(qv)[QuotientVertex(v)], Indices(vertices(qv))))
+end
+function DataGraphs.edge_data(qv::QuotientView)
+    return Dictionary(map(e -> parent(qv)[QuotientEdge(e)], Indices(edges(qv))))
+end
+
+DataGraphs.vertex_data_eltype(qv::QuotientView) = DataGraphs.vertex_data_eltype(typeof(qv))
+DataGraphs.vertex_data_eltype(T::Type{<:QuotientView}) = eltype(Base.promote_op(vertex_data, T))
+
+DataGraphs.edge_data_eltype(qv::QuotientView) = DataGraphs.edge_data_eltype(typeof(qv))
+DataGraphs.edge_data_eltype(T::Type{<:QuotientView}) = eltype(Base.promote_op(edge_data, T))
 
 # PartitionedGraphs interface
 function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
@@ -55,5 +75,6 @@ function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
 end
 
 PartitionedGraphs.partitionedgraph(::AbstractDataGraph, parts) = not_implemented()
+PartitionedGraphs.departition(::AbstractDataGraph) = not_implemented()
 
 end
