@@ -16,24 +16,47 @@ using NamedGraphs.PartitionedGraphs:
     quotientedges
 using Dictionaries: Dictionary, Indices
 
+#====INTERFACE FUNCTIONS====#
+Base.getindex(g::AbstractGraph, qv::QuotientVertex) = get_quotient_vertex_data(g, qv)
+Base.getindex(g::AbstractGraph, qe::QuotientEdge) = get_quotient_edge_data(g, qe)
+
+# The type of `val` should be the return type of the corresponding `getindex` method.
+Base.setindex!(g::AbstractGraph, val, qv::QuotientVertex) = set_quotient_vertex_data!(g, val, qv)
+Base.setindex!(g::AbstractGraph, val, qe::QuotientEdge) = set_quotient_edge_data!(g, val, qe)
+#====#
+
 # Fallbacks
 get_quotient_vertex_data(g::AbstractGraph, qv) = map(v -> g[v], Indices(vertices(g, qv)))
 get_quotient_edge_data(g::AbstractGraph, qe) = map(e -> g[e], Indices(edges(g, qe)))
 
-# Interface functions
-Base.getindex(g::AbstractGraph, qv::QuotientVertex) = get_quotient_vertex_data(g, qv)
-Base.getindex(g::AbstractGraph, qe::QuotientEdge) = get_quotient_edge_data(g, qe)
+function set_quotient_vertex_data!(g::AbstractGraph, val, qv)
+    for v in vertices(g, qv)
+        g[v] = val[v]
+    end
+    return g
+end
+function set_quotient_edge_data!(g::AbstractGraph, val, qe)
+    for e in edges(g, qe)
+        g[e] = val[e]
+    end
+    return g
+end
 
 # For ambiguity resolution
 Base.getindex(g::AbstractDataGraph, qv::QuotientVertex) = get_quotient_vertex_data(g, qv)
 Base.getindex(g::AbstractDataGraph, qe::QuotientEdge) = get_quotient_edge_data(g, qe)
 
+Base.setindex!(g::AbstractDataGraph, val, qv::QuotientVertex) = set_quotient_vertex_data!(g, val, qv)
+Base.setindex!(g::AbstractDataGraph, val, qe::QuotientEdge) = set_quotient_edge_data!(g, val, qe)
+
 # QuotientView; make sure quotient views of data graphs do data graph indexing.
-function Base.getindex(qv::QuotientView{V, <:AbstractDataGraph}, v) where {V}
-    return _getindex(qv, v)
-end
-_getindex(qv::QuotientView, v) = parent(qv)[QuotientVertex(v)]
-_getindex(qv::QuotientView, e::Union{Pair, AbstractEdge}) = parent(qv)[QuotientEdge(e)]
+Base.getindex(qv::QuotientView{V, <:AbstractDataGraph}, v) where {V} = _getindex(qv, v)
+_getindex(qv::QuotientView, v) = getindex(parent(qv), QuotientVertex(v))
+_getindex(qv::QuotientView, e::AbstractEdge) = getindex(parent(qv), QuotientEdge(e))
+
+Base.setindex!(qv::QuotientView, ve) = _getindex(qv, ve)
+_setindex!(qv::QuotientView, val, v) = setindex!(parent(qv), val, QuotientEdge(v))
+_setindex!(qv::QuotientView, val, e::AbstractEdge) = setindex!(parent(qv), val, QuotientEdge(e))
 
 DataGraphs.vertex_data_eltype(qv::QuotientView) = DataGraphs.vertex_data_eltype(typeof(qv))
 DataGraphs.vertex_data_eltype(T::Type{<:QuotientView}) = eltype(Base.promote_op(vertex_data, T))
