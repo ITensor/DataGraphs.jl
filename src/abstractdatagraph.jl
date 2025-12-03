@@ -46,9 +46,6 @@ edge_data_eltype(T::Type{<:AbstractDataGraph}) = eltype(Base.promote_op(edge_dat
 
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
 Graphs.has_edge(g::AbstractDataGraph, edge) = has_edge(underlying_graph(g), edge)
-
-# For method ambiguities
-Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
 Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge) = has_edge(underlying_graph(g), edge)
 
 vertex_data(dg::AbstractDataGraph) = map(v -> dg[v], assigned_vertices(dg))
