@@ -1,5 +1,11 @@
 using DataGraphs:
-    DataGraphs, DataGraph, edge_data, edge_data_eltype, vertex_data, vertex_data_eltype
+    DataGraphs,
+    DataGraph,
+    edge_data,
+    edge_data_eltype,
+    vertex_data,
+    vertex_data_eltype,
+    underlying_graph
 using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
 using Graphs:
     add_edge!,
@@ -392,7 +398,7 @@ using Test: @test, @test_broken, @testset
             (3, 1) => (4, 1),
             (4, 1) => (4, 2),
         ]
-        @test t isa NamedDiGraph{Tuple{Int, Int}}
+        @test underlying_graph(t) isa NamedDiGraph{Tuple{Int, Int}}
         @test nv(t) == nv(g)
         @test ne(t) == nv(g) - 1
         @test all(e -> has_edge(t, e), es)
@@ -407,7 +413,7 @@ using Test: @test, @test_broken, @testset
             (3, 2) => (2, 2),
             (2, 2) => (1, 2),
         ]
-        @test t isa NamedDiGraph{Tuple{Int, Int}}
+        @test underlying_graph(t) isa NamedDiGraph{Tuple{Int, Int}}
         @test nv(t) == nv(g)
         @test ne(t) == nv(g) - 1
         @test all(e -> has_edge(t, e), es)
