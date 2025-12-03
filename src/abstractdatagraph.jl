@@ -14,7 +14,10 @@ using NamedGraphs: NamedGraphs, AbstractNamedGraph, AbstractNamedEdge
 using NamedGraphs.GraphsExtensions:
     GraphsExtensions, arrange_edge, incident_edges, is_edge_arranged, vertextype
 using NamedGraphs.SimilarType: similar_type
+using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using SimpleTraits: SimpleTraits, Not, @traitfn
+
+is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
 
@@ -291,7 +294,6 @@ function map_data(f, graph::AbstractDataGraph; vertices = nothing, edges = nothi
     return map_edge_data(f, graph; edges)
 end
 
-Base.getindex(graph::AbstractDataGraph, vertex) = get_vertex_data(graph, vertex)
 
 Base.get!(graph::AbstractGraph, key, default) = get!(() -> default, graph, key)
 function Base.get!(default::Base.Callable, graph::AbstractGraph, key)
@@ -308,6 +310,18 @@ function Base.get(default::Base.Callable, graph::AbstractGraph, key)
     else
         return default()
     end
+end
+
+Base.getindex(graph::AbstractDataGraph, vertex) = get_vertex_data(graph, vertex)
+
+function Base.getindex(graph::AbstractDataGraph, vertex::OrdinalSuffixedInteger)
+    return graph[vertices(graph)[vertex]]
+end
+
+function Base.getindex(
+        graph::AbstractDataGraph, edge::Pair{<:OrdinalSuffixedInteger, <:OrdinalSuffixedInteger}
+    )
+    return graph[edgetype(graph)(vertices(graph)[edge[1]], vertices(graph)[edge[2]])]
 end
 
 function Base.getindex(graph::AbstractDataGraph, edge::AbstractEdge)
@@ -354,6 +368,20 @@ end
 # Support syntax `g[1, 2] = g[(1, 2)]`
 function Base.setindex!(graph::AbstractDataGraph, x, i1, i2, i...)
     graph[(i1, i2, i...)] = x
+    return graph
+end
+
+function Base.setindex!(graph::AbstractDataGraph, value, vertex::OrdinalSuffixedInteger)
+    graph[vertices(graph)[vertex]] = value
+    return graph
+end
+
+function Base.setindex!(
+        graph::AbstractDataGraph,
+        value,
+        edge::Pair{<:OrdinalSuffixedInteger, <:OrdinalSuffixedInteger},
+    )
+    graph[edgetype(graph)(vertices(graph)[edge[1]], vertices(graph)[edge[2]])] = value
     return graph
 end
 
