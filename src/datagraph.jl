@@ -1,6 +1,5 @@
 using Dictionaries: Dictionary
 using Graphs: Graphs, edgetype, has_edge, has_vertex
-using Graphs.SimpleGraphs: SimpleGraph
 using NamedGraphs: GenericNamedGraph
 using NamedGraphs.GraphsExtensions:
     convert_vertextype,
@@ -15,7 +14,7 @@ using NamedGraphs.GraphsExtensions:
 # TODO: Use https://github.com/vtjnash/ComputedFieldTypes.jl to
 # automatically determine `E` from `G` from `edgetype(G)`
 # and `V` from `G` as `vertextype(G)`.
-struct DataGraph{V, VD, ED, G <: AbstractGraph, E <: AbstractEdge} <: AbstractDataGraph{V, VD, ED}
+struct DataGraph{V, VD, ED, G <: AbstractNamedGraph, E <: AbstractEdge} <: AbstractDataGraph{V, VD, ED}
     underlying_graph::G
     vertex_data::Dictionary{V, VD}
     edge_data::Dictionary{E, ED}

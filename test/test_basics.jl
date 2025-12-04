@@ -31,7 +31,6 @@ using Graphs:
     src,
     steiner_tree,
     vertices
-using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
 using GraphsFlows: GraphsFlows
 using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
 using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, subgraph, vertextype
@@ -55,11 +54,11 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "Basics" begin
-        g = grid((4,))
+        g = named_grid(4)
         dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
-        @test !isassigned(dg, SimpleEdge(1, 2))
+        @test !isassigned(dg, NamedEdge(1, 2))
         @test !isassigned(dg, 1 => 2)
-        @test !isassigned(dg, SimpleEdge(1 => 2))
+        @test !isassigned(dg, NamedEdge(1 => 2))
         @test !isassigned(dg, 1 => 3)
         @test !isassigned(dg, 1)
         @test !isassigned(dg, 2)
@@ -94,11 +93,11 @@ using Test: @test, @test_broken, @testset
 
         dg[1 => 2] = :E12
         dg[2 => 3] = :E23
-        dg[SimpleEdge(3, 4)] = :E34
+        dg[NamedEdge(3, 4)] = :E34
         #@test isassigned(dg, (1, 2))
-        @test isassigned(dg, SimpleEdge(2, 3))
+        @test isassigned(dg, NamedEdge(2, 3))
         @test isassigned(dg, 3 => 4)
-        @test dg[SimpleEdge(1, 2)] == :E12
+        @test dg[NamedEdge(1, 2)] == :E12
         @test dg[2 => 3] == :E23
         @test dg[3 => 4] == :E34
 
@@ -109,7 +108,7 @@ using Test: @test, @test_broken, @testset
         @test dg[(1, 1) => (1, (1, 1))] == "X"
 
         vdata = map(v -> "V$v", Indices(1:4))
-        edata = map(e -> "E$(src(e))$(dst(e))", Indices(SimpleEdge.([1 => 2, 2 => 3, 3 => 4])))
+        edata = map(e -> "E$(src(e))$(dst(e))", Indices(NamedEdge.([1 => 2, 2 => 3, 3 => 4])))
         # TODO: Make a more compact constructor that directly accepts
         # vertex and edge data? Maybe `DataGraph(g; vertex_data=vdata, edge_data=edata)`
         # or `DataGraph(g; vertex_data=v -> "V$v", edge_data=e -> "E$(src(e))$(dst(e))")`.
@@ -129,13 +128,13 @@ using Test: @test, @test_broken, @testset
         @test dg[2 => 3] == "E23"
         @test dg[3 => 4] == "E34"
 
-        @test DataGraph(g) isa DataGraph{Int, Any, Any, SimpleGraph{Int}, SimpleEdge{Int}}
+        @test DataGraph(g) isa DataGraph{Int, Any, Any, NamedGraph{Int}, NamedEdge{Int}}
 
         dg_uint16 = DataGraph{UInt16}(dg)
         @test dg_uint16 isa
-            DataGraph{UInt16, String, String, SimpleGraph{UInt16}, SimpleEdge{UInt16}}
+            DataGraph{UInt16, String, String, NamedGraph{UInt16}, NamedEdge{UInt16}}
         @test vertextype(dg_uint16) === UInt16
-        @test edgetype(dg_uint16) === SimpleEdge{UInt16}
+        @test edgetype(dg_uint16) === NamedEdge{UInt16}
         @test vertex_data_eltype(dg_uint16) === String
         @test edge_data_eltype(dg_uint16) === String
         @test dg_uint16[1] == "V1"
@@ -181,7 +180,7 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "get and get! functions" begin
-        g = grid((4,))
+        g = named_grid(4)
         dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
 
         # Test for vertices
@@ -303,11 +302,11 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "union" begin
-        g1 = DataGraph(grid((4,)))
+        g1 = DataGraph(named_grid(4))
         g1[1] = ["A", "B", "C"]
         g1[1 => 2] = ["E", "F"]
 
-        g2 = DataGraph(SimpleGraph(5))
+        g2 = DataGraph(NamedGraph(5))
         add_edge!(g2, 1 => 5)
         g2[1] = ["C", "D", "E"]
 
@@ -355,7 +354,7 @@ using Test: @test, @test_broken, @testset
         @test issetequal(comps[2], [4, 5, 6])
     end
     @testset "reverse" begin
-        g = DataGraph(SimpleDiGraph(4))
+        g = DataGraph(NamedDiGraph(4))
         add_edge!(g, 1 => 2)
         add_edge!(g, 3 => 4)
         g[1 => 2] = :A
