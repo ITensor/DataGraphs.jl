@@ -222,7 +222,6 @@ function Graphs.merge_vertices(
         merge_edge_data = merge_data,
         kwargs...,
     )
-    underlying_merged_graph = Graphs.merge_vertices(underlying_graph(graph); kwargs...)
     return not_implemented()
 end
 
@@ -234,8 +233,6 @@ function Graphs.merge_vertices!(
         merge_edge_data = merge_data,
         kwargs...,
     )
-    underlying_merged_graph = copy(underlying_graph(graph))
-    Graphs.merge_vertices!(underlying_merged_graph; kwargs...)
     return not_implemented()
 end
 
