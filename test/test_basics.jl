@@ -1,11 +1,13 @@
 using DataGraphs:
-    DataGraphs,
     DataGraph,
+    DataGraphs,
+    EdgeDataView,
+    VertexDataView,
     edge_data,
     edge_data_eltype,
+    underlying_graph,
     vertex_data,
-    vertex_data_eltype,
-    underlying_graph
+    vertex_data_eltype
 using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
 using Graphs:
     add_edge!,
@@ -250,11 +252,9 @@ using Test: @test, @test_broken, @testset
         @test has_edge(dg, 2.0 => 3.0)
         @test has_edge(dg, 3.0 => 4.0)
         @test vertex_data(dg) == Dictionary{Float64, String}()
-        @test vertex_data(dg) isa Dictionary{Float64, String}
         @test keytype(vertex_data(dg)) === Float64
         @test eltype(vertex_data(dg)) === String
         @test edge_data(dg) == Dictionary{NamedEdge{Float64}, Symbol}()
-        @test edge_data(dg) isa Dictionary{NamedEdge{Float64}, Symbol}
         @test keytype(edge_data(dg)) === NamedEdge{Float64}
         @test eltype(edge_data(dg)) === Symbol
     end
@@ -473,5 +473,45 @@ using Test: @test, @test_broken, @testset
         @test g[2nd => 1st] === :e_ab
         @test g[2nd => 3rd] === :e_bc
         @test g[3rd => 2nd] === :e_bc
+    end
+
+    @testset "Data views" begin
+        g = DataGraph(
+            NamedGraph(path_graph(3), ["a", "b", "c"]);
+            vertex_data_eltype = Int,
+            edge_data_eltype = Float64
+        )
+        g["b"] = 2
+        g["c"] = 3
+        g["a" => "b"] = -1.0
+        g["b" => "c"] = -2.0
+
+        vdata = vertex_data(g)
+        @test vdata isa VertexDataView
+
+        @test keytype(VertexDataView(g)) === String
+        @test eltype(VertexDataView(g)) === Int
+
+        @test collect(keys(vdata)) == ["b", "c"]
+        @test collect(vdata) == [2, 3]
+
+        @test !haskey(vdata, "a")
+        @test haskey(vdata, "b")
+        @test haskey(vdata, "c")
+
+        g["a"] = 1
+        vdata = vertex_data(g)
+        @test collect(keys(vdata)) == collect(vertices(g))
+        vdata["a"] = 4
+        @test g["a"] == 4
+        @test vdata["a"] == 4
+
+        @test length(keys(EdgeDataView(g))) == 2
+        @test keytype(EdgeDataView(g)) === NamedEdge{String}
+        @test eltype(EdgeDataView(g)) === Float64
+
+        edata = edge_data(g)
+        @test edata["a" => "b"] == -1.0
+        @test edata[edgetype(g)("b" => "c")] == -2.0
     end
 end
