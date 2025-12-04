@@ -26,6 +26,9 @@ is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
 
+vertex_data_eltype(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = VD
+edge_data_eltype(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
+
 # Minimal interface
 # TODO: Define for `AbstractGraph` as a `DataGraphInterface`.
 underlying_graph(::AbstractDataGraph) = not_implemented()
@@ -45,8 +48,6 @@ unset_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 # Quasi-derived interface; only required if inference fails
 
 underlying_graph_type(T::Type{<:AbstractDataGraph}) = Base.promote_op(underlying_graph, T)
-vertex_data_eltype(T::Type{<:AbstractDataGraph}) = eltype(Base.promote_op(vertex_data, T))
-edge_data_eltype(T::Type{<:AbstractDataGraph}) = eltype(Base.promote_op(edge_data, T))
 
 # Derived interface
 
@@ -75,8 +76,8 @@ function Graphs.is_directed(graph_type::Type{<:AbstractDataGraph})
 end
 
 underlying_graph_type(graph::AbstractDataGraph) = typeof(underlying_graph(graph))
-vertex_data_eltype(graph::AbstractDataGraph) = eltype(vertex_data(graph))
-edge_data_eltype(graph::AbstractDataGraph) = eltype(edge_data(graph))
+vertex_data_eltype(graph::AbstractDataGraph) = vertex_data_eltype(typeof(graph))
+edge_data_eltype(graph::AbstractDataGraph) = edge_data_eltype(typeof(graph))
 
 Base.zero(graph_type::Type{<:AbstractDataGraph}) = graph_type()
 
