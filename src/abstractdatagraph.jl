@@ -4,6 +4,7 @@ using Graphs:
     AbstractEdge,
     IsDirected,
     add_edge!,
+    add_vertex!,
     a_star,
     edges,
     ne,
@@ -175,7 +176,7 @@ end
 
 function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
 
-    # Use the two-argument `similar_graph` method so the new graph has correct vertex type
+    # Uses the two-argument `similar_graph` method so the new graph has correct vertex type
     renamed_graph = similar_graph(graph, map(f, vertices(graph)))
 
     for vertex in vertices(graph)
@@ -196,19 +197,22 @@ function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
 end
 
 function Base.reverse(graph::AbstractDataGraph)
-    reversed_graph = typeof(graph)(reverse(underlying_graph(graph)))
+    reversed_graph = similar_graph(graph)
     for v in vertices(graph)
+        add_vertex!(reversed_graph, v)
         if isassigned(graph, v)
             reversed_graph[v] = graph[v]
         end
     end
     for e in edges(graph)
+        add_edge!(reversed_graph, reverse(e))
         if isassigned(graph, e)
             reversed_graph[reverse(e)] = graph[e]
         end
     end
     return reversed_graph
 end
+
 
 function Graphs.merge_vertices(
         graph::AbstractDataGraph,
