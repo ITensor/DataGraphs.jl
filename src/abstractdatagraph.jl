@@ -12,7 +12,12 @@ using Graphs:
     vertices
 using NamedGraphs: NamedGraphs, AbstractNamedGraph, AbstractNamedEdge
 using NamedGraphs.GraphsExtensions:
-    GraphsExtensions, arrange_edge, incident_edges, is_edge_arranged, vertextype
+    GraphsExtensions,
+    arrange_edge,
+    incident_edges,
+    is_edge_arranged,
+    vertextype,
+    similar_graph
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using SimpleTraits: SimpleTraits, Not, @traitfn
@@ -36,8 +41,6 @@ set_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 
 unset_vertex_data!(::AbstractDataGraph, data, vertex) = not_implemented()
 unset_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
-
-GraphsExtensions.rename_vertices(f, ::AbstractDataGraph) = not_implemented()
 
 # Quasi-derived interface; only required if inference fails
 
@@ -167,6 +170,28 @@ end
         end
     end
     return digraph
+end
+
+function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
+
+    # Use the two-argument `similar_graph` method so the new graph has correct vertex type
+    renamed_graph = similar_graph(graph, map(f, vertices(graph)))
+
+    for vertex in vertices(graph)
+        if isassigned(graph, vertex)
+            renamed_graph[f(vertex)] = graph[vertex]
+        end
+    end
+
+    for edge in edges(graph)
+        renamed_edge = rename_vertices(f, edge)
+        add_edge!(renamed_graph, renamed_edge)
+        if isassigned(graph, edge)
+            renamed_graph[renamed_edge] = graph[edge]
+        end
+    end
+
+    return renamed_graph
 end
 
 function Base.reverse(graph::AbstractDataGraph)

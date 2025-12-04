@@ -7,7 +7,7 @@ using NamedGraphs.GraphsExtensions:
     directed_graph,
     vertextype,
     directed_graph_type,
-    graph_from_vertices,
+    similar_graph,
     rename_vertices
 
 # TODO: define VertexDataGraph, a graph with only data on the
@@ -69,36 +69,11 @@ edge_data_eltype(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 
 Graphs.edgetype(T::Type{<:DataGraph}) = keytype(fieldtype(T, :edge_data))
 
-function GraphsExtensions.graph_from_vertices(T::Type{<:DataGraph}, vertices)
-    return T(graph_from_vertices(underlying_graph_type(T), vertices))
+function GraphsExtensions.similar_graph(T::Type{<:DataGraph})
+    similar_underlying_graph = similar_graph(underlying_graph_type(T))
+    return T(similar_underlying_graph)
 end
 
-function GraphsExtensions.rename_vertices(f::Function, graph::DataGraph)
-    renamed_underlying_graph = GraphsExtensions.rename_vertices(f, underlying_graph(graph))
-
-    renamed_graph = DataGraph(
-        renamed_underlying_graph;
-        vertex_data_eltype = vertex_data_eltype(graph),
-        edge_data_eltype = edge_data_eltype(graph),
-    )
-
-    for v in vertices(graph)
-        if isassigned(graph, v)
-            renamed_graph[f(v)] = graph[v]
-        end
-    end
-
-    for e in edges(graph)
-        if isassigned(graph, e)
-            renamed_graph[rename_vertices(f, e)] = graph[e]
-        end
-    end
-
-    return renamed_graph
-end
-
-# TODO: Implement in terms of `set_underlying_graph`, `set_vertex_data`, etc.
-# TODO: Use `https://github.com/JuliaObjects/Accessors.jl`?
 function Base.copy(graph::DataGraph)
     # Need to manually copy the keys of Dictionaries, see:
     # https://github.com/andyferris/Dictionaries.jl/issues/98
@@ -150,7 +125,6 @@ function GraphsExtensions.convert_vertextype(vertextype::Type, graph::DataGraph)
     return DataGraph{vertextype}(graph)
 end
 
-# TODO: implement generic version in terms of `set_underlying_graph_type`.
 function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
     return DataGraph{
         vertextype(graph_type),
