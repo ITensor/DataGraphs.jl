@@ -66,8 +66,6 @@ edge_data_eltype(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 
 # Extras
 
-Graphs.edgetype(T::Type{<:DataGraph}) = keytype(fieldtype(T, :edge_data))
-
 function GraphsExtensions.similar_graph(T::Type{<:DataGraph})
     similar_underlying_graph = similar_graph(underlying_graph_type(T))
     return T(similar_underlying_graph)
@@ -119,7 +117,6 @@ function DataGraph{V}(graph::DataGraph) where {V}
     return _DataGraph(converted_underlying_graph, converted_vertex_data, converted_edge_data)
 end
 
-GraphsExtensions.convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
 function GraphsExtensions.convert_vertextype(vertextype::Type, graph::DataGraph)
     return DataGraph{vertextype}(graph)
 end
