@@ -5,66 +5,107 @@ using ..DataGraphs:
     DataGraphs,
     edge_data,
     underlying_graph,
-    vertex_data
+    vertex_data,
+    get_vertex_data,
+    get_edge_data,
+    set_vertex_data!,
+    set_edge_data!,
+    has_vertex_data,
+    has_edge_data,
+    has_vertices_data,
+    has_edges_data,
+    unset_vertex_data!,
+    unset_edge_data!,
+    unset_vertices_data!,
+    unset_edges_data!,
+    vertices_data_eltype,
+    edges_data_eltype
+using NamedGraphs: to_graph_indices
 using NamedGraphs.PartitionedGraphs:
     PartitionedGraphs,
     QuotientEdge,
+    QuotientEdgeEdges,
     QuotientVertex,
+    QuotientVertexVertices,
     QuotientView,
     partitioned_vertices,
     quotientvertices,
-    quotientedges
+    quotientedges,
+    parent_graph_type
 using Dictionaries: Dictionary, Indices
 
-#====INTERFACE FUNCTIONS====#
-Base.getindex(g::AbstractGraph, qv::QuotientVertex) = get_quotient_vertex_data(g, qv)
-Base.getindex(g::AbstractGraph, qe::QuotientEdge) = get_quotient_edge_data(g, qe)
+# Methods to overload if you dont want to use the defaults.
+# DataGraphs.has_vertices_data(g::MyGraph, v::QuotientVertexVertices)
+# DataGraphs.has_edges_data(g::MyGraph, v::QuotientEdgeEdges)
+#
+# DataGraphs.get_vertices_data(g::MyGraph, v::QuotientVertexVertices)
+# DataGraphs.get_edges_data(g::MyGraph, v::QuotientEdgeEdges)
+#
+# DataGraphs.set_vertices_data!(g::MyGraph, v::QuotientVertexVertices)
+# DataGraphs.set_edges_data!(g::MyGraph, v::QuotientEdgeEdges)
+#
+# DataGraphs.unset_vertices_data!(g::MyGraph, v::QuotientVertexVertices)
+# DataGraphs.unset_edges_data!(g::MyGraph, v::QuotientEdgeEdges)
+#
+# DataGraphs.vertices_data_eltype(::Type{<:MyGraph}, ::Type{<:QuotientVertexVertices})
+# DataGraphs.edges_data_eltype(::Type{<:MyGraph}, ::Type{<:QuotientVertexVertices})
 
-# The type of `val` should be the return type of the corresponding `getindex` method.
-Base.setindex!(g::AbstractGraph, val, qv::QuotientVertex) = set_quotient_vertex_data!(g, val, qv)
-Base.setindex!(g::AbstractGraph, val, qe::QuotientEdge) = set_quotient_edge_data!(g, val, qe)
-#====#
-
-# Fallbacks
-get_quotient_vertex_data(g::AbstractGraph, qv) = map(v -> g[v], Indices(vertices(g, qv)))
-get_quotient_edge_data(g::AbstractGraph, qe) = map(e -> g[e], Indices(edges(g, qe)))
-
-function set_quotient_vertex_data!(g::AbstractGraph, val, qv)
-    for v in vertices(g, qv)
-        g[v] = val[v]
-    end
-    return g
-end
-function set_quotient_edge_data!(g::AbstractGraph, val, qe)
-    for e in edges(g, qe)
-        g[e] = val[e]
-    end
-    return g
-end
-
-# For ambiguity resolution
-Base.getindex(g::AbstractDataGraph, qv::QuotientVertex) = get_quotient_vertex_data(g, qv)
-Base.getindex(g::AbstractDataGraph, qe::QuotientEdge) = get_quotient_edge_data(g, qe)
-
-Base.setindex!(g::AbstractDataGraph, val, qv::QuotientVertex) = set_quotient_vertex_data!(g, val, qv)
-Base.setindex!(g::AbstractDataGraph, val, qe::QuotientEdge) = set_quotient_edge_data!(g, val, qe)
+to_quotient_indices(vertex) = QuotientVertex(vertex)
+to_quotient_indices(edge::AbstractEdge) = QuotientEdge(edge)
 
 # QuotientView; make sure quotient views of data graphs do data graph indexing.
-Base.getindex(qv::QuotientView{V, <:AbstractDataGraph}, v) where {V} = _getindex(qv, v)
-_getindex(qv::QuotientView, v) = getindex(parent(qv), QuotientVertex(v))
-_getindex(qv::QuotientView, e::AbstractEdge) = getindex(parent(qv), QuotientEdge(e))
+function Base.getindex(qv::QuotientView{V, <:AbstractDataGraph}, ind) where {V}
+    return getindex(parent(qv), to_quotient_indices(to_graph_indices(qv, ind)))
+end
 
-Base.setindex!(qv::QuotientView, ve) = _getindex(qv, ve)
-_setindex!(qv::QuotientView, val, v) = setindex!(parent(qv), val, QuotientEdge(v))
-_setindex!(qv::QuotientView, val, e::AbstractEdge) = setindex!(parent(qv), val, QuotientEdge(e))
+function Base.setindex!(qv::QuotientView{V, <:AbstractDataGraph}, val, ind) where {V}
+    return setindex!(parent(qv), val, to_quotient_indices(to_graph_indices(qv, ind)))
+end
 
-DataGraphs.vertex_data_eltype(qv::QuotientView) = DataGraphs.vertex_data_eltype(typeof(qv))
-DataGraphs.vertex_data_eltype(T::Type{<:QuotientView}) = eltype(Base.promote_op(vertex_data, T))
+function DataGraphs.get_vertex_data(qv::QuotientView, v)
+    return getindex(parent(qv), QuotientVertex(v))
+end
+function DataGraphs.get_edge_data(qv::QuotientView, e)
+    return getindex(parent(qv), QuotientEdge(e))
+end
 
-DataGraphs.edge_data_eltype(qv::QuotientView) = DataGraphs.edge_data_eltype(typeof(qv))
-DataGraphs.edge_data_eltype(T::Type{<:QuotientView}) = eltype(Base.promote_op(edge_data, T))
+function DataGraphs.set_vertex_data!(qv::QuotientView, val, v)
+    return setindex!(parent(qv), val, QuotientVertex(v))
+end
+function DataGraphs.set_edge_data!(qv::QuotientView, val, e)
+    return setindex!(parent(qv), val, QuotientEdge(e))
+end
+
+function DataGraphs.has_vertex_data(qv::QuotientView, v)
+    pg = parent(qv)
+    return has_vertices_data(pg, to_graph_indices(pg, QuotientVertex(v)))
+end
+function DataGraphs.has_edge_data(qv::QuotientView, e)
+    pg = parent(qv)
+    return has_edges_data(pg, to_graph_indices(pg, QuotientEdge(e)))
+end
+
+function DataGraphs.unset_vertex_data!(qv::QuotientView, v)
+    pg = parent(qv)
+    return unset_vertices_data!(pg, to_graph_indices(pg, QuotientVertex(v)))
+end
+function DataGraphs.unset_edge_data!(qv::QuotientView, e)
+    pg = parent(qv)
+    return unset_edges_data!(pg, to_graph_indices(pg, QuotientEdge(e)))
+end
+
+function DataGraphs.vertex_data_eltype(T::Type{<:QuotientView})
+    return vertices_data_eltype(parent_graph_type(T), QuotientVertexVertices)
+end
+function DataGraphs.edge_data_eltype(T::Type{<:QuotientView})
+    return edges_data_eltype(parent_graph_type(T), QuotientEdgeEdges)
+end
 
 DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
+
+function Base.isassigned(qv::QuotientView, ind)
+    return isassigned(parent(qv), to_quotient_indices(to_graph_indices(qv, ind)))
+end
 
 # PartitionedGraphs interface
 function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
@@ -74,14 +115,30 @@ end
 PartitionedGraphs.partitionedgraph(::AbstractDataGraph, parts) = not_implemented()
 PartitionedGraphs.departition(::AbstractDataGraph) = not_implemented()
 
-# TODO: These methods wont be necessary once DataGraphs pivots to a `get/setindex`-based interface.
-function DataGraphs.vertex_data(g::QuotientView)
-    vs = Indices(vertices(g))
-    return map(v -> getindex(parent(g), QuotientVertex(v)), vs)
+function DataGraphs.vertices_data_eltype(
+        T::Type{<:AbstractGraph},
+        ::Type{<:QuotientVertexVertices}
+    )
+    return eltype(Base.promote_op(quotientvertices_data, T))
 end
-function DataGraphs.edge_data(g::QuotientView)
-    es = Indices(edges(g))
-    return map(e -> getindex(parent(g), QuotientEdge(e)), es)
+
+function quotientvertices_data(g::AbstractGraph)
+    qvs = PartitionedGraphs.quotientvertices(g)
+    data = map(qv -> DataGraphs.get_vertices_data(g, to_graph_indices(g, qv)), qvs)
+    return data
+end
+
+function DataGraphs.edges_data_eltype(
+        T::Type{<:AbstractGraph},
+        ::Type{<:QuotientEdgeEdges}
+    )
+    return eltype(Base.promote_op(quotientedges_data, T))
+end
+
+function quotientedges_data(g::AbstractGraph)
+    qes = PartitionedGraphs.quotientedges(g)
+    data = map(qe -> DataGraphs.get_edges_data(g, to_graph_indices(g, qe)), qes)
+    return data
 end
 
 end
