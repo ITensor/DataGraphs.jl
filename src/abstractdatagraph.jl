@@ -11,14 +11,21 @@ using Graphs:
     nv,
     steiner_tree,
     vertices
-using NamedGraphs: NamedGraphs, AbstractNamedGraph, AbstractNamedEdge
+using NamedGraphs:
+    NamedGraphs,
+    AbstractNamedGraph,
+    AbstractNamedEdge,
+    AbstractVertices,
+    AbstractEdges,
+    position_graph_type
 using NamedGraphs.GraphsExtensions:
     GraphsExtensions,
     arrange_edge,
     incident_edges,
     is_edge_arranged,
     vertextype,
-    similar_graph
+    similar_graph,
+    add_vertices!
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using SimpleTraits: SimpleTraits, Not, @traitfn
@@ -26,6 +33,9 @@ using SimpleTraits: SimpleTraits, Not, @traitfn
 is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
+
+vertex_data_eltype(::Type{<:AbstractGraph}) = Any
+edge_data_eltype(::Type{<:AbstractGraph}) = Any
 
 vertex_data_eltype(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = VD
 edge_data_eltype(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
@@ -48,21 +58,64 @@ unset_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 
 # Quasi-derived interface; only required if inference fails
 
-underlying_graph_type(T::Type{<:AbstractDataGraph}) = Base.promote_op(underlying_graph, T)
+underlying_graph_type(T::Type{<:AbstractGraph}) = Base.promote_op(underlying_graph, T)
 
 # Derived interface
+
+has_vertices_data(g::AbstractGraph, vertices) = all(v -> has_vertex_data(g, v), vertices)
+has_edges_data(g::AbstractGraph, edges) = all(e -> has_edge_data(g, e), edges)
+
+function get_vertices_data(g::AbstractGraph, vertices)
+    return map(v -> get_vertex_data(g, v), Indices(vertices))
+end
+function vertices_data_eltype(G::Type{<:AbstractGraph}, V::Type{<:AbstractVertices})
+    return Dictionary{eltype(V), vertex_data_eltype(G)}
+end
+
+function get_edges_data(g::AbstractGraph, edges)
+    return map(e -> get_edge_data(g, e), Indices(edges))
+end
+function edges_data_eltype(G::Type{<:AbstractGraph}, E::Type{<:AbstractEdges{V, ET} where {V, ET}})
+    return Dictionary{eltype(E), edge_data_eltype(G)}
+end
+
+function set_vertices_data!(g::AbstractGraph, val, vertices)
+    for v in vertices
+        g[v] = val[v]
+    end
+    return g
+end
+function set_edges_data!(g::AbstractGraph, val, edges)
+    for e in edges
+        g[e] = val[e]
+    end
+    return g
+end
+
+function unset_vertices_data!(g::AbstractGraph, vertices)
+    for v in vertices
+        unset_vertex_data!(g, v)
+    end
+    return g
+end
+function unset_edges_data!(g::AbstractGraph, edges)
+    for e in edges
+        unset_edge_data!(g, e)
+    end
+    return g
+end
 
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
 Graphs.has_edge(g::AbstractDataGraph, edge) = has_edge(underlying_graph(g), edge)
 Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge) = has_edge(underlying_graph(g), edge)
 
-vertex_data(dg::AbstractDataGraph) = VertexDataView(dg)
-edge_data(dg::AbstractDataGraph) = EdgeDataView(dg)
+vertex_data(dg::AbstractGraph) = VertexDataView(dg)
+edge_data(dg::AbstractGraph) = EdgeDataView(dg)
 
-function assigned_vertices(graph::AbstractDataGraph)
+function assigned_vertices(graph::AbstractGraph)
     return Indices(filter(v -> isassigned(graph, v), vertices(graph)))
 end
-function assigned_edges(graph::AbstractDataGraph)
+function assigned_edges(graph::AbstractGraph)
     return Indices(filter(e -> isassigned(graph, e), edges(graph)))
 end
 
@@ -70,21 +123,21 @@ function Graphs.edgetype(graph::AbstractDataGraph)
     return Graphs.edgetype(underlying_graph(graph))
 end
 function Graphs.edgetype(graph_type::Type{<:AbstractDataGraph})
-    return Base.promote_op(edgetype, graph_type)
+    return edgetype(underlying_graph_type(graph_type))
 end
 function Graphs.is_directed(graph_type::Type{<:AbstractDataGraph})
     return Graphs.is_directed(underlying_graph_type(graph_type))
 end
 
-underlying_graph_type(graph::AbstractDataGraph) = typeof(underlying_graph(graph))
-vertex_data_eltype(graph::AbstractDataGraph) = vertex_data_eltype(typeof(graph))
-edge_data_eltype(graph::AbstractDataGraph) = edge_data_eltype(typeof(graph))
+underlying_graph_type(graph::AbstractGraph) = typeof(underlying_graph(graph))
+vertex_data_eltype(graph::AbstractGraph) = vertex_data_eltype(typeof(graph))
+edge_data_eltype(graph::AbstractGraph) = edge_data_eltype(typeof(graph))
 
 function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
     return position_graph_type(underlying_graph_type(type))
 end
 
-Base.zero(graph_type::Type{<:AbstractDataGraph}) = graph_type()
+Base.zero(graph_type::Type{<:AbstractDataGraph}) = similar_graph(graph_type)
 
 # Graphs overloads
 function Graphs.vertices(graph::AbstractDataGraph)
@@ -127,12 +180,12 @@ function Graphs.eccentricity(graph::AbstractDataGraph, distmx::AbstractMatrix)
 end
 
 # Fix for ambiguity error with `AbstractGraph` version
-function indegree(graph::AbstractDataGraph, vertex::Integer)
+function Graphs.indegree(graph::AbstractDataGraph, vertex::Integer)
     return indegree(underlying_graph(graph), vertex)
 end
 
 # Fix for ambiguity error with `AbstractGraph` version
-function outdegree(graph::AbstractDataGraph, vertex::Integer)
+function Graphs.outdegree(graph::AbstractDataGraph, vertex::Integer)
     return outdegree(underlying_graph(graph), vertex)
 end
 
@@ -181,7 +234,10 @@ end
 function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
 
     # Uses the two-argument `similar_graph` method so the new graph has correct vertex type
-    renamed_graph = similar_graph(graph, map(f, vertices(graph)))
+    renamed_vertices = map(f, vertices(graph))
+    renamed_graph = similar_graph(graph, eltype(renamed_vertices))
+
+    add_vertices!(renamed_graph, renamed_vertices)
 
     for vertex in vertices(graph)
         if isassigned(graph, vertex)
@@ -300,7 +356,7 @@ function Graphs.dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
     return Graphs.dfs_tree(underlying_graph(graph), s; kwargs...)
 end
 
-function map_vertex_data(f, graph::AbstractDataGraph; vertices = nothing)
+function map_vertex_data(f, graph::AbstractGraph; vertices = nothing)
     new_graph = copy(graph)
     vs = isnothing(vertices) ? Graphs.vertices(graph) : vertices
     for v in vs
@@ -309,7 +365,7 @@ function map_vertex_data(f, graph::AbstractDataGraph; vertices = nothing)
     return new_graph
 end
 
-function map_edge_data(f, graph::AbstractDataGraph; edges = nothing)
+function map_edge_data(f, graph::AbstractGraph; edges = nothing)
     new_graph = copy(graph)
     es = isnothing(edges) ? Graphs.edges(graph) : edges
     for e in es
@@ -320,22 +376,22 @@ function map_edge_data(f, graph::AbstractDataGraph; edges = nothing)
     return new_graph
 end
 
-function map_data(f, graph::AbstractDataGraph; vertices = nothing, edges = nothing)
+function map_data(f, graph::AbstractGraph; vertices = nothing, edges = nothing)
     graph = map_vertex_data(f, graph; vertices)
     return map_edge_data(f, graph; edges)
 end
 
 
-Base.get!(graph::AbstractGraph, key, default) = get!(() -> default, graph, key)
-function Base.get!(default::Base.Callable, graph::AbstractGraph, key)
+Base.get!(graph::AbstractDataGraph, key, default) = get!(() -> default, graph, key)
+function Base.get!(default::Base.Callable, graph::AbstractDataGraph, key)
     if isassigned(graph, key)
         return graph[key]
     else
         return graph[key] = default()
     end
 end
-Base.get(graph::AbstractGraph, key, default) = get(() -> default, graph, key)
-function Base.get(default::Base.Callable, graph::AbstractGraph, key)
+Base.get(graph::AbstractDataGraph, key, default) = get(() -> default, graph, key)
+function Base.get(default::Base.Callable, graph::AbstractDataGraph, key)
     if isassigned(graph, key)
         return graph[key]
     else
@@ -343,77 +399,18 @@ function Base.get(default::Base.Callable, graph::AbstractGraph, key)
     end
 end
 
-Base.getindex(graph::AbstractDataGraph, vertex) = get_vertex_data(graph, vertex)
-
-function Base.getindex(graph::AbstractDataGraph, vertex::OrdinalSuffixedInteger)
-    return graph[vertices(graph)[vertex]]
+function Base.isassigned(graph::AbstractDataGraph, index)
+    return _isassigned(graph, to_graph_indices(graph, index))
 end
-
-function Base.getindex(
-        graph::AbstractDataGraph, edge::Pair{<:OrdinalSuffixedInteger, <:OrdinalSuffixedInteger}
-    )
-    return graph[edgetype(graph)(vertices(graph)[edge[1]], vertices(graph)[edge[2]])]
-end
-
-function Base.getindex(graph::AbstractDataGraph, edge::AbstractEdge)
-    data = get_edge_data(graph, arrange_edge(graph, edge))
-    return reverse_data_direction(graph, edge, data)
-end
-
-# Support syntax `g[v1 => v2]`
-function Base.getindex(graph::AbstractDataGraph, edge::Pair)
-    return graph[edgetype(graph)(edge)]
-end
-
-# Support syntax `g[1, 2] = g[(1, 2)]`
-function Base.getindex(graph::AbstractDataGraph, i1, i2, i...)
-    return graph[(i1, i2, i...)]
-end
-
-Base.isassigned(graph::AbstractDataGraph, vertex) = has_vertex_data(graph, vertex)
-
-function Base.isassigned(graph::AbstractDataGraph, edge::AbstractEdge)
+_isassigned(graph::AbstractDataGraph, vertex) = has_vertex_data(graph, vertex)
+function _isassigned(graph::AbstractDataGraph, edge::AbstractEdge)
     return has_edge_data(graph, arrange_edge(graph, edge))
 end
-function Base.isassigned(graph::AbstractDataGraph, edge::Pair)
-    return isassigned(graph, edgetype(graph)(edge))
+function _isassigned(graph::AbstractDataGraph, edges::AbstractEdges)
+    return has_edges_data(graph, edges)
 end
-
-function Base.setindex!(graph::AbstractDataGraph, data, vertex)
-    set_vertex_data!(graph, data, vertex)
-    return graph
-end
-
-function Base.setindex!(graph::AbstractDataGraph, data, edge::AbstractEdge)
-    arranged_edge = arrange_edge(graph, edge)
-    arranged_data = reverse_data_direction(graph, edge, data)
-    set_edge_data!(graph, arranged_data, arranged_edge)
-    return graph
-end
-
-function Base.setindex!(graph::AbstractDataGraph, data, edge::Pair)
-    graph[edgetype(graph)(edge)] = data
-    return graph
-end
-
-# Support syntax `g[1, 2] = g[(1, 2)]`
-function Base.setindex!(graph::AbstractDataGraph, x, i1, i2, i...)
-    graph[(i1, i2, i...)] = x
-    return graph
-end
-
-function Base.setindex!(graph::AbstractDataGraph, value, vertex::OrdinalSuffixedInteger)
-    graph[vertices(graph)[vertex]] = value
-    return graph
-end
-
-function Base.setindex!(
-        graph::AbstractDataGraph,
-        value,
-        edge::Pair{<:OrdinalSuffixedInteger, <:OrdinalSuffixedInteger},
-    )
-    graph[edgetype(graph)(vertices(graph)[edge[1]], vertices(graph)[edge[2]])] = value
-    return graph
+function _isassigned(graph::AbstractDataGraph, vertices::AbstractVertices)
+    return has_vertices_data(graph, vertices)
 end
 
 function induced_subgraph_datagraph(graph::AbstractDataGraph, subvertices)
