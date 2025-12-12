@@ -31,7 +31,8 @@ using NamedGraphs.PartitionedGraphs:
     partitioned_vertices,
     quotientvertices,
     quotientedges,
-    parent_graph_type
+    parent_graph_type,
+    quotient_index
 using Dictionaries: Dictionary, Indices
 
 # Methods to overload if you dont want to use the defaults.
@@ -50,16 +51,16 @@ using Dictionaries: Dictionary, Indices
 # DataGraphs.vertices_data_eltype(::Type{<:MyGraph}, ::Type{<:QuotientVertexVertices})
 # DataGraphs.edges_data_eltype(::Type{<:MyGraph}, ::Type{<:QuotientVertexVertices})
 
-to_quotient_indices(vertex) = QuotientVertex(vertex)
-to_quotient_indices(edge::AbstractEdge) = QuotientEdge(edge)
+PartitionedGraphs.quotient_index(vertex) = QuotientVertex(vertex)
+PartitionedGraphs.quotient_index(edge::AbstractEdge) = QuotientEdge(edge)
 
 # QuotientView; make sure quotient views of data graphs do data graph indexing.
 function Base.getindex(qv::QuotientView{V, <:AbstractDataGraph}, ind) where {V}
-    return getindex(parent(qv), to_quotient_indices(to_graph_indices(qv, ind)))
+    return getindex(parent(qv), quotient_index(to_graph_indices(qv, ind)))
 end
 
 function Base.setindex!(qv::QuotientView{V, <:AbstractDataGraph}, val, ind) where {V}
-    return setindex!(parent(qv), val, to_quotient_indices(to_graph_indices(qv, ind)))
+    return setindex!(parent(qv), val, quotient_index(to_graph_indices(qv, ind)))
 end
 
 function DataGraphs.get_vertex_data(qv::QuotientView, v)
@@ -104,7 +105,7 @@ end
 DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
 
 function Base.isassigned(qv::QuotientView, ind)
-    return isassigned(parent(qv), to_quotient_indices(to_graph_indices(qv, ind)))
+    return isassigned(parent(qv), quotient_index(to_graph_indices(qv, ind)))
 end
 
 # PartitionedGraphs interface
