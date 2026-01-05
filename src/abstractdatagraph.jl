@@ -65,16 +65,24 @@ underlying_graph_type(T::Type{<:AbstractGraph}) = Base.promote_op(underlying_gra
 has_vertices_data(g::AbstractGraph, vertices) = all(v -> has_vertex_data(g, v), vertices)
 has_edges_data(g::AbstractGraph, edges) = all(e -> has_edge_data(g, e), edges)
 
-function get_vertices_data(g::AbstractGraph, vertices)
-    return map(v -> get_vertex_data(g, v), Indices(vertices))
+# Interface function
+get_vertices_data(g::AbstractGraph, vertices) = _get_vertices_data(g, vertices)
+
+# For defining default behaviour
+function _get_vertices_data(g::AbstractGraph, vertices)
+    return map(v -> getindex(g, v), Indices(vertices))
 end
+
 function vertices_data_eltype(G::Type{<:AbstractGraph}, V::Type{<:AbstractVertices})
     return Dictionary{eltype(V), vertex_data_eltype(G)}
 end
 
-function get_edges_data(g::AbstractGraph, edges)
-    return map(e -> get_edge_data(g, e), Indices(edges))
+get_edges_data(g::AbstractGraph, edges) = _get_edges_data(g, edges)
+
+function _get_edges_data(g::AbstractGraph, edges)
+    return map(e -> getindex(g, e), Indices(edges))
 end
+
 function edges_data_eltype(G::Type{<:AbstractGraph}, E::Type{<:AbstractEdges{V, ET} where {V, ET}})
     return Dictionary{eltype(E), edge_data_eltype(G)}
 end
@@ -400,7 +408,7 @@ function Base.get(default::Base.Callable, graph::AbstractDataGraph, key)
 end
 
 function Base.isassigned(graph::AbstractDataGraph, index)
-    return _isassigned(graph, to_graph_indices(graph, index))
+    return _isassigned(graph, to_graph_index(graph, index))
 end
 _isassigned(graph::AbstractDataGraph, vertex) = has_vertex_data(graph, vertex)
 function _isassigned(graph::AbstractDataGraph, edge::AbstractEdge)

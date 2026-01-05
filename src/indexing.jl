@@ -1,7 +1,7 @@
-using NamedGraphs: to_graph_indices, AbstractEdges, AbstractVertices
+using NamedGraphs: to_graph_index, AbstractEdges, AbstractVertices
 
 function Base.getindex(graph::AbstractDataGraph, indices)
-    return _getindex(graph, to_graph_indices(graph, indices))
+    return _getindex(graph, to_graph_index(graph, indices))
 end
 
 _getindex(graph::AbstractGraph, vertex) = get_vertex_data(graph, vertex)
@@ -24,7 +24,7 @@ function Base.getindex(graph::AbstractDataGraph, i1, i2, i...)
 end
 
 function Base.setindex!(graph::AbstractDataGraph, data, index)
-    _setindex!(graph, data, to_graph_indices(graph, index))
+    _setindex!(graph, data, to_graph_index(graph, index))
     return graph
 end
 
@@ -55,14 +55,14 @@ end
 
 # Ordinal Indexing
 
-function NamedGraphs.to_graph_indices(
+function NamedGraphs.to_graph_index(
         graph::AbstractGraph,
         pair::Pair{<:OrdinalSuffixedInteger, <:OrdinalSuffixedInteger}
     )
     vs = vertices(graph)
     v1, v2 = pair
-    return to_graph_indices(graph, vs[v1] => vs[v2])
+    return to_graph_index(graph, vs[v1] => vs[v2])
 end
-function NamedGraphs.to_graph_indices(graph::AbstractGraph, vertex::OrdinalSuffixedInteger)
-    return to_graph_indices(graph, vertices(graph)[vertex])
+function NamedGraphs.to_graph_index(graph::AbstractGraph, vertex::OrdinalSuffixedInteger)
+    return to_graph_index(graph, vertices(graph)[vertex])
 end
