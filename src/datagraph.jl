@@ -130,3 +130,23 @@ function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
         edgetype(graph_type),
     }
 end
+
+function induced_subgraph_datagraph(graph::DataGraph, subvertices)
+    underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
+    subgraph = DataGraph(
+        underlying_subgraph;
+        vertex_data_eltype = vertex_data_eltype(graph),
+        edge_data_eltype = edge_data_eltype(graph),
+    )
+    for v in vertices(subgraph)
+        if isassigned(graph, v)
+            subgraph[v] = graph[v]
+        end
+    end
+    for e in edges(subgraph)
+        if isassigned(graph, e)
+            subgraph[e] = graph[e]
+        end
+    end
+    return subgraph, vlist
+end

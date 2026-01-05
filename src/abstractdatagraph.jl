@@ -413,21 +413,6 @@ function _isassigned(graph::AbstractDataGraph, vertices::AbstractVertices)
     return has_vertices_data(graph, vertices)
 end
 
-function induced_subgraph_datagraph(graph::AbstractDataGraph, subvertices)
-    underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
-    subgraph = similar_type(graph)(underlying_subgraph)
-    for v in vertices(subgraph)
-        if isassigned(graph, v)
-            subgraph[v] = graph[v]
-        end
-    end
-    for e in edges(subgraph)
-        if isassigned(graph, e)
-            subgraph[e] = graph[e]
-        end
-    end
-    return subgraph, vlist
-end
 function Graphs.induced_subgraph(graph::AbstractDataGraph, subvertices)
     return induced_subgraph_datagraph(graph, subvertices)
 end
