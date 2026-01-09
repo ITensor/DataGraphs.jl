@@ -49,7 +49,7 @@ function Base.setindex!(view::VertexOrEdgeDataView{K, V}, data::V, key::K) where
     return view
 end
 function Dictionaries.settokenvalue!(view::VertexOrEdgeDataView{<:Any, T}, token, value::T) where {T}
-    setindex!(view, value, Dictionaries.gettokenvalue(view, token))
+    setindex!(view, value, gettokenvalue(keys(view), token))
     return view
 end
 
