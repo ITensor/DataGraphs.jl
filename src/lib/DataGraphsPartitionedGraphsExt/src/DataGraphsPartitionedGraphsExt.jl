@@ -43,7 +43,7 @@ using NamedGraphs.PartitionedGraphs:
     quotientvertices,
     quotientedges,
     parent_graph_type,
-    quotient_index
+    to_quotient_index
 using Dictionaries: Dictionary, Indices
 
 # Methods to overload if you dont want to use the defaults.
@@ -87,12 +87,6 @@ function DataGraphs._get_edges_data(g::AbstractGraph, e::QuotientEdgeEdges)
     return getindex(g, Edges(parent_graph_indices(e)))
 end
 
-
-# function DataGraphs.get_vertices_data(qv::QuotientView, vertices::AbstractGraphIndices)
-#     inds = Indices(parent_graph_indices(vertices))
-#     return map(v -> getindex(qv, v), inds)
-# end
-
 function DataGraphs.set_vertex_data!(qv::QuotientView, val, v)
     return setindex!(parent(qv), val, QuotientVertex(v))
 end
@@ -134,7 +128,7 @@ get_quotient_edges_data(g::AbstractGraph) = get_edges_data(g, QuotientEdges(g))
 DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
 
 function Base.isassigned(qv::QuotientView, ind)
-    return isassigned(parent(qv), quotient_index(to_graph_index(qv, ind)))
+    return isassigned(parent(qv), to_quotient_index(to_graph_index(qv, ind)))
 end
 
 # PartitionedGraphs interface
