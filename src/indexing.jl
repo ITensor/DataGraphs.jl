@@ -1,4 +1,5 @@
 using NamedGraphs: to_graph_index, AbstractEdges, AbstractVertices
+using NamedGraphs.GraphsExtensions: subgraph
 
 function Base.getindex(graph::AbstractDataGraph, indices)
     return _getindex(graph, to_graph_index(graph, indices))
@@ -12,10 +13,10 @@ function _getindex(graph::AbstractGraph, edge::AbstractEdge)
 end
 
 function _getindex(graph::AbstractGraph, vertices::AbstractVertices)
-    return get_vertices_data(graph, vertices)
+    return subgraph(graph, vertices)
 end
 function _getindex(graph::AbstractGraph, edges::AbstractEdges)
-    return get_edges_data(graph, edges)
+    return subgraph(graph, edges)
 end
 
 # Support syntax `g[1, 2] = g[(1, 2)]`
