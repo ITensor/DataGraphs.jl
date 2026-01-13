@@ -37,6 +37,7 @@ using NamedGraphs.PartitionedGraphs:
     QuotientVertexVertex,
     QuotientVertexVertices,
     QuotientVerticesVertices,
+    QuotientVertexOrVerticesVertices,
     QuotientVertices,
     QuotientView,
     partitioned_vertices,
@@ -75,11 +76,7 @@ end
 DataGraphs.get_vertex_data(qv::QuotientView, v) = getindex(parent(qv), QuotientVertex(v))
 DataGraphs.get_edge_data(qv::QuotientView, e) = getindex(parent(qv), QuotientEdge(e))
 
-function DataGraphs._get_vertices_data(g::AbstractGraph, v::QuotientVertexVertices)
-    return getindex(g, Vertices(parent_graph_indices(v)))
-end
-
-function DataGraphs._get_vertices_data(g::AbstractGraph, v::QuotientVerticesVertices)
+function DataGraphs._get_vertices_data(g::AbstractGraph, v::QuotientVertexOrVerticesVertices)
     return getindex(g, Vertices(parent_graph_indices(v)))
 end
 
