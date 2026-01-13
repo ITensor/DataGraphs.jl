@@ -16,7 +16,7 @@ function _getindex(graph::AbstractGraph, vertices::AbstractVertices)
     return subgraph(graph, vertices)
 end
 function _getindex(graph::AbstractGraph, edges::AbstractEdges)
-    return edge_subgraph(graph, edges)
+    return throw(MethodError(_getindex, (graph, edges)))
 end
 
 # Support syntax `g[1, 2] = g[(1, 2)]`
