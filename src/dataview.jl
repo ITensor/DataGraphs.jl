@@ -61,3 +61,20 @@ function Dictionaries.deletetoken!(view::VertexOrEdgeDataView, token)
     Dictionaries.unset!(view.graph, gettokenvalue(keys(view), token))
     return view
 end
+
+Base.size(view::VertexDataView) = (nv(view.graph),)
+Base.size(view::EdgeDataView) = (ne(view.graph),)
+
+function Base.copyto!(dest::VertexDataView, bc::Base.Broadcast.Broadcasted)
+    for (i, vertex) in enumerate(vertices(dest.graph))
+        dest[vertex] = bc[i]
+    end
+    return dest
+end
+
+function Base.copyto!(dest::EdgeDataView, bc::Base.Broadcast.Broadcasted)
+    for (i, edge) in enumerate(edges(dest.graph))
+        dest[edge] = bc[i]
+    end
+    return dest
+end
