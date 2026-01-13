@@ -4,7 +4,7 @@ using NamedGraphs.NamedGraphGenerators: named_grid
 using Graphs: ne, nv
 
 g = named_grid((2, 2))
-dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = String)
+dg = DataGraph(g; vertex_data_type = String, edge_data_type = String)
 
 dg[1, 1] = "V11"
 dg[1, 2] = "V12"

@@ -34,11 +34,11 @@ is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
 
-vertex_data_eltype(::Type{<:AbstractGraph}) = Any
-edge_data_eltype(::Type{<:AbstractGraph}) = Any
+vertex_data_type(::Type{<:AbstractGraph}) = Any
+edge_data_type(::Type{<:AbstractGraph}) = Any
 
-vertex_data_eltype(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = VD
-edge_data_eltype(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
+vertex_data_type(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = VD
+edge_data_type(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
 
 # Minimal interface
 # TODO: Define for `AbstractGraph` as a `DataGraphInterface`.
@@ -74,7 +74,7 @@ function _get_vertices_data(g::AbstractGraph, vertices)
 end
 
 function vertices_data_eltype(G::Type{<:AbstractGraph}, V::Type{<:AbstractVertices})
-    return Dictionary{eltype(V), vertex_data_eltype(G)}
+    return Dictionary{eltype(V), vertex_data_type(G)}
 end
 
 get_edges_data(g::AbstractGraph, edges) = _get_edges_data(g, edges)
@@ -84,7 +84,7 @@ function _get_edges_data(g::AbstractGraph, edges)
 end
 
 function edges_data_eltype(G::Type{<:AbstractGraph}, E::Type{<:AbstractEdges{V, ET} where {V, ET}})
-    return Dictionary{eltype(E), edge_data_eltype(G)}
+    return Dictionary{eltype(E), edge_data_type(G)}
 end
 
 function set_vertices_data!(g::AbstractGraph, val, vertices)
@@ -138,8 +138,8 @@ function Graphs.is_directed(graph_type::Type{<:AbstractDataGraph})
 end
 
 underlying_graph_type(graph::AbstractGraph) = typeof(underlying_graph(graph))
-vertex_data_eltype(graph::AbstractGraph) = vertex_data_eltype(typeof(graph))
-edge_data_eltype(graph::AbstractGraph) = edge_data_eltype(typeof(graph))
+vertex_data_type(graph::AbstractGraph) = vertex_data_type(typeof(graph))
+edge_data_type(graph::AbstractGraph) = edge_data_type(typeof(graph))
 
 function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
     return position_graph_type(underlying_graph_type(type))

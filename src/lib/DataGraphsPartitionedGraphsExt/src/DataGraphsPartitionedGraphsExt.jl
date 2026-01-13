@@ -110,11 +110,11 @@ function DataGraphs.unset_edge_data!(qv::QuotientView, e)
 end
 
 # TODO: eltype -> type?
-function DataGraphs.vertex_data_eltype(T::Type{<:QuotientView})
+function DataGraphs.vertex_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
     return Base.promote_op(getindex, PGT, QuotientVertex{vertextype(T)})
 end
-function DataGraphs.edge_data_eltype(T::Type{<:QuotientView})
+function DataGraphs.edge_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
     return Base.promote_op(getindex, PGT, QuotientEdge{vertextype(T), edgetype(T)})
 end

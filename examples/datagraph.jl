@@ -4,7 +4,7 @@ using NamedGraphs: NamedEdge
 using NamedGraphs.NamedGraphGenerators: named_grid
 
 g = named_grid((4))
-dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
+dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
 @show !isassigned(dg, NamedEdge(1, 2))
 @show !isassigned(dg, 1 => 2)
 @show !isassigned(dg, NamedEdge(1 => 2))

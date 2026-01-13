@@ -61,8 +61,8 @@ function unset_edge_data!(dg::DataGraph, edge)
 end
 
 underlying_graph_type(G::Type{<:DataGraph}) = fieldtype(G, :underlying_graph)
-vertex_data_eltype(G::Type{<:DataGraph}) = eltype(fieldtype(G, :vertex_data))
-edge_data_eltype(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
+vertex_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :vertex_data))
+edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 
 # Extras
 
@@ -80,13 +80,13 @@ function Base.copy(graph::DataGraph)
 end
 
 function DataGraph{V}(
-        underlying_graph::AbstractGraph; vertex_data_eltype::Type = Any, edge_data_eltype::Type = Any
+        underlying_graph::AbstractGraph; vertex_data_type::Type = Any, edge_data_type::Type = Any
     ) where {V}
     converted_underlying_graph = convert_vertextype(V, underlying_graph)
     return _DataGraph(
         converted_underlying_graph,
-        Dictionary{vertextype(converted_underlying_graph), vertex_data_eltype}(),
-        Dictionary{edgetype(converted_underlying_graph), edge_data_eltype}(),
+        Dictionary{vertextype(converted_underlying_graph), vertex_data_type}(),
+        Dictionary{edgetype(converted_underlying_graph), edge_data_type}(),
     )
 end
 
@@ -124,8 +124,8 @@ end
 function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
     return DataGraph{
         vertextype(graph_type),
-        vertex_data_eltype(graph_type),
-        edge_data_eltype(graph_type),
+        vertex_data_type(graph_type),
+        edge_data_type(graph_type),
         directed_graph_type(underlying_graph_type(graph_type)),
         edgetype(graph_type),
     }
@@ -135,8 +135,8 @@ function induced_subgraph_datagraph(graph::DataGraph, subvertices)
     underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
     subgraph = DataGraph(
         underlying_subgraph;
-        vertex_data_eltype = vertex_data_eltype(graph),
-        edge_data_eltype = edge_data_eltype(graph),
+        vertex_data_type = vertex_data_type(graph),
+        edge_data_type = edge_data_type(graph),
     )
     for v in vertices(subgraph)
         if isassigned(graph, v)

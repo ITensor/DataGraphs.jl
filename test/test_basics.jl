@@ -4,10 +4,10 @@ using DataGraphs:
     EdgeDataView,
     VertexDataView,
     edge_data,
-    edge_data_eltype,
+    edge_data_type,
     underlying_graph,
     vertex_data,
-    vertex_data_eltype
+    vertex_data_type
 using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
 using Graphs:
     add_edge!,
@@ -55,7 +55,7 @@ using Test: @test, @test_broken, @testset
 
     @testset "Basics" begin
         g = named_grid(4)
-        dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
+        dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
         @test !isassigned(dg, NamedEdge(1, 2))
         @test !isassigned(dg, 1 => 2)
         @test !isassigned(dg, NamedEdge(1 => 2))
@@ -112,7 +112,7 @@ using Test: @test, @test_broken, @testset
         # TODO: Make a more compact constructor that directly accepts
         # vertex and edge data? Maybe `DataGraph(g; vertex_data=vdata, edge_data=edata)`
         # or `DataGraph(g; vertex_data=v -> "V$v", edge_data=e -> "E$(src(e))$(dst(e))")`.
-        dg = DataGraph(g; vertex_data_eltype = eltype(vdata), edge_data_eltype = eltype(edata))
+        dg = DataGraph(g; vertex_data_type = eltype(vdata), edge_data_type = eltype(edata))
         for v in vertices(dg)
             dg[v] = vdata[v]
         end
@@ -135,8 +135,8 @@ using Test: @test, @test_broken, @testset
             DataGraph{UInt16, String, String, NamedGraph{UInt16}, NamedEdge{UInt16}}
         @test vertextype(dg_uint16) === UInt16
         @test edgetype(dg_uint16) === NamedEdge{UInt16}
-        @test vertex_data_eltype(dg_uint16) === String
-        @test edge_data_eltype(dg_uint16) === String
+        @test vertex_data_type(dg_uint16) === String
+        @test edge_data_type(dg_uint16) === String
         @test dg_uint16[1] == "V1"
         @test dg_uint16[2] == "V2"
         @test dg_uint16[3] == "V3"
@@ -181,7 +181,7 @@ using Test: @test, @test_broken, @testset
 
     @testset "get and get! functions" begin
         g = named_grid(4)
-        dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
+        dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
 
         # Test for vertices
         @test get(dg, 1, "default") == "default"
@@ -236,14 +236,14 @@ using Test: @test, @test_broken, @testset
 
     @testset "Constructors specifying vertex type" begin
         dg = DataGraph{Float64}(
-            named_path_graph(4); vertex_data_eltype = String, edge_data_eltype = Symbol
+            named_path_graph(4); vertex_data_type = String, edge_data_type = Symbol
         )
         @test nv(dg) == 4
         @test ne(dg) == 3
         @test edgetype(dg) === NamedEdge{Float64}
         @test vertextype(dg) === Float64
-        @test vertex_data_eltype(dg) === String
-        @test edge_data_eltype(dg) === Symbol
+        @test vertex_data_type(dg) === String
+        @test edge_data_type(dg) === Symbol
         @test issetequal(vertices(dg), Float64.(1:4))
         @test vertices(dg) isa AbstractIndices{Float64}
         @test eltype(vertices(dg)) === Float64
@@ -259,7 +259,7 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "Disjoint unions" begin
-        g = DataGraph(named_grid((2, 2)); vertex_data_eltype = String, edge_data_eltype = String)
+        g = DataGraph(named_grid((2, 2)); vertex_data_type = String, edge_data_type = String)
 
         for v in vertices(g)
             g[v] = "V$v"
@@ -447,8 +447,8 @@ using Test: @test, @test_broken, @testset
     @testset "OrdinalIndexing" begin
         g = DataGraph(
             NamedGraph(path_graph(3), ["a", "b", "c"]);
-            vertex_data_eltype = String,
-            edge_data_eltype = Symbol,
+            vertex_data_type = String,
+            edge_data_type = Symbol,
         )
         g[1st] = "v_a"
         g[2nd] = "v_b"
@@ -477,8 +477,8 @@ using Test: @test, @test_broken, @testset
     @testset "Data views" begin
         g = DataGraph(
             NamedGraph(path_graph(3), ["a", "b", "c"]);
-            vertex_data_eltype = Int,
-            edge_data_eltype = Float64
+            vertex_data_type = Int,
+            edge_data_type = Float64
         )
         g["b"] = 2
         g["c"] = 3

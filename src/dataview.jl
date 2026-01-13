@@ -4,7 +4,7 @@ struct VertexDataView{V, VD, G <: AbstractGraph{V}} <: AbstractDictionary{V, VD}
     graph::G
     function VertexDataView(graph)
         V = vertextype(graph)
-        VD = vertex_data_eltype(graph)
+        VD = vertex_data_type(graph)
         G = typeof(graph)
         return new{V, VD, G}(graph)
     end
@@ -16,7 +16,7 @@ struct EdgeDataView{E, ED, G <: AbstractGraph} <: AbstractDictionary{E, ED}
     graph::G
     function EdgeDataView(graph)
         E = edgetype(graph)
-        ED = edge_data_eltype(graph)
+        ED = edge_data_type(graph)
         G = typeof(graph)
         return new{E, ED, G}(graph)
     end
