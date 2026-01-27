@@ -1,4 +1,12 @@
-using Dictionaries: Dictionaries, AbstractDictionary, gettokenvalue, filterview
+using Dictionaries:
+    Dictionaries,
+    AbstractDictionary,
+    gettokenvalue,
+    filterview,
+    IndexError,
+    Indices,
+    getindices
+using NamedGraphs: to_graph_index, to_vertices, to_edges
 
 struct VertexDataView{V, VD, G <: AbstractGraph{V}} <: AbstractDictionary{V, VD}
     graph::G
@@ -31,8 +39,29 @@ function Base.keys(view::VertexOrEdgeDataView)
 end
 
 Base.isassigned(view::VertexOrEdgeDataView{K}, key::K) where {K} = isassigned(view.graph, key)
-Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = view.graph[key]
-Base.getindex(view::EdgeDataView, key::Pair) = view.graph[key]
+
+Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = _getindex(view, key)
+function Base.getindex(view::VertexOrEdgeDataView, key)
+    return _getindex(view, to_graph_index(view.graph, key))
+end
+
+function _getindex(view::VertexDataView, key)
+    if key in keys(view)
+        return get_vertex_data(view.graph, key)
+    else
+        throw(IndexError("VertexDataView does not contain index: $key"))
+    end
+end
+function _getindex(view::EdgeDataView, key)
+    if key in keys(view)
+        return get_edge_data(view.graph, key)
+    else
+        throw(IndexError("EdgeDataView does not contain index: $key"))
+    end
+end
+
+# Support indexing with `Indices`.
+Base.getindex(view::VertexOrEdgeDataView, keys::Indices) = getindices(view, keys)
 
 Dictionaries.istokenizable(::Type{<:VertexOrEdgeDataView}) = true
 function Dictionaries.istokenassigned(view::VertexOrEdgeDataView, token)
@@ -62,19 +91,16 @@ function Dictionaries.deletetoken!(view::VertexOrEdgeDataView, token)
     return view
 end
 
-Base.size(view::VertexDataView) = (nv(view.graph),)
-Base.size(view::EdgeDataView) = (ne(view.graph),)
-
-function Base.copyto!(dest::VertexDataView, bc::Base.Broadcast.Broadcasted)
-    for (i, vertex) in enumerate(vertices(dest.graph))
-        dest[vertex] = bc[i]
+function Base.copyto!(dest::VertexOrEdgeDataView, bc::Dictionaries.BroadcastedDictionary)
+    for (key, val) in pairs(bc)
+        dest[to_graph_index(dest.graph, key)] = val
     end
     return dest
 end
 
-function Base.copyto!(dest::EdgeDataView, bc::Base.Broadcast.Broadcasted)
-    for (i, edge) in enumerate(edges(dest.graph))
-        dest[edge] = bc[i]
+function Base.fill!(view::VertexOrEdgeDataView{<:Any, T}, value::T) where {T}
+    for key in keys(view)
+        view[key] = value
     end
-    return dest
+    return view
 end

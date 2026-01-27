@@ -512,5 +512,11 @@ using Test: @test, @test_broken, @testset
         edata = edge_data(g)
         @test edata["a" => "b"] == -1.0
         @test edata[edgetype(g)("b" => "c")] == -2.0
+
+        vertex_data(g) .= dictionary(["a" => 1, "b" => 2, "c" => 3])
+        @test collect(vertex_data(g)) == [1, 2, 3]
+
+        edge_data(g) .= dictionary([("a" => "b") => 1, ("b" => "c") => 2])
+        @test collect(edge_data(g)) == [1.0, 2.0]
     end
 end

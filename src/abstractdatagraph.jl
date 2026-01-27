@@ -53,64 +53,38 @@ get_edge_data(::AbstractDataGraph, edge) = not_implemented()
 set_vertex_data!(::AbstractDataGraph, data, vertex) = not_implemented()
 set_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 
-unset_vertex_data!(::AbstractDataGraph, data, vertex) = not_implemented()
-unset_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
+unset_vertex_data!(::AbstractDataGraph, vertex) = not_implemented()
+unset_edge_data!(::AbstractDataGraph, edge) = not_implemented()
 
 # Quasi-derived interface; only required if inference fails
 
 underlying_graph_type(T::Type{<:AbstractGraph}) = Base.promote_op(underlying_graph, T)
 
-# Derived interface
 
-has_vertices_data(g::AbstractGraph, vertices) = all(v -> has_vertex_data(g, v), vertices)
+# Devirved Interface functions with defaults
+# has_vertices_data(g::AbstractGraph, vertices) = _has_vertices_data(g, vertices)
+# has_edges_data(g::AbstractGraph, edges) = _has_edges_data(g, edges)
+
+# get_vertices_data(g::AbstractGraph, vertices) = _get_vertices_data(g, vertices)
+# get_edges_data(g::AbstractGraph, edges) = _get_edges_data(g, edges)
+
+# The defaults
 has_edges_data(g::AbstractGraph, edges) = all(e -> has_edge_data(g, e), edges)
+has_vertices_data(g::AbstractGraph, vertices) = all(v -> has_vertex_data(g, v), vertices)
 
-# Interface function
-get_vertices_data(g::AbstractGraph, vertices) = _get_vertices_data(g, vertices)
-
-# For defining default behaviour
-function _get_vertices_data(g::AbstractGraph, vertices)
-    return map(v -> getindex(g, v), Indices(vertices))
+function get_vertices_data(g::AbstractGraph, vertices)
+    return map(v -> get_graph_data(g, v), Indices(vertices))
+end
+function get_edges_data(g::AbstractGraph, edges)
+    return map(e -> get_graph_data(g, e), Indices(edges))
 end
 
 function vertices_data_eltype(G::Type{<:AbstractGraph}, V::Type{<:AbstractVertices})
     return Dictionary{eltype(V), vertex_data_type(G)}
 end
 
-get_edges_data(g::AbstractGraph, edges) = _get_edges_data(g, edges)
-
-function _get_edges_data(g::AbstractGraph, edges)
-    return map(e -> getindex(g, e), Indices(edges))
-end
-
 function edges_data_eltype(G::Type{<:AbstractGraph}, E::Type{<:AbstractEdges{V, ET} where {V, ET}})
     return Dictionary{eltype(E), edge_data_type(G)}
-end
-
-function set_vertices_data!(g::AbstractGraph, val, vertices)
-    for v in vertices
-        g[v] = val[v]
-    end
-    return g
-end
-function set_edges_data!(g::AbstractGraph, val, edges)
-    for e in edges
-        g[e] = val[e]
-    end
-    return g
-end
-
-function unset_vertices_data!(g::AbstractGraph, vertices)
-    for v in vertices
-        unset_vertex_data!(g, v)
-    end
-    return g
-end
-function unset_edges_data!(g::AbstractGraph, edges)
-    for e in edges
-        unset_edge_data!(g, e)
-    end
-    return g
 end
 
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
@@ -169,6 +143,11 @@ end
 # These cannot be known abstractly.
 GraphsExtensions.directed_graph_type(::AbstractDataGraph) = not_implemented()
 GraphsExtensions.undirected_graph_type(::AbstractDataGraph) = not_implemented()
+
+# Thase canot be implemented abstractly.
+function GraphsExtensions.convert_vertextype(vertextype::Type, graph::AbstractDataGraph)
+    return not_implemented()
+end
 
 # Fix for ambiguity error with `AbstractGraph` version
 function Graphs.degree(graph::AbstractDataGraph, vertex::Integer)
@@ -407,28 +386,26 @@ function Base.get(default::Base.Callable, graph::AbstractDataGraph, key)
     end
 end
 
-function Base.isassigned(graph::AbstractDataGraph, index)
-    return _isassigned(graph, to_graph_index(graph, index))
-end
-_isassigned(graph::AbstractDataGraph, vertex) = has_vertex_data(graph, vertex)
-function _isassigned(graph::AbstractDataGraph, edge::AbstractEdge)
-    return has_edge_data(graph, arrange_edge(graph, edge))
-end
-function _isassigned(graph::AbstractDataGraph, edges::AbstractEdges)
-    return has_edges_data(graph, edges)
-end
-function _isassigned(graph::AbstractDataGraph, vertices::AbstractVertices)
-    return has_vertices_data(graph, vertices)
-end
 
-function Graphs.induced_subgraph(graph::AbstractDataGraph, subvertices)
+function NamedGraphs.induced_subgraph_from_vertices(graph::AbstractDataGraph, subvertices)
     return induced_subgraph_datagraph(graph, subvertices)
 end
-# Fix ambiguity with Graphs.jl for integer `subvertices`.
-function Graphs.induced_subgraph(
-        graph::AbstractDataGraph, subvertices::AbstractVector{<:Integer}
-    )
-    return induced_subgraph_datagraph(graph, subvertices)
+function induced_subgraph_datagraph(graph::AbstractDataGraph, subvertices)
+    underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
+
+    subgraph = similar_graph(graph, underlying_subgraph)
+
+    for v in vertices(subgraph)
+        if isassigned(graph, v)
+            subgraph[v] = graph[v]
+        end
+    end
+    for e in edges(subgraph)
+        if isassigned(graph, e)
+            subgraph[e] = graph[e]
+        end
+    end
+    return subgraph, vlist
 end
 
 #

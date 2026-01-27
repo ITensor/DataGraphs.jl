@@ -70,6 +70,13 @@ function GraphsExtensions.similar_graph(T::Type{<:DataGraph})
     similar_underlying_graph = similar_graph(underlying_graph_type(T))
     return T(similar_underlying_graph)
 end
+function GraphsExtensions.similar_graph(dg::DataGraph, underlying_graph::AbstractGraph)
+    return DataGraph(
+        underlying_graph;
+        vertex_data_type = vertex_data_type(dg),
+        edge_data_type = edge_data_type(dg)
+    )
+end
 
 function Base.copy(graph::DataGraph)
     # Need to manually copy the keys of Dictionaries, see:
@@ -129,24 +136,4 @@ function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
         directed_graph_type(underlying_graph_type(graph_type)),
         edgetype(graph_type),
     }
-end
-
-function induced_subgraph_datagraph(graph::DataGraph, subvertices)
-    underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
-    subgraph = DataGraph(
-        underlying_subgraph;
-        vertex_data_type = vertex_data_type(graph),
-        edge_data_type = edge_data_type(graph),
-    )
-    for v in vertices(subgraph)
-        if isassigned(graph, v)
-            subgraph[v] = graph[v]
-        end
-    end
-    for e in edges(subgraph)
-        if isassigned(graph, e)
-            subgraph[e] = graph[e]
-        end
-    end
-    return subgraph, vlist
 end
