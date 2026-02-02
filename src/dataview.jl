@@ -99,7 +99,7 @@ function Base.copyto!(dest::VertexOrEdgeDataView, bc::Dictionaries.BroadcastedDi
 end
 
 function Base.fill!(view::VertexOrEdgeDataView{<:Any, T}, value::T) where {T}
-    for key in keys(view)
+    for key in _keys(view)
         view[key] = value
     end
     return view
