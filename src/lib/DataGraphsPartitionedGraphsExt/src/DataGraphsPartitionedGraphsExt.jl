@@ -74,7 +74,7 @@ using Dictionaries: Dictionary, Indices
 
 # ======================== DataGraphs interface for QuotientView ========================= #
 
-function NamedGraphs.get_graph_index(qv::QuotientView{V, <:AbstractDataGraph}, ind) where {V}
+function NamedGraphs.get_graph_index(qv::QuotientView{<:Any, <:AbstractDataGraph}, ind)
     return DataGraphs.get_index_data(qv, ind)
 end
 
