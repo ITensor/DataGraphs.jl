@@ -18,7 +18,7 @@ struct VertexDataView{V, VD, G <: AbstractGraph{V}} <: AbstractDictionary{V, VD}
     end
 end
 
-_keys(view::VertexDataView) = Indices(vertices(view.graph))
+Base.keys(view::VertexDataView) = Indices(vertices(view.graph))
 
 struct EdgeDataView{E, ED, G <: AbstractGraph} <: AbstractDictionary{E, ED}
     graph::G
@@ -30,15 +30,12 @@ struct EdgeDataView{E, ED, G <: AbstractGraph} <: AbstractDictionary{E, ED}
     end
 end
 
-_keys(view::EdgeDataView) = Indices(edges(view.graph))
+Base.keys(view::EdgeDataView) = Indices(edges(view.graph))
 
 const VertexOrEdgeDataView{K, V, G} = Union{VertexDataView{K, V, G}, EdgeDataView{K, V, G}}
 
-function Base.keys(view::VertexOrEdgeDataView)
-    return filterview(k -> isassigned(view.graph, k), _keys(view))
-end
-
 Base.isassigned(view::VertexOrEdgeDataView{K}, key::K) where {K} = isassigned(view.graph, key)
+Base.isassigned(view::EdgeDataView, key::Pair) = isassigned(view, to_graph_index(view.graph, key))
 
 Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = _getindex(view, key)
 function Base.getindex(view::VertexOrEdgeDataView, key)
@@ -62,6 +59,17 @@ end
 
 # Support indexing with `Indices`.
 Base.getindex(view::VertexOrEdgeDataView, keys::Indices) = getindices(view, keys)
+function Base.getindex(view::EdgeDataView, keys::Indices{<:Pair})
+    return getindex(view, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
+end
+function Base.setindex!(view::VertexOrEdgeDataView, vals, keys::Indices)
+    Dictionaries.setindices!(view, vals, keys)
+    return view
+end
+function Base.setindex!(view::VertexOrEdgeDataView, vals, keys::Indices{<:Pair})
+    setindex!(view, vals, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
+    return view
+end
 
 Dictionaries.istokenizable(::Type{<:VertexOrEdgeDataView}) = true
 function Dictionaries.istokenassigned(view::VertexOrEdgeDataView, token)
@@ -77,6 +85,11 @@ function Base.setindex!(view::VertexOrEdgeDataView{K, V}, data::V, key::K) where
     setindex!(view.graph, data, key)
     return view
 end
+function Base.setindex!(view::EdgeDataView{<:Any, V}, data::V, key::Pair{V, V}) where {V}
+    setindex!(view, data, to_graph_index(view.graph, key))
+    return view
+end
+
 function Dictionaries.settokenvalue!(view::VertexOrEdgeDataView{<:Any, T}, token, value::T) where {T}
     setindex!(view, value, gettokenvalue(keys(view), token))
     return view
@@ -87,7 +100,16 @@ function Dictionaries.gettoken!(view::VertexOrEdgeDataView{K}, ind::K) where {K}
     return Dictionaries.gettoken(keys(view), ind)
 end
 function Dictionaries.deletetoken!(view::VertexOrEdgeDataView, token)
-    Dictionaries.unset!(view.graph, gettokenvalue(keys(view), token))
+    unsetindex!(view.graph, gettokenvalue(keys(view), token))
+    return view
+end
+
+function Dictionaries.unset!(view::VertexOrEdgeDataView{I}, key::I) where {I}
+    unsetindex!(view.graph, key)
+    return view
+end
+function Dictionaries.unset!(view::EdgeDataView, key::Pair)
+    unset!(view, to_graph_index(view.graph, key))
     return view
 end
 
@@ -99,8 +121,18 @@ function Base.copyto!(dest::VertexOrEdgeDataView, bc::Dictionaries.BroadcastedDi
 end
 
 function Base.fill!(view::VertexOrEdgeDataView{<:Any, T}, value::T) where {T}
-    for key in _keys(view)
+    for key in keys(view)
         view[key] = value
     end
     return view
+end
+
+function assigned_vertex_data(g::AbstractGraph)
+    inds = filterview(k -> isassigned(g, k), keys(vertex_data(g)))
+    return view(vertex_data(g), inds)
+end
+
+function assigned_edge_data(g::AbstractGraph)
+    inds = filterview(k -> isassigned(g, k), keys(edge_data(g)))
+    return view(edge_data(g), inds)
 end

@@ -25,6 +25,8 @@ using DataGraphs:
     AbstractDataGraph,
     vertex_data,
     edge_data,
+    assigned_vertex_data,
+    assigned_edge_data,
     underlying_graph,
     vertex_data_type,
     edge_data_type,
@@ -41,8 +43,8 @@ end
 
 function TestDataGraph(graph)
 
-    vertex_data_transform = subgraph -> collect(vertex_data(subgraph))
-    edge_data_transform = subgraph -> collect(edge_data(subgraph))
+    vertex_data_transform = subgraph -> collect(assigned_vertex_data(subgraph))
+    edge_data_transform = subgraph -> collect(assigned_edge_data(subgraph))
 
     quotientgraph = quotient_graph(graph; vertex_data_transform, edge_data_transform)
 

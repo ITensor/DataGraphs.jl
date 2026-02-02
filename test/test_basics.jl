@@ -8,7 +8,14 @@ using DataGraphs:
     underlying_graph,
     vertex_data,
     vertex_data_type
-using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
+using Dictionaries:
+    Dictionaries,
+    AbstractDictionary,
+    AbstractIndices,
+    Dictionary,
+    Indices,
+    dictionary,
+    unset!
 using Graphs:
     add_edge!,
     a_star,
@@ -250,10 +257,12 @@ using Test: @test, @test_broken, @testset
         @test has_edge(dg, 1.0 => 2.0)
         @test has_edge(dg, 2.0 => 3.0)
         @test has_edge(dg, 3.0 => 4.0)
-        @test vertex_data(dg) == Dictionary{Float64, String}()
+        @test vertex_data(dg) isa AbstractDictionary{Float64, String}
+        @test !any(k -> isassigned(vertex_data(dg), k), keys(vertex_data(dg)))
         @test keytype(vertex_data(dg)) === Float64
         @test eltype(vertex_data(dg)) === String
-        @test edge_data(dg) == Dictionary{NamedEdge{Float64}, Symbol}()
+        @test edge_data(dg) isa AbstractDictionary{NamedEdge{Float64}, Symbol}
+        @test !any(k -> isassigned(edge_data(dg), k), keys(edge_data(dg)))
         @test keytype(edge_data(dg)) === NamedEdge{Float64}
         @test eltype(edge_data(dg)) === Symbol
     end
@@ -342,11 +351,11 @@ using Test: @test, @test_broken, @testset
         dg1[1 => 2] = "A1" => "B1"
         dg1[2 => 3] = "B1" => "C1"
         dg2 = DataGraph(g2)
-        dg2[1] = "A2"
-        dg2[2] = "B2"
-        dg2[3] = "C2"
-        dg2[1 => 2] = "A2" => "B2"
-        dg2[2 => 3] = "B2" => "C2"
+        dg2[4] = "A2"
+        dg2[5] = "B2"
+        dg2[6] = "C2"
+        dg2[4 => 5] = "A2" => "B2"
+        dg2[5 => 6] = "B2" => "C2"
         dg = union(dg1, dg2)
         comps = connected_components(dg)
         @test length(comps) == 2
@@ -491,12 +500,18 @@ using Test: @test, @test_broken, @testset
         @test keytype(VertexDataView(g)) === String
         @test eltype(VertexDataView(g)) === Int
 
-        @test collect(keys(vdata)) == ["b", "c"]
-        @test collect(vdata) == [2, 3]
+        @test collect(keys(vdata)) == ["a", "b", "c"]
 
-        @test !haskey(vdata, "a")
+        @test haskey(vdata, "a")
         @test haskey(vdata, "b")
         @test haskey(vdata, "c")
+
+        @test !isassigned(vdata, "a")
+        @test isassigned(vdata, "b")
+        @test isassigned(vdata, "c")
+
+        @test_throws Dictionaries.IndexError vdata["a"]
+        @test_throws Dictionaries.IndexError collect(vdata)
 
         g["a"] = 1
         vdata = vertex_data(g)
@@ -518,5 +533,20 @@ using Test: @test, @test_broken, @testset
 
         edge_data(g) .= dictionary([("a" => "b") => 1, ("b" => "c") => 2])
         @test collect(edge_data(g)) == [1.0, 2.0]
+
+        unset!(vertex_data(g), "b")
+        @test !isassigned(g, "b")
+
+        vertex_data(g) .= 4
+        @test g["a"] == 4
+        @test g["b"] == 4
+        @test g["c"] == 4
+
+        unset!(edge_data(g), "b" => "c")
+        @test !isassigned(g, "b" => "c")
+
+        edge_data(g) .= 4
+        @test g["a" => "b"] == 4.0
+        @test g["b" => "c"] == 4.0
     end
 end

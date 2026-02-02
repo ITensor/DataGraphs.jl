@@ -292,9 +292,10 @@ function Base.union(
         merge_vertex_data = merge_data,
         merge_edge_data = merge_data,
     )
+
     underlying_graph_union = union(underlying_graph(graph1), underlying_graph(graph2))
-    vertex_data_merge = mergewith(merge_vertex_data, vertex_data(graph1), vertex_data(graph2))
-    edge_data_merge = mergewith(merge_edge_data, edge_data(graph1), edge_data(graph2))
+    vertex_data_merge = mergewith(merge_vertex_data, assigned_vertex_data(graph1), assigned_vertex_data(graph2))
+    edge_data_merge = mergewith(merge_edge_data, assigned_edge_data(graph1), assigned_edge_data(graph2))
     # TODO: Convert to `promote_type(typeof(graph1), typeof(graph2))`
     return _DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
