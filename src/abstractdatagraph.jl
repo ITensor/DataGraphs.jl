@@ -320,7 +320,7 @@ function Graphs.rem_vertex!(graph::AbstractDataGraph, vertex)
 end
 
 function Graphs.rem_edge!(graph::AbstractDataGraph, edge)
-    unset_edge_data!(edge_data(graph), edge)
+    unset_edge_data!(graph, edge)
     Graphs.rem_edge!(underlying_graph(graph), edge)
     return graph
 end

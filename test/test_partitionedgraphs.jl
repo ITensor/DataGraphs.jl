@@ -1,7 +1,7 @@
 module TestModule
 
 using Graphs: AbstractGraph, vertices, edges, src, dst, has_vertex, has_edge, edgetype
-using NamedGraphs: NamedGraph, Vertices, Edges
+using NamedGraphs: NamedGraphs, NamedGraph, Vertices, Edges
 using NamedGraphs.PartitionedGraphs:
     QuotientView,
     QuotientVertex,
@@ -74,10 +74,21 @@ for f in [
     @eval $(f)(graph::TestDataGraph, val, ind) = $(f)(graph.graph, val, ind)
 end
 
-function DataGraphs.get_index_data(graph::TestDataGraph, ind::QuotientVertexOrEdge)
+# Enable separate quotient data
+
+NamedGraphs.to_graph_index(::TestDataGraph, qv::QuotientVertex) = qv
+NamedGraphs.to_graph_index(::TestDataGraph, qe::QuotientEdge) = qe
+
+function DataGraphs.get_index_data(graph::TestDataGraph, ind::QuotientVertex)
     return graph.quotientgraph[parent(ind)]
 end
-function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientVertexOrEdge)
+function DataGraphs.get_index_data(graph::TestDataGraph, ind::QuotientEdge)
+    return graph.quotientgraph[parent(ind)]
+end
+function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientVertex)
+    return isassigned(graph.quotientgraph, parent(ind))
+end
+function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientEdge)
     return isassigned(graph.quotientgraph, parent(ind))
 end
 

@@ -1,18 +1,29 @@
 using NamedGraphs:
     to_graph_index,
-    to_graph_indices,
     AbstractEdges,
     AbstractVertices,
     to_vertices,
     to_edges,
     AbstractGraphIndices
 using NamedGraphs.GraphsExtensions: subgraph
+using Dictionaries: AbstractIndices
+
+struct Keys{I, GI <: AbstractGraphIndices} <: AbstractIndices{I}
+    parent::GI
+    Keys(parent::GI) where {GI} = new{eltype{GI}, GI}(parent)
+end
+
+Base.iterate(keys::Keys, state...) = iterate(keys.parent, state...)
+Base.length(keys::Keys) = length(keys.parent)
+Base.in(i, keys::Keys) = in(i, keys.parent)
 
 # ====================================== getindex! ======================================= #
 
 NamedGraphs.get_graph_index(graph::AbstractDataGraph, index) = get_index_data(graph, index)
 # If unknown, treat like  single vertex
 get_index_data(graph::AbstractGraph, vertex) = _get_index_data(graph, vertex)
+
+# _get_index_data exists to avoid method ambiguity when overloading get_index_data
 function _get_index_data(graph::AbstractGraph, vertex)
     if isassigned(graph, vertex)
         return get_vertex_data(graph, vertex)
@@ -29,9 +40,9 @@ function _get_index_data(graph::AbstractGraph, edge::AbstractEdge)
     end
 end
 
-# Can force data retrivial instead of subgraphing by using `Indices`.
-function NamedGraphs.get_graph_indices(graph::AbstractDataGraph, inds::Indices)
-    return get_indices_data(graph, to_graph_indices(graph, parent_graph_indices(inds)))
+# Can force data retrivial instead of subgraphing by using `Keys`.
+function NamedGraphs.get_graph_indices(graph::AbstractDataGraph, keys::Keys)
+    return get_indices_data(graph, to_graph_index(graph, keys.parent))
 end
 
 function get_indices_data(graph::AbstractGraph, vertices::AbstractVertices)
@@ -45,11 +56,11 @@ end
 # ====================================== isassigned ====================================== #
 
 function Base.isassigned(graph::AbstractDataGraph, index)
-    return _isassigned(graph, to_graph_index(graph, index))
+    return isassigned_datagraph(graph, to_graph_index(graph, index))
 end
 
-_isassigned(graph::AbstractGraph, ind) = has_index_data(graph, ind)
-_isassigned(graph::AbstractGraph, inds::AbstractGraphIndices) = has_indices_data(graph, inds)
+isassigned_datagraph(graph::AbstractGraph, ind) = has_index_data(graph, ind)
+isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = has_indices_data(graph, inds)
 
 has_index_data(graph::AbstractGraph, vertex) = has_vertex_data(graph, vertex)
 
@@ -66,26 +77,26 @@ end
 # ====================================== setindex! ======================================= #
 
 function Base.setindex!(graph::AbstractDataGraph, data, index)
-    _setindex!(graph, data, to_graph_index(graph, index))
+    setindex!_datagraph(graph, data, to_graph_index(graph, index))
     return graph
 end
 
-function _setindex!(graph::AbstractGraph, data, vertex)
+function setindex!_datagraph(graph::AbstractGraph, data, vertex)
     set_index_data!(graph, data, vertex)
     return graph
 end
 
-function _setindex!(graph::AbstractGraph, data, edge::AbstractEdge)
+function setindex!_datagraph(graph::AbstractGraph, data, edge::AbstractEdge)
     arranged_edge = arrange_edge(graph, edge)
     arranged_data = reverse_data_direction(graph, edge, data)
     set_index_data!(graph, arranged_data, arranged_edge)
     return graph
 end
 
-function _setindex!(graph::AbstractGraph, val, vertices::AbstractVertices)
+function setindex!_datagraph(graph::AbstractGraph, val, vertices::AbstractVertices)
     return set_indices_data!(graph, val, vertices)
 end
-function _setindex!(graph::AbstractGraph, val, edges::AbstractEdges)
+function setindex!_datagraph(graph::AbstractGraph, val, edges::AbstractEdges)
     return set_indices_data!(graph, val, edges)
 end
 
@@ -128,21 +139,21 @@ end
 # ===================================== unsetindex! ====================================== #
 
 function unsetindex!(graph::AbstractDataGraph, index)
-    return _unsetindex!(graph, to_graph_index(graph, index))
+    return unsetindex!_datagraph(graph, to_graph_index(graph, index))
 end
 
-_unsetindex!(graph::AbstractGraph, vertex) = unset_index_data!(graph, vertex)
+unsetindex!_datagraph(graph::AbstractGraph, vertex) = unset_index_data!(graph, vertex)
 
-function _unsetindex!(graph::AbstractGraph, edge::AbstractEdge)
+function unsetindex!_datagraph(graph::AbstractGraph, edge::AbstractEdge)
     arranged_edge = arrange_edge(graph, edge)
     unset_index_data!(graph, arranged_edge)
     return graph
 end
 
-function _unsetindex!(graph::AbstractGraph, vertices::AbstractVertices)
+function unsetindex!_datagraph(graph::AbstractGraph, vertices::AbstractVertices)
     return unset_indices_data!(graph, vertices)
 end
-function _unsetindex!(graph::AbstractGraph, edges::AbstractEdges)
+function unsetindex!_datagraph(graph::AbstractGraph, edges::AbstractEdges)
     return unset_indices_data!(graph, edges)
 end
 

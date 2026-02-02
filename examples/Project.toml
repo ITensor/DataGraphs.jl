@@ -6,4 +6,4 @@ NamedGraphs = "678767b0-92e7-4007-89e4-4527a8725b19"
 [compat]
 DataGraphs = "0.3.0"
 Graphs = "1.12"
-NamedGraphs = "0.9.0"
+NamedGraphs = "0.10.0"

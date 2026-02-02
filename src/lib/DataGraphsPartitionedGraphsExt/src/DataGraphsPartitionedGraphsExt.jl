@@ -27,6 +27,7 @@ using ..DataGraphs:
     has_edge_data,
     has_vertices_data,
     has_edges_data,
+    unsetindex!,
     unset_index_data!,
     unset_indices_data!,
     unset_vertex_data!,
@@ -38,17 +39,15 @@ using ..DataGraphs:
     get_index_data
 using NamedGraphs: NamedGraphs,
     to_graph_index,
-    parent_graph_indices,
     Vertices,
     Edges,
     to_edges,
     to_vertices,
-    VertexSlice,
-    EdgeSlice,
-    to_graph_indices,
     get_graph_index
 using NamedGraphs.GraphsExtensions: vertextype, subgraph, edge_subgraph
 using NamedGraphs.PartitionedGraphs:
+    QuotientVertexSlice,
+    QuotientEdgeSlice,
     PartitionedGraphs,
     QuotientEdge,
     QuotientEdgeEdge,
@@ -65,38 +64,13 @@ using NamedGraphs.PartitionedGraphs:
     quotientvertices,
     quotientedges,
     parent_graph_type,
-    to_quotient_index,
-    quotient_index,
     unpartitioned_graph,
     quotient_graph,
     partitionedgraph,
     departition,
     has_quotientvertex,
     has_quotientedge
-using Dictionaries: Dictionary, Indices, IndexError, unset!
-
-# Methods to overload if you dont want to use the defaults.
-# DataGraphs.has_vertices_data(g::MyGraph, v::QuotientVertexVertices)
-# DataGraphs.has_edges_data(g::MyGraph, v::QuotientEdgeEdges)
-# use `isassigned`
-#
-# DataGraphs.get_vertices_data(g::MyGraph, v::QuotientVertexVertices)
-# DataGraphs.get_edges_data(g::MyGraph, v::QuotientEdgeEdges)
-# use `get_graph_data`
-#
-# DataGraphs.set_vertices_data!(g::MyGraph, v::QuotientVertexVertices)
-# DataGraphs.set_edges_data!(g::MyGraph, v::QuotientEdgeEdges)
-# use `set!`
-#
-# DataGraphs.unset_vertices_data!(g::MyGraph, v::QuotientVertexVertices)
-# DataGraphs.unset_edges_data!(g::MyGraph, v::QuotientEdgeEdges)
-# use `unset!`
-#
-# DataGraphs.vertices_data_eltype(::Type{<:MyGraph}, ::Type{<:QuotientVertexVertices})
-# DataGraphs.edges_data_eltype(::Type{<:MyGraph}, ::Type{<:QuotientVertexVertices})
-
-# QuotientView; make sure quotient views of data graphs do data graph indexing
-# and not subgraph indexing.
+using Dictionaries: Dictionary, Indices
 
 # ======================== DataGraphs interface for QuotientView ========================= #
 
@@ -128,25 +102,22 @@ function DataGraphs.set_edge_data!(qv::QuotientView, val, e)
 end
 
 function DataGraphs.unset_vertex_data!(qv::QuotientView, v)
-    return unset!(parent(qv), QuotientVertex(v))
+    return unsetindex!(parent(qv), QuotientVertex(v))
 end
 function DataGraphs.unset_edge_data!(qe::QuotientView, e)
-    return unset!(parent(qe), QuotientEdge(e))
+    return unsetindex!(parent(qe), QuotientEdge(e))
 end
 
 # =========================== Quotient indexing for DataGraphs =========================== #
 
-function DataGraphs.get_index_data(graph::AbstractGraph, ind::QuotientVertexOrEdge)
-    return _get_index_data(graph, ind)
-end
-function _get_index_data(graph::AbstractGraph, vertex::QuotientVertex)
+function DataGraphs.get_index_data(graph::AbstractGraph, vertex::QuotientVertex)
     if !isassigned(graph, vertex)
         return subgraph(graph, vertex)
     else
         throw(MethodError(get_index_data, (graph, vertex)))
     end
 end
-function _get_index_data(graph::AbstractGraph, edge::QuotientEdge)
+function DataGraphs.get_index_data(graph::AbstractGraph, edge::QuotientEdge)
     if !isassigned(graph, edge)
         return edge_subgraph(graph, edge)
     else
@@ -161,17 +132,6 @@ function DataGraphs.unset_index_data!(graph::AbstractGraph, ind::QuotientVertexO
     return MethodError(unset_index_data!, (graph, ind))
 end
 
-# Special case
-
-function DataGraphs.get_vertices_data(g::AbstractGraph, vertices::QuotientVerticesVertices)
-
-    inds = Indices(quotient_index(v) for v in vertices.quotientvertices)
-    data = [get_vertices_data(g, to_vertices(g, v)) for v in vertices.quotientvertices]
-
-    return Dictionary(inds, data)
-end
-
-
 function DataGraphs.vertex_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
     return Base.promote_op(get_index_data, PGT, QuotientVertex{vertextype(T)})
@@ -183,7 +143,7 @@ end
 
 DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
 
-Base.isassigned(qv::QuotientView, ind) = DataGraphs._isassigned(qv, to_graph_index(qv, ind))
+Base.isassigned(qv::QuotientView, ind) = DataGraphs.isassigned_datagraph(qv, to_graph_index(qv, ind))
 
 # PartitionedGraphs interface
 function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
@@ -231,13 +191,13 @@ end
 
 function quotient_graph_vertex_data(f, dg)
     ug = underlying_graph(dg)
-    qvs = VertexSlice(QuotientVertices(ug))
+    qvs = QuotientVertexSlice(QuotientVertices(ug))
     return map(v -> f(dg[QuotientVertex(v)]), Indices(qvs))
 end
 
 function quotient_graph_edge_data(f, dg)
     ug = underlying_graph(dg)
-    qes = EdgeSlice(QuotientEdges(ug))
+    qes = QuotientEdgeSlice(QuotientEdges(ug))
     return map(e -> f(dg[QuotientEdge(e)]), Indices(qes))
 end
 
@@ -257,5 +217,8 @@ function PartitionedGraphs.quotient_graph(
     )
     return dg
 end
+
+# Need this to opt into partition-preserving subgraphing.
+NamedGraphs.to_vertices(::AbstractDataGraph, qvsvs::QuotientVerticesVertices) = qvsvs
 
 end
