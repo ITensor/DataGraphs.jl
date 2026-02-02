@@ -126,10 +126,10 @@ function DataGraphs.get_index_data(graph::AbstractGraph, edge::QuotientEdge)
 end
 DataGraphs.has_index_data(graph::AbstractGraph, ind::QuotientVertexOrEdge) = false
 function DataGraphs.set_index_data!(graph::AbstractGraph, value, ind::QuotientVertexOrEdge)
-    return MethodError(set_index_data!, (graph, value, ind))
+    return throw(MethodError(set_index_data!, (graph, value, ind)))
 end
 function DataGraphs.unset_index_data!(graph::AbstractGraph, ind::QuotientVertexOrEdge)
-    return MethodError(unset_index_data!, (graph, ind))
+    return throw(MethodError(unset_index_data!, (graph, ind)))
 end
 
 function DataGraphs.vertex_data_type(T::Type{<:QuotientView})
