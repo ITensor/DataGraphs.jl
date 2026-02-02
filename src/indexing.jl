@@ -138,7 +138,7 @@ end
 
 # ===================================== unsetindex! ====================================== #
 
-function unsetindex!(graph::AbstractDataGraph, index)
+function unsetindex!(graph::AbstractGraph, index)
     return unsetindex!_datagraph(graph, to_graph_index(graph, index))
 end
 

@@ -27,7 +27,8 @@ using DataGraphs:
     edge_data,
     underlying_graph,
     vertex_data_type,
-    edge_data_type
+    edge_data_type,
+    unsetindex!
 using NamedGraphs.GraphsExtensions: GraphsExtensions, similar_graph, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_path_graph
 using Test: @testset, @test, @test_throws
@@ -85,11 +86,22 @@ end
 function DataGraphs.get_index_data(graph::TestDataGraph, ind::QuotientEdge)
     return graph.quotientgraph[parent(ind)]
 end
+
 function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientVertex)
     return isassigned(graph.quotientgraph, parent(ind))
 end
 function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientEdge)
     return isassigned(graph.quotientgraph, parent(ind))
+end
+
+function DataGraphs.set_index_data!(graph::TestDataGraph, val, ind::QuotientVertex)
+    graph.quotientgraph[parent(ind)] = val
+    return graph
+end
+
+function DataGraphs.unset_index_data!(graph::TestDataGraph, ind::QuotientVertex)
+    unsetindex!(graph.quotientgraph, parent(ind))
+    return graph
 end
 
 @testset "DataGraphsPartitionedGraphsExt.jl" begin
@@ -183,6 +195,13 @@ end
             @test tqv[:b => :a] == [("1", "2")]
             @test tqv[:b => :c] == [("3", "4")]
             @test tqv[:c => :b] == [("3", "4")]
+
+
+            tqv[:a] = ["one"]
+            @test tqv[:a] == ["one"]
+            @test tpg[QuotientVertex(:a)] == ["one"]
+            unsetindex!(tqv, :a)
+            @test !isassigned(tqv, :a)
         end
 
     end

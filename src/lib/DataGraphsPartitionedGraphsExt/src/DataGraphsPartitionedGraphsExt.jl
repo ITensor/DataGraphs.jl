@@ -144,6 +144,7 @@ end
 DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
 
 Base.isassigned(qv::QuotientView, ind) = DataGraphs.isassigned_datagraph(qv, to_graph_index(qv, ind))
+Base.setindex!(qv::QuotientView, val, ind) = DataGraphs.setindex!_datagraph(qv, val, to_graph_index(qv, ind))
 
 # PartitionedGraphs interface
 function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
