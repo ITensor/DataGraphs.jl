@@ -528,7 +528,7 @@ using Test: @test, @test_broken, @testset
         @test edata["a" => "b"] == -1.0
         @test edata[edgetype(g)("b" => "c")] == -2.0
 
-        vertex_data(g) .= dictionary(["a" => 1, "b" => 2, "c" => 3])
+        vertex_data(g) .= dictionary(["b" => 2, "a" => 1, "c" => 3])
         @test collect(vertex_data(g)) == [1, 2, 3]
 
         edge_data(g) .= dictionary([("a" => "b") => 1, ("b" => "c") => 2])
@@ -542,11 +542,21 @@ using Test: @test, @test_broken, @testset
         @test g["b"] == 4
         @test g["c"] == 4
 
+        vertex_data(g)[Indices(["b", "a"])] .= [5, 6]
+        @test g["a"] == 6
+        @test g["b"] == 5
+        @test g["c"] == 4
+
         unset!(edge_data(g), "b" => "c")
         @test !isassigned(g, "b" => "c")
 
         edge_data(g) .= 4
         @test g["a" => "b"] == 4.0
         @test g["b" => "c"] == 4.0
+
+        edge_data(g)[Indices(["a" => "b", "b" => "c"])] .= [1.5, 2.5]
+        @test g["a" => "b"] == 1.5
+        @test g["b" => "c"] == 2.5
+
     end
 end
