@@ -73,10 +73,10 @@ has_edges_data(g::AbstractGraph, edges) = all(e -> has_edge_data(g, e), edges)
 has_vertices_data(g::AbstractGraph, vertices) = all(v -> has_vertex_data(g, v), vertices)
 
 function get_vertices_data(g::AbstractGraph, vertices)
-    return map(v -> get_graph_data(g, v), Indices(vertices))
+    return map(v -> getindex(g, v), Indices(vertices))
 end
 function get_edges_data(g::AbstractGraph, edges)
-    return map(e -> get_graph_data(g, e), Indices(edges))
+    return map(e -> getindex(g, e), Indices(edges))
 end
 
 function vertices_data_eltype(G::Type{<:AbstractGraph}, V::Type{<:AbstractVertices})

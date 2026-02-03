@@ -8,9 +8,9 @@ using NamedGraphs:
 using NamedGraphs.GraphsExtensions: subgraph
 using Dictionaries: AbstractIndices
 
-struct Keys{I, GI <: AbstractGraphIndices} <: AbstractIndices{I}
-    parent::GI
-    Keys(parent::GI) where {GI} = new{eltype{GI}, GI}(parent)
+struct Keys{I, Indices} <: AbstractIndices{I}
+    parent::Indices
+    Keys(parent::GI) where {GI} = new{eltype(GI), GI}(parent)
 end
 
 Base.iterate(keys::Keys, state...) = iterate(keys.parent, state...)
@@ -41,7 +41,7 @@ function _get_index_data(graph::AbstractGraph, edge::AbstractEdge)
 end
 
 # Can force data retrivial instead of subgraphing by using `Keys`.
-function NamedGraphs.get_graph_indices(graph::AbstractDataGraph, keys::Keys)
+function NamedGraphs.getindex_namedgraph(graph::AbstractDataGraph, keys::Keys)
     return get_indices_data(graph, to_graph_index(graph, keys.parent))
 end
 
