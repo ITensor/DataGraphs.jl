@@ -8,7 +8,16 @@ using Dictionaries:
     getindices
 using NamedGraphs: to_graph_index, to_vertices, to_edges
 
-struct VertexDataView{V, VD, G <: AbstractGraph{V}} <: AbstractDictionary{V, VD}
+abstract type AbstractDataView{K, V} <: AbstractDictionary{K, V} end
+
+function Base.fill!(view::AbstractDataView{<:Any, T}, value::T) where {T}
+    for key in keys(view)
+        view[key] = value
+    end
+    return view
+end
+
+struct VertexDataView{V, VD, G <: AbstractGraph} <: AbstractDataView{V, VD}
     graph::G
     function VertexDataView(graph)
         V = vertextype(graph)
@@ -20,7 +29,7 @@ end
 
 Base.keys(view::VertexDataView) = Indices(vertices(view.graph))
 
-struct EdgeDataView{E, ED, G <: AbstractGraph} <: AbstractDictionary{E, ED}
+struct EdgeDataView{E, ED, G <: AbstractGraph} <: AbstractDataView{E, ED}
     graph::G
     function EdgeDataView(graph)
         E = edgetype(graph)
@@ -58,15 +67,11 @@ function _getindex(view::EdgeDataView, key)
 end
 
 # Support indexing with `Indices`.
-Base.getindex(view::VertexOrEdgeDataView, keys::Indices) = getindices(view, keys)
-function Base.getindex(view::EdgeDataView, keys::Indices{<:Pair})
-    return getindex(view, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
-end
 function Base.setindex!(view::VertexOrEdgeDataView, vals, keys::Indices)
     Dictionaries.setindices!(view, vals, keys)
     return view
 end
-function Base.setindex!(view::VertexOrEdgeDataView, vals, keys::Indices{<:Pair})
+function Base.setindex!(view::EdgeDataView, vals, keys::Indices{<:Pair})
     setindex!(view, vals, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
     return view
 end
@@ -120,13 +125,6 @@ function Base.copyto!(dest::VertexOrEdgeDataView, bc::Dictionaries.BroadcastedDi
     return dest
 end
 
-function Base.fill!(view::VertexOrEdgeDataView{<:Any, T}, value::T) where {T}
-    for key in keys(view)
-        view[key] = value
-    end
-    return view
-end
-
 function assigned_vertex_data(g::AbstractGraph)
     inds = filterview(k -> isassigned(g, k), keys(vertex_data(g)))
     return view(vertex_data(g), inds)
@@ -135,4 +133,48 @@ end
 function assigned_edge_data(g::AbstractGraph)
     inds = filterview(k -> isassigned(g, k), keys(edge_data(g)))
     return view(edge_data(g), inds)
+end
+
+struct DataViewSlice{K, V, View} <: AbstractDataView{K, V}
+    view::View
+    inds::Indices{K}
+    function DataViewSlice(view::VertexOrEdgeDataView, inds::Indices{K}) where {K}
+        return new{K, eltype(view), typeof(view)}(view, inds)
+    end
+end
+
+Base.keys(dvs::DataViewSlice) = dvs.inds
+
+Base.getindex(dvs::DataViewSlice, key) = dvs.view[key]
+Base.getindex(view::DataViewSlice{K}, key::K) where {K} = view.view[key]
+
+Base.isassigned(view::DataViewSlice, key) = key in keys(view)
+Base.isassigned(view::DataViewSlice{K}, key::K) where {K} = key in keys(view)
+
+Base.getindex(view::VertexOrEdgeDataView, keys::Indices) = DataViewSlice(view, keys)
+function Base.getindex(view::EdgeDataView, keys::Indices{<:Pair})
+    return DataViewSlice(view, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
+end
+
+function Base.setindex!(view::DataViewSlice{K, V}, data::V, key::K) where {K, V}
+    setindex!(view.view, data, key)
+    return view
+end
+function Base.setindex!(view::DataViewSlice{<:Any, V}, data::V, key::Pair{V, V}) where {V}
+    setindex!(view, data, to_graph_index(view.view.graph, key))
+    return view
+end
+
+function Dictionaries.settokenvalue!(view::DataViewSlice{<:Any, T}, token, value::T) where {T}
+    setindex!(view, value, gettokenvalue(keys(view), token))
+    return view
+end
+
+Base.axes(view::DataViewSlice) = (Base.OneTo(length(keys(view))),)
+
+function Base.copyto!(dest::DataViewSlice, bc::Base.Broadcast.Broadcasted{Base.Broadcast.DefaultArrayStyle{1}})
+    for (i, key) in enumerate(keys(dest))
+        @inbounds dest[key] = bc[i]
+    end
+    return dest
 end
