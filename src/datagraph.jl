@@ -135,12 +135,10 @@ function Graphs.rem_vertex!(graph::DataGraph, vertex)
     for neighbor_edge in neighbor_edges
         delete!(graph.edge_data, neighbor_edge)
     end
-    Graphs.rem_vertex!(graph.underlying_graph, vertex)
-    return graph
+    return Graphs.rem_vertex!(graph.underlying_graph, vertex)
 end
 
 function Graphs.rem_edge!(graph::DataGraph, edge)
     delete!(graph.edge_data, edge)
-    Graphs.rem_edge!(graph.underlying_graph, edge)
-    return graph
+    return Graphs.rem_edge!(graph.underlying_graph, edge)
 end
