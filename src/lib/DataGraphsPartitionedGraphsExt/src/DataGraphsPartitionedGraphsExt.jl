@@ -88,10 +88,12 @@ function DataGraphs.is_edge_assigned(qv::QuotientView, v)
 end
 
 function DataGraphs.set_vertex_data!(qv::QuotientView, val, v)
-    return setindex!(parent(qv), val, QuotientVertex(v))
+    setindex!(parent(qv), val, QuotientVertex(v))
+    return qv
 end
 function DataGraphs.set_edge_data!(qv::QuotientView, val, e)
-    return setindex!(parent(qv), val, QuotientEdge(e))
+    setindex!(parent(qv), val, QuotientEdge(e))
+    return qv
 end
 
 DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
@@ -122,10 +124,12 @@ function DataGraphs.is_edge_assigned(pg::AbstractPartitionedGraph, e)
 end
 
 function DataGraphs.set_vertex_data!(pg::AbstractPartitionedGraph, val, v)
-    return setindex!(unpartitioned_graph(pg), val, v)
+    setindex!(unpartitioned_graph(pg), val, v)
+    return pg
 end
 function DataGraphs.set_edge_data!(pg::AbstractPartitionedGraph, val, e)
-    return setindex!(unpartitioned_graph(pg), val, e)
+    setindex!(unpartitioned_graph(pg), val, e)
+    return pg
 end
 
 Base.isassigned(pg::AbstractPartitionedGraph, ind) = DataGraphs.isassigned_datagraph(pg, to_graph_index(pg, ind))
