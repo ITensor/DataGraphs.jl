@@ -63,7 +63,7 @@ using NamedGraphs.PartitionedGraphs:
     departition,
     has_quotientvertex,
     has_quotientedge
-using Dictionaries: Dictionary, Indices
+using Dictionaries: Dictionary, Indices, IndexError
 
 # ======================== DataGraphs interface for QuotientView ========================= #
 
@@ -169,19 +169,11 @@ end
 
 # =========================== Quotient indexing for DataGraphs =========================== #
 
-function DataGraphs.get_index_data(graph::AbstractGraph, vertex::QuotientVertex)
-    if !isassigned(graph, vertex)
-        return subgraph(graph, vertex)
-    else
-        throw(MethodError(get_index_data, (graph, vertex)))
-    end
+function DataGraphs.get_index_data(::AbstractGraph, vertex::QuotientVertex)
+    throw(IndexError("Quotient vertex $vertex not assigned"))
 end
-function DataGraphs.get_index_data(graph::AbstractGraph, edge::QuotientEdge)
-    if !isassigned(graph, edge)
-        return edge_subgraph(graph, edge)
-    else
-        throw(MethodError(get_index_data, (graph, edge)))
-    end
+function DataGraphs.get_index_data(::AbstractGraph, edge::QuotientEdge)
+    throw(IndexError("Quotient edge $edge not assigned"))
 end
 DataGraphs.is_graph_index_assigned(graph::AbstractGraph, ind::QuotientVertexOrEdge) = false
 function DataGraphs.set_index_data!(graph::AbstractGraph, value, ind::QuotientVertexOrEdge)
