@@ -21,7 +21,7 @@ using ..DataGraphs:
     set_edge_data!,
     set_vertices_data!,
     set_edges_data!,
-    is_index_assigned,
+    is_graph_index_assigned,
     is_vertex_assigned,
     is_edge_assigned,
     vertices_data_eltype,
@@ -151,10 +151,10 @@ function DataGraphs.get_index_data(graph::PartitionedGraph, ind::QuotientEdge)
     return graph.quotient_graph[parent(ind)]
 end
 
-function DataGraphs.is_index_assigned(graph::PartitionedGraph, ind::QuotientVertex)
+function DataGraphs.is_graph_index_assigned(graph::PartitionedGraph, ind::QuotientVertex)
     return isassigned(graph.quotient_graph, parent(ind))
 end
-function DataGraphs.is_index_assigned(graph::PartitionedGraph, ind::QuotientEdge)
+function DataGraphs.is_graph_index_assigned(graph::PartitionedGraph, ind::QuotientEdge)
     return isassigned(graph.quotient_graph, parent(ind))
 end
 
@@ -183,7 +183,7 @@ function DataGraphs.get_index_data(graph::AbstractGraph, edge::QuotientEdge)
         throw(MethodError(get_index_data, (graph, edge)))
     end
 end
-DataGraphs.is_index_assigned(graph::AbstractGraph, ind::QuotientVertexOrEdge) = false
+DataGraphs.is_graph_index_assigned(graph::AbstractGraph, ind::QuotientVertexOrEdge) = false
 function DataGraphs.set_index_data!(graph::AbstractGraph, value, ind::QuotientVertexOrEdge)
     return throw(MethodError(set_index_data!, (graph, value, ind)))
 end

@@ -86,10 +86,10 @@ function DataGraphs.get_index_data(graph::TestDataGraph, ind::QuotientEdge)
     return graph.quotientgraph[parent(ind)]
 end
 
-function DataGraphs.is_index_assigned(graph::TestDataGraph, ind::QuotientVertex)
+function DataGraphs.is_graph_index_assigned(graph::TestDataGraph, ind::QuotientVertex)
     return isassigned(graph.quotientgraph, parent(ind))
 end
-function DataGraphs.is_index_assigned(graph::TestDataGraph, ind::QuotientEdge)
+function DataGraphs.is_graph_index_assigned(graph::TestDataGraph, ind::QuotientEdge)
     return isassigned(graph.quotientgraph, parent(ind))
 end
 

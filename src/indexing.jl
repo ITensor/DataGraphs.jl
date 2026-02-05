@@ -59,18 +59,18 @@ function Base.isassigned(graph::AbstractDataGraph, index)
     return isassigned_datagraph(graph, to_graph_index(graph, index))
 end
 
-isassigned_datagraph(graph::AbstractGraph, ind) = is_index_assigned(graph, ind)
-isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = is_indices_assigned(graph, inds)
+isassigned_datagraph(graph::AbstractGraph, ind) = is_graph_index_assigned(graph, ind)
+isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = is_graph_indices_assigned(graph, inds)
 
-is_index_assigned(graph::AbstractGraph, vertex) = is_vertex_assigned(graph, vertex)
+is_graph_index_assigned(graph::AbstractGraph, vertex) = is_vertex_assigned(graph, vertex)
 
-function is_index_assigned(graph::AbstractGraph, edge::AbstractEdge)
+function is_graph_index_assigned(graph::AbstractGraph, edge::AbstractEdge)
     return is_edge_assigned(graph, arrange_edge(graph, edge))
 end
-function is_indices_assigned(graph::AbstractGraph, edges::AbstractEdges)
+function is_graph_indices_assigned(graph::AbstractGraph, edges::AbstractEdges)
     return is_edges_assigned(graph, edges)
 end
-function is_indices_assigned(graph::AbstractGraph, vertices::AbstractVertices)
+function is_graph_indices_assigned(graph::AbstractGraph, vertices::AbstractVertices)
     return is_vertices_assigned(graph, vertices)
 end
 
