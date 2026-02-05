@@ -34,11 +34,13 @@ using NamedGraphs: NamedGraphs,
     to_edges,
     to_vertices,
     get_graph_index
-using NamedGraphs.GraphsExtensions: vertextype, subgraph, edge_subgraph
+using NamedGraphs.GraphsExtensions: vertextype, subgraph, edge_subgraph, similar_graph, add_vertices!
 using NamedGraphs.PartitionedGraphs:
+    PartitionedGraphs,
+    PartitionedGraph,
+    PartitionedView,
     QuotientVertexSlice,
     QuotientEdgeSlice,
-    PartitionedGraphs,
     QuotientEdge,
     QuotientEdgeEdge,
     QuotientEdges,
@@ -51,6 +53,7 @@ using NamedGraphs.PartitionedGraphs:
     QuotientVertices,
     QuotientView,
     partitioned_vertices,
+    quotientvertex,
     quotientvertices,
     quotientedges,
     parent_graph_type,
@@ -91,9 +94,14 @@ function DataGraphs.set_edge_data!(qv::QuotientView, val, e)
     return setindex!(parent(qv), val, QuotientEdge(e))
 end
 
+DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
+
+Base.isassigned(qv::QuotientView, ind) = DataGraphs.isassigned_datagraph(qv, to_graph_index(qv, ind))
+Base.setindex!(qv::QuotientView, val, ind) = DataGraphs.setindex!_datagraph(qv, val, to_graph_index(qv, ind))
+
 # ====================== DataGraphs interface for PartitionedGraphs ====================== #
 
-function NamedGraphs.get_graph_index(pg::AbstractPartitionedGraph{<:Any, <:AbstractDataGraph}, ind)
+function NamedGraphs.get_graph_index(pg::PartitionedGraph{<:Any, <:Any, <:AbstractDataGraph}, ind)
     return DataGraphs.get_index_data(pg, ind)
 end
 
@@ -118,6 +126,45 @@ function DataGraphs.set_vertex_data!(pg::AbstractPartitionedGraph, val, v)
 end
 function DataGraphs.set_edge_data!(pg::AbstractPartitionedGraph, val, e)
     return setindex!(unpartitioned_graph(pg), val, e)
+end
+
+Base.isassigned(pg::AbstractPartitionedGraph, ind) = DataGraphs.isassigned_datagraph(pg, to_graph_index(pg, ind))
+Base.setindex!(pg::AbstractPartitionedGraph, val, ind) = DataGraphs.setindex!_datagraph(pg, val, to_graph_index(pg, ind))
+
+function NamedGraphs.to_graph_index(
+        ::PartitionedGraph{<:Any, <:Any, <:AbstractDataGraph},
+        qv::QuotientVertex
+    )
+    return qv
+end
+function NamedGraphs.to_graph_index(
+        ::PartitionedGraph{<:Any, <:Any, <:AbstractDataGraph},
+        qe::QuotientEdge
+    )
+    return qe
+end
+
+function DataGraphs.get_index_data(graph::PartitionedGraph, ind::QuotientVertex)
+    return graph.quotient_graph[parent(ind)]
+end
+function DataGraphs.get_index_data(graph::PartitionedGraph, ind::QuotientEdge)
+    return graph.quotient_graph[parent(ind)]
+end
+
+function DataGraphs.is_index_assigned(graph::PartitionedGraph, ind::QuotientVertex)
+    return isassigned(graph.quotient_graph, parent(ind))
+end
+function DataGraphs.is_index_assigned(graph::PartitionedGraph, ind::QuotientEdge)
+    return isassigned(graph.quotient_graph, parent(ind))
+end
+
+function DataGraphs.set_index_data!(graph::PartitionedGraph, val, ind::QuotientVertex)
+    graph.quotient_graph[parent(ind)] = val
+    return graph
+end
+function DataGraphs.set_index_data!(graph::PartitionedGraph, val, ind::QuotientEdge)
+    graph.quotient_graph[parent(ind)] = val
+    return graph
 end
 
 # =========================== Quotient indexing for DataGraphs =========================== #
@@ -149,11 +196,6 @@ function DataGraphs.edge_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
     return Base.promote_op(get_index_data, PGT, QuotientEdge{vertextype(T), edgetype(T)})
 end
-
-DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
-
-Base.isassigned(qv::QuotientView, ind) = DataGraphs.isassigned_datagraph(qv, to_graph_index(qv, ind))
-Base.setindex!(qv::QuotientView, val, ind) = DataGraphs.setindex!_datagraph(qv, val, to_graph_index(qv, ind))
 
 # PartitionedGraphs interface
 function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
@@ -227,6 +269,38 @@ function PartitionedGraphs.quotient_graph(
     )
     return dg
 end
+
+# TODO: NamedGraphs.PartitionedGraphs needs a notion of `induced_quotient_graph`, which
+# would largely replace this definition.
+function PartitionedGraphs.quotient_graph(g::PartitionedView{<:Any, PV, <:DataGraph}) where {PV}
+    ug = unpartitioned_graph(g)
+
+    sg = similar_graph(underlying_graph(ug), PV)
+    qg = DataGraph(
+        sg;
+        vertex_data_type = Base.promote_op(subgraph, typeof(g), QuotientVertex{PV}),
+        edge_data_type = Base.promote_op(edge_subgraph, typeof(g), QuotientEdge{PV, edgetype(sg)}),
+    )
+
+    add_vertices!(qg, keys(partitioned_vertices(g)))
+
+    for v in vertices(qg)
+        qg[v] = g[QuotientVertex(v)]
+    end
+
+    for e in edges(g)
+        qv_src = parent(quotientvertex(g, src(e)))
+        qv_dst = parent(quotientvertex(g, dst(e)))
+        qe = edgetype(qg)(qv_src => qv_dst)
+        if qv_src != qv_dst && !has_edge(qg, qe)
+            add_edge!(qg, qe)
+            qg[qe] = g[QuotientEdge(e)]
+        end
+    end
+
+    return qg
+end
+
 
 # Need this to opt into partition-preserving subgraphing.
 NamedGraphs.to_vertices(::AbstractDataGraph, qvsvs::QuotientVerticesVertices) = qvsvs
