@@ -5,10 +5,29 @@ using Dictionaries:
     filterview,
     IndexError,
     Indices,
-    getindices
+    getindices,
+    istokenizable
 using NamedGraphs: to_graph_index, to_vertices, to_edges
 
 abstract type AbstractDataView{K, V} <: AbstractDictionary{K, V} end
+
+Dictionaries.issetable(::AbstractDataView) = true
+Dictionaries.isinsertable(::AbstractDataView) = false
+Dictionaries.istokenizable(view::AbstractDataView) = istokenizable(keys(view))
+
+function Dictionaries.istokenassigned(view::AbstractDataView, token)
+    ind = gettokenvalue(keys(view), token)
+    return isassigned(view, ind)
+end
+function Dictionaries.gettokenvalue(view::AbstractDataView, token)
+    ind = gettokenvalue(keys(view), token)
+    return view[ind]
+end
+
+function Dictionaries.settokenvalue!(view::AbstractDataView{<:Any, T}, token, value::T) where {T}
+    setindex!(view, value, gettokenvalue(keys(view), token))
+    return view
+end
 
 function Base.fill!(view::AbstractDataView{<:Any, T}, value::T) where {T}
     for key in keys(view)
@@ -76,45 +95,12 @@ function Base.setindex!(view::EdgeDataView, vals, keys::Indices{<:Pair})
     return view
 end
 
-Dictionaries.istokenizable(::Type{<:VertexOrEdgeDataView}) = true
-function Dictionaries.istokenassigned(view::VertexOrEdgeDataView, token)
-    ind = gettokenvalue(keys(view), token)
-    return isassigned(view, ind)
-end
-function Dictionaries.gettokenvalue(view::VertexOrEdgeDataView, token)
-    ind = gettokenvalue(keys(view), token)
-    return view[ind]
-end
-
 function Base.setindex!(view::VertexOrEdgeDataView{K, V}, data::V, key::K) where {K, V}
     setindex!(view.graph, data, key)
     return view
 end
 function Base.setindex!(view::EdgeDataView{<:Any, V}, data::V, key::Pair{V, V}) where {V}
     setindex!(view, data, to_graph_index(view.graph, key))
-    return view
-end
-
-function Dictionaries.settokenvalue!(view::VertexOrEdgeDataView{<:Any, T}, token, value::T) where {T}
-    setindex!(view, value, gettokenvalue(keys(view), token))
-    return view
-end
-
-function Dictionaries.gettoken!(view::VertexOrEdgeDataView{K}, ind::K) where {K}
-    # This will intentially error if `ind` is not assigned in `view`.
-    return Dictionaries.gettoken(keys(view), ind)
-end
-function Dictionaries.deletetoken!(view::VertexOrEdgeDataView, token)
-    unsetindex!(view.graph, gettokenvalue(keys(view), token))
-    return view
-end
-
-function Dictionaries.unset!(view::VertexOrEdgeDataView{I}, key::I) where {I}
-    unsetindex!(view.graph, key)
-    return view
-end
-function Dictionaries.unset!(view::EdgeDataView, key::Pair)
-    unset!(view, to_graph_index(view.graph, key))
     return view
 end
 
@@ -162,11 +148,6 @@ function Base.setindex!(view::DataViewSlice{K, V}, data::V, key::K) where {K, V}
 end
 function Base.setindex!(view::DataViewSlice{<:Any, V}, data::V, key::Pair{V, V}) where {V}
     setindex!(view, data, to_graph_index(view.view.graph, key))
-    return view
-end
-
-function Dictionaries.settokenvalue!(view::DataViewSlice{<:Any, T}, token, value::T) where {T}
-    setindex!(view, value, gettokenvalue(keys(view), token))
     return view
 end
 
