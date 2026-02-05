@@ -1,4 +1,5 @@
 module DataGraphsPartitionedGraphsExt
+using NamedGraphs.PartitionedGraphs: AbstractPartitionedGraph
 using NamedGraphs.PartitionedGraphs: quotient_graph_vertextype
 using Graphs: Graphs, AbstractGraph, AbstractEdge, vertices, edges
 using ..DataGraphs:
@@ -16,24 +17,13 @@ using ..DataGraphs:
     get_vertices_data,
     get_edges_data,
     set_index_data!,
-    set_indices_data!,
     set_vertex_data!,
     set_edge_data!,
     set_vertices_data!,
     set_edges_data!,
-    has_index_data,
-    has_indices_data,
-    has_vertex_data,
-    has_edge_data,
-    has_vertices_data,
-    has_edges_data,
-    unsetindex!,
-    unset_index_data!,
-    unset_indices_data!,
-    unset_vertex_data!,
-    unset_edge_data!,
-    unset_vertices_data!,
-    unset_edges_data!,
+    is_index_assigned,
+    is_vertex_assigned,
+    is_edge_assigned,
     vertices_data_eltype,
     edges_data_eltype,
     get_index_data
@@ -79,18 +69,18 @@ function NamedGraphs.get_graph_index(qv::QuotientView{<:Any, <:AbstractDataGraph
 end
 
 function DataGraphs.get_vertex_data(qv::QuotientView, v)
-    return get_graph_index(parent(qv), QuotientVertex(v))
+    return getindex(parent(qv), QuotientVertex(v))
 end
 
 function DataGraphs.get_edge_data(qv::QuotientView, v)
-    return get_graph_index(parent(qv), QuotientEdge(v))
+    return getindex(parent(qv), QuotientEdge(v))
 end
 
-function DataGraphs.has_vertex_data(qv::QuotientView, v)
+function DataGraphs.is_vertex_assigned(qv::QuotientView, v)
     return isassigned(parent(qv), QuotientVertex(v))
 end
 
-function DataGraphs.has_edge_data(qv::QuotientView, v)
+function DataGraphs.is_edge_assigned(qv::QuotientView, v)
     return isassigned(parent(qv), QuotientEdge(v))
 end
 
@@ -101,11 +91,33 @@ function DataGraphs.set_edge_data!(qv::QuotientView, val, e)
     return setindex!(parent(qv), val, QuotientEdge(e))
 end
 
-function DataGraphs.unset_vertex_data!(qv::QuotientView, v)
-    return unsetindex!(parent(qv), QuotientVertex(v))
+# ====================== DataGraphs interface for PartitionedGraphs ====================== #
+
+function NamedGraphs.get_graph_index(pg::AbstractPartitionedGraph{<:Any, <:AbstractDataGraph}, ind)
+    return DataGraphs.get_index_data(pg, ind)
 end
-function DataGraphs.unset_edge_data!(qe::QuotientView, e)
-    return unsetindex!(parent(qe), QuotientEdge(e))
+
+function DataGraphs.get_vertex_data(pg::AbstractPartitionedGraph, v)
+    return getindex(unpartitioned_graph(pg), v)
+end
+
+function DataGraphs.get_edge_data(pg::AbstractPartitionedGraph, e)
+    return getindex(unpartitioned_graph(pg), e)
+end
+
+function DataGraphs.is_vertex_assigned(pg::AbstractPartitionedGraph, v)
+    return isassigned(unpartitioned_graph(pg), v)
+end
+
+function DataGraphs.is_edge_assigned(pg::AbstractPartitionedGraph, e)
+    return isassigned(unpartitioned_graph(pg), e)
+end
+
+function DataGraphs.set_vertex_data!(pg::AbstractPartitionedGraph, val, v)
+    return setindex!(unpartitioned_graph(pg), val, v)
+end
+function DataGraphs.set_edge_data!(pg::AbstractPartitionedGraph, val, e)
+    return setindex!(unpartitioned_graph(pg), val, e)
 end
 
 # =========================== Quotient indexing for DataGraphs =========================== #
@@ -124,12 +136,9 @@ function DataGraphs.get_index_data(graph::AbstractGraph, edge::QuotientEdge)
         throw(MethodError(get_index_data, (graph, edge)))
     end
 end
-DataGraphs.has_index_data(graph::AbstractGraph, ind::QuotientVertexOrEdge) = false
+DataGraphs.is_index_assigned(graph::AbstractGraph, ind::QuotientVertexOrEdge) = false
 function DataGraphs.set_index_data!(graph::AbstractGraph, value, ind::QuotientVertexOrEdge)
     return throw(MethodError(set_index_data!, (graph, value, ind)))
-end
-function DataGraphs.unset_index_data!(graph::AbstractGraph, ind::QuotientVertexOrEdge)
-    return throw(MethodError(unset_index_data!, (graph, ind)))
 end
 
 function DataGraphs.vertex_data_type(T::Type{<:QuotientView})

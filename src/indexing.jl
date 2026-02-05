@@ -59,19 +59,19 @@ function Base.isassigned(graph::AbstractDataGraph, index)
     return isassigned_datagraph(graph, to_graph_index(graph, index))
 end
 
-isassigned_datagraph(graph::AbstractGraph, ind) = has_index_data(graph, ind)
-isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = has_indices_data(graph, inds)
+isassigned_datagraph(graph::AbstractGraph, ind) = is_index_assigned(graph, ind)
+isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = is_indices_assigned(graph, inds)
 
-has_index_data(graph::AbstractGraph, vertex) = has_vertex_data(graph, vertex)
+is_index_assigned(graph::AbstractGraph, vertex) = is_vertex_assigned(graph, vertex)
 
-function has_index_data(graph::AbstractGraph, edge::AbstractEdge)
-    return has_edge_data(graph, arrange_edge(graph, edge))
+function is_index_assigned(graph::AbstractGraph, edge::AbstractEdge)
+    return is_edge_assigned(graph, arrange_edge(graph, edge))
 end
-function has_indices_data(graph::AbstractGraph, edges::AbstractEdges)
-    return has_edges_data(graph, edges)
+function is_indices_assigned(graph::AbstractGraph, edges::AbstractEdges)
+    return is_edges_assigned(graph, edges)
 end
-function has_indices_data(graph::AbstractGraph, vertices::AbstractVertices)
-    return has_vertices_data(graph, vertices)
+function is_indices_assigned(graph::AbstractGraph, vertices::AbstractVertices)
+    return is_vertices_assigned(graph, vertices)
 end
 
 # ====================================== setindex! ======================================= #
@@ -132,66 +132,6 @@ end
 function set_edges_data!(g::AbstractGraph, val, edges)
     for e in edges
         g[e] = val[e]
-    end
-    return g
-end
-
-# ===================================== unsetindex! ====================================== #
-
-function unsetindex!(graph::AbstractGraph, index)
-    return unsetindex!_datagraph(graph, to_graph_index(graph, index))
-end
-
-unsetindex!_datagraph(graph::AbstractGraph, vertex) = unset_index_data!(graph, vertex)
-
-function unsetindex!_datagraph(graph::AbstractGraph, edge::AbstractEdge)
-    arranged_edge = arrange_edge(graph, edge)
-    unset_index_data!(graph, arranged_edge)
-    return graph
-end
-
-function unsetindex!_datagraph(graph::AbstractGraph, vertices::AbstractVertices)
-    return unset_indices_data!(graph, vertices)
-end
-function unsetindex!_datagraph(graph::AbstractGraph, edges::AbstractEdges)
-    return unset_indices_data!(graph, edges)
-end
-
-function unset_index_data!(g::AbstractGraph, vertex)
-    if has_vertex(g, vertex)
-        unset_vertex_data!(g, vertex)
-        return g
-    else
-        throw(ArgumentError("Cannot unset data as vertex $vertex not in graph"))
-    end
-end
-function unset_index_data!(g::AbstractGraph, edge::AbstractEdge)
-    if has_edge(g, edge)
-        unset_edge_data!(g, edge)
-        return g
-    else
-        throw(ArgumentError("Cannot unset data as edge $edge not in graph"))
-    end
-end
-
-function unset_indices_data!(g::AbstractGraph, vertices::AbstractVertices)
-    unset_vertices_data!(g, vertices)
-    return g
-end
-function unset_indices_data!(g::AbstractGraph, edges::AbstractEdges)
-    unset_edges_data!(g, edges)
-    return g
-end
-
-function unset_vertices_data!(g::AbstractGraph, vertices)
-    for v in vertices
-        unset_vertex_data!(g, v)
-    end
-    return g
-end
-function unset_edges_data!(g::AbstractGraph, edges)
-    for e in edges
-        unset_edge_data!(g, e)
     end
     return g
 end

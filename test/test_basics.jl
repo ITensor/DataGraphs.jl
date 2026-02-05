@@ -534,7 +534,7 @@ using Test: @test, @test_broken, @testset
         edge_data(g) .= dictionary([("a" => "b") => 1, ("b" => "c") => 2])
         @test collect(edge_data(g)) == [1.0, 2.0]
 
-        unset!(vertex_data(g), "b")
+        unset!(g.vertex_data, "b")
         @test !isassigned(g, "b")
 
         vertex_data(g) .= 4
@@ -547,7 +547,7 @@ using Test: @test, @test_broken, @testset
         @test g["b"] == 5
         @test g["c"] == 4
 
-        unset!(edge_data(g), "b" => "c")
+        unset!(g.edge_data, edgetype(g)("b" => "c"))
         @test !isassigned(g, "b" => "c")
 
         edge_data(g) .= 4

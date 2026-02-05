@@ -44,17 +44,14 @@ edge_data_type(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
 # TODO: Define for `AbstractGraph` as a `DataGraphInterface`.
 underlying_graph(::AbstractDataGraph) = not_implemented()
 
-has_vertex_data(::AbstractDataGraph, vertex) = not_implemented()
-has_edge_data(::AbstractDataGraph, edge) = not_implemented()
+is_vertex_assigned(::AbstractDataGraph, vertex) = not_implemented()
+is_edge_assigned(::AbstractDataGraph, edge) = not_implemented()
 
 get_vertex_data(::AbstractDataGraph, vertex) = not_implemented()
 get_edge_data(::AbstractDataGraph, edge) = not_implemented()
 
 set_vertex_data!(::AbstractDataGraph, data, vertex) = not_implemented()
 set_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
-
-unset_vertex_data!(::AbstractDataGraph, vertex) = not_implemented()
-unset_edge_data!(::AbstractDataGraph, edge) = not_implemented()
 
 # Quasi-derived interface; only required if inference fails
 
@@ -69,8 +66,8 @@ underlying_graph_type(T::Type{<:AbstractGraph}) = Base.promote_op(underlying_gra
 # get_edges_data(g::AbstractGraph, edges) = _get_edges_data(g, edges)
 
 # The defaults
-has_edges_data(g::AbstractGraph, edges) = all(e -> has_edge_data(g, e), edges)
-has_vertices_data(g::AbstractGraph, vertices) = all(v -> has_vertex_data(g, v), vertices)
+is_vertices_assigned(g::AbstractGraph, vertices) = all(v -> is_vertex_assigned(g, v), vertices)
+is_edges_assigned(g::AbstractGraph, edges) = all(e -> is_edge_assigned(g, e), edges)
 
 function get_vertices_data(g::AbstractGraph, vertices)
     return map(v -> getindex(g, v), Indices(vertices))
@@ -311,17 +308,9 @@ function Base.union(
 end
 
 function Graphs.rem_vertex!(graph::AbstractDataGraph, vertex)
-    neighbor_edges = incident_edges(graph, vertex)
-    unset_vertex_data!(vertex_data(graph), vertex)
-    for neighbor_edge in neighbor_edges
-        unset_edge_data!(edge_data(graph), neighbor_edge)
-    end
-    Graphs.rem_vertex!(underlying_graph(graph), vertex)
-    return graph
+    return Graphs.rem_vertex!(underlying_graph(graph), vertex)
 end
-
 function Graphs.rem_edge!(graph::AbstractDataGraph, edge)
-    unset_edge_data!(graph, edge)
     Graphs.rem_edge!(underlying_graph(graph), edge)
     return graph
 end

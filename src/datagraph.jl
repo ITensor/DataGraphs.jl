@@ -36,8 +36,8 @@ end
 # Interface
 underlying_graph(graph::DataGraph) = getfield(graph, :underlying_graph)
 
-has_vertex_data(dg::DataGraph, vertex) = haskey(dg.vertex_data, vertex)
-has_edge_data(dg::DataGraph, edge) = haskey(dg.edge_data, edge)
+is_vertex_assigned(dg::DataGraph, vertex) = haskey(dg.vertex_data, vertex)
+is_edge_assigned(dg::DataGraph, edge) = haskey(dg.edge_data, edge)
 
 get_vertex_data(dg::DataGraph, vertex) = dg.vertex_data[vertex]
 get_edge_data(dg::DataGraph, edge) = dg.edge_data[edge]
@@ -48,15 +48,6 @@ function set_vertex_data!(dg::DataGraph, data, vertex)
 end
 function set_edge_data!(dg::DataGraph, data, edge)
     set!(dg.edge_data, edge, data)
-    return dg
-end
-
-function unset_vertex_data!(dg::DataGraph, vertex)
-    unset!(dg.vertex_data, vertex)
-    return dg
-end
-function unset_edge_data!(dg::DataGraph, edge)
-    unset!(dg.edge_data, edge)
     return dg
 end
 
@@ -136,4 +127,20 @@ function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
         directed_graph_type(underlying_graph_type(graph_type)),
         edgetype(graph_type),
     }
+end
+
+function Graphs.rem_vertex!(graph::DataGraph, vertex)
+    neighbor_edges = incident_edges(graph, vertex)
+    delete!(graph.vertex_data, vertex)
+    for neighbor_edge in neighbor_edges
+        delete!(graph.edge_data, neighbor_edge)
+    end
+    Graphs.rem_vertex!(graph.underlying_graph, vertex)
+    return graph
+end
+
+function Graphs.rem_edge!(graph::DataGraph, edge)
+    delete!(graph.edge_data, edge)
+    Graphs.rem_edge!(graph.underlying_graph, edge)
+    return graph
 end

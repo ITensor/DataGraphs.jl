@@ -29,8 +29,7 @@ using DataGraphs:
     assigned_edge_data,
     underlying_graph,
     vertex_data_type,
-    edge_data_type,
-    unsetindex!
+    edge_data_type
 using NamedGraphs.GraphsExtensions: GraphsExtensions, similar_graph, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_path_graph
 using Test: @testset, @test, @test_throws
@@ -60,12 +59,10 @@ function GraphsExtensions.similar_graph(dg::TestDataGraph, graph::AbstractGraph)
 end
 
 for f in [
-        :(DataGraphs.has_vertex_data),
-        :(DataGraphs.has_edge_data),
+        :(DataGraphs.is_vertex_assigned),
+        :(DataGraphs.is_edge_assigned),
         :(DataGraphs.get_vertex_data),
         :(DataGraphs.get_edge_data),
-        :(DataGraphs.unset_vertex_data!),
-        :(DataGraphs.unset_edge_data!),
     ]
     @eval $(f)(graph::TestDataGraph, ind) = $(f)(graph.graph, ind)
 end
@@ -89,20 +86,15 @@ function DataGraphs.get_index_data(graph::TestDataGraph, ind::QuotientEdge)
     return graph.quotientgraph[parent(ind)]
 end
 
-function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientVertex)
+function DataGraphs.is_index_assigned(graph::TestDataGraph, ind::QuotientVertex)
     return isassigned(graph.quotientgraph, parent(ind))
 end
-function DataGraphs.has_index_data(graph::TestDataGraph, ind::QuotientEdge)
+function DataGraphs.is_index_assigned(graph::TestDataGraph, ind::QuotientEdge)
     return isassigned(graph.quotientgraph, parent(ind))
 end
 
 function DataGraphs.set_index_data!(graph::TestDataGraph, val, ind::QuotientVertex)
     graph.quotientgraph[parent(ind)] = val
-    return graph
-end
-
-function DataGraphs.unset_index_data!(graph::TestDataGraph, ind::QuotientVertex)
-    unsetindex!(graph.quotientgraph, parent(ind))
     return graph
 end
 
@@ -202,8 +194,6 @@ end
             tqv[:a] = ["one"]
             @test tqv[:a] == ["one"]
             @test tpg[QuotientVertex(:a)] == ["one"]
-            unsetindex!(tqv, :a)
-            @test !isassigned(tqv, :a)
         end
 
     end
