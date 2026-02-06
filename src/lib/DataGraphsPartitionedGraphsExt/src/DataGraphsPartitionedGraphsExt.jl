@@ -208,7 +208,11 @@ end
 function PartitionedGraphs.departition(dg::DataGraph)
     ug = underlying_graph(dg)
     upg = departition(underlying_graph(dg))
+
+    # Check if underlying graph is already unpartitioned...
     if upg === ug
+        # ...and return the graph itself such that `unpartition` can terminate correctly.
+        # `unpartition` requires === to terminate its recursion.
         return dg
     else
         vd = copy(vertex_data(dg))
