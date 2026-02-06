@@ -1,6 +1,22 @@
 using DataGraphs:
-    DataGraphs, DataGraph, edge_data, edge_data_eltype, vertex_data, vertex_data_eltype
-using Dictionaries: AbstractIndices, Dictionary, Indices, dictionary
+    DataGraph,
+    DataGraphs,
+    EdgeDataView,
+    VertexDataView,
+    edge_data,
+    edge_data_type,
+    underlying_graph,
+    vertex_data,
+    vertex_data_type
+using Dictionaries:
+    Dictionaries,
+    AbstractDictionary,
+    AbstractIndices,
+    Dictionary,
+    Indices,
+    dictionary,
+    unset!,
+    IndexError
 using Graphs:
     add_edge!,
     a_star,
@@ -23,7 +39,6 @@ using Graphs:
     src,
     steiner_tree,
     vertices
-using Graphs.SimpleGraphs: SimpleDiGraph, SimpleEdge, SimpleGraph
 using GraphsFlows: GraphsFlows
 using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
 using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, subgraph, vertextype
@@ -47,11 +62,11 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "Basics" begin
-        g = grid((4,))
-        dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
-        @test !isassigned(dg, SimpleEdge(1, 2))
+        g = named_grid(4)
+        dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
+        @test !isassigned(dg, NamedEdge(1, 2))
         @test !isassigned(dg, 1 => 2)
-        @test !isassigned(dg, SimpleEdge(1 => 2))
+        @test !isassigned(dg, NamedEdge(1 => 2))
         @test !isassigned(dg, 1 => 3)
         @test !isassigned(dg, 1)
         @test !isassigned(dg, 2)
@@ -86,11 +101,11 @@ using Test: @test, @test_broken, @testset
 
         dg[1 => 2] = :E12
         dg[2 => 3] = :E23
-        dg[SimpleEdge(3, 4)] = :E34
+        dg[NamedEdge(3, 4)] = :E34
         #@test isassigned(dg, (1, 2))
-        @test isassigned(dg, SimpleEdge(2, 3))
+        @test isassigned(dg, NamedEdge(2, 3))
         @test isassigned(dg, 3 => 4)
-        @test dg[SimpleEdge(1, 2)] == :E12
+        @test dg[NamedEdge(1, 2)] == :E12
         @test dg[2 => 3] == :E23
         @test dg[3 => 4] == :E34
 
@@ -101,11 +116,11 @@ using Test: @test, @test_broken, @testset
         @test dg[(1, 1) => (1, (1, 1))] == "X"
 
         vdata = map(v -> "V$v", Indices(1:4))
-        edata = map(e -> "E$(src(e))$(dst(e))", Indices(SimpleEdge.([1 => 2, 2 => 3, 3 => 4])))
+        edata = map(e -> "E$(src(e))$(dst(e))", Indices(NamedEdge.([1 => 2, 2 => 3, 3 => 4])))
         # TODO: Make a more compact constructor that directly accepts
         # vertex and edge data? Maybe `DataGraph(g; vertex_data=vdata, edge_data=edata)`
         # or `DataGraph(g; vertex_data=v -> "V$v", edge_data=e -> "E$(src(e))$(dst(e))")`.
-        dg = DataGraph(g; vertex_data_eltype = eltype(vdata), edge_data_eltype = eltype(edata))
+        dg = DataGraph(g; vertex_data_type = eltype(vdata), edge_data_type = eltype(edata))
         for v in vertices(dg)
             dg[v] = vdata[v]
         end
@@ -121,15 +136,15 @@ using Test: @test, @test_broken, @testset
         @test dg[2 => 3] == "E23"
         @test dg[3 => 4] == "E34"
 
-        @test DataGraph(g) isa DataGraph{Int, Any, Any, SimpleGraph{Int}, SimpleEdge{Int}}
+        @test DataGraph(g) isa DataGraph{Int, Any, Any, NamedGraph{Int}, NamedEdge{Int}}
 
         dg_uint16 = DataGraph{UInt16}(dg)
         @test dg_uint16 isa
-            DataGraph{UInt16, String, String, SimpleGraph{UInt16}, SimpleEdge{UInt16}}
+            DataGraph{UInt16, String, String, NamedGraph{UInt16}, NamedEdge{UInt16}}
         @test vertextype(dg_uint16) === UInt16
-        @test edgetype(dg_uint16) === SimpleEdge{UInt16}
-        @test vertex_data_eltype(dg_uint16) === String
-        @test edge_data_eltype(dg_uint16) === String
+        @test edgetype(dg_uint16) === NamedEdge{UInt16}
+        @test vertex_data_type(dg_uint16) === String
+        @test edge_data_type(dg_uint16) === String
         @test dg_uint16[1] == "V1"
         @test dg_uint16[2] == "V2"
         @test dg_uint16[3] == "V3"
@@ -173,8 +188,8 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "get and get! functions" begin
-        g = grid((4,))
-        dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
+        g = named_grid(4)
+        dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
 
         # Test for vertices
         @test get(dg, 1, "default") == "default"
@@ -229,32 +244,32 @@ using Test: @test, @test_broken, @testset
 
     @testset "Constructors specifying vertex type" begin
         dg = DataGraph{Float64}(
-            named_path_graph(4); vertex_data_eltype = String, edge_data_eltype = Symbol
+            named_path_graph(4); vertex_data_type = String, edge_data_type = Symbol
         )
         @test nv(dg) == 4
         @test ne(dg) == 3
         @test edgetype(dg) === NamedEdge{Float64}
         @test vertextype(dg) === Float64
-        @test vertex_data_eltype(dg) === String
-        @test edge_data_eltype(dg) === Symbol
+        @test vertex_data_type(dg) === String
+        @test edge_data_type(dg) === Symbol
         @test issetequal(vertices(dg), Float64.(1:4))
         @test vertices(dg) isa AbstractIndices{Float64}
         @test eltype(vertices(dg)) === Float64
         @test has_edge(dg, 1.0 => 2.0)
         @test has_edge(dg, 2.0 => 3.0)
         @test has_edge(dg, 3.0 => 4.0)
-        @test vertex_data(dg) == Dictionary{Float64, String}()
-        @test vertex_data(dg) isa Dictionary{Float64, String}
+        @test vertex_data(dg) isa AbstractDictionary{Float64, String}
+        @test !any(k -> isassigned(vertex_data(dg), k), keys(vertex_data(dg)))
         @test keytype(vertex_data(dg)) === Float64
         @test eltype(vertex_data(dg)) === String
-        @test edge_data(dg) == Dictionary{NamedEdge{Float64}, Symbol}()
-        @test edge_data(dg) isa Dictionary{NamedEdge{Float64}, Symbol}
+        @test edge_data(dg) isa AbstractDictionary{NamedEdge{Float64}, Symbol}
+        @test !any(k -> isassigned(edge_data(dg), k), keys(edge_data(dg)))
         @test keytype(edge_data(dg)) === NamedEdge{Float64}
         @test eltype(edge_data(dg)) === Symbol
     end
 
     @testset "Disjoint unions" begin
-        g = DataGraph(named_grid((2, 2)); vertex_data_eltype = String, edge_data_eltype = String)
+        g = DataGraph(named_grid((2, 2)); vertex_data_type = String, edge_data_type = String)
 
         for v in vertices(g)
             g[v] = "V$v"
@@ -297,11 +312,11 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "union" begin
-        g1 = DataGraph(grid((4,)))
+        g1 = DataGraph(named_grid(4))
         g1[1] = ["A", "B", "C"]
         g1[1 => 2] = ["E", "F"]
 
-        g2 = DataGraph(SimpleGraph(5))
+        g2 = DataGraph(NamedGraph(5))
         add_edge!(g2, 1 => 5)
         g2[1] = ["C", "D", "E"]
 
@@ -337,11 +352,11 @@ using Test: @test, @test_broken, @testset
         dg1[1 => 2] = "A1" => "B1"
         dg1[2 => 3] = "B1" => "C1"
         dg2 = DataGraph(g2)
-        dg2[1] = "A2"
-        dg2[2] = "B2"
-        dg2[3] = "C2"
-        dg2[1 => 2] = "A2" => "B2"
-        dg2[2 => 3] = "B2" => "C2"
+        dg2[4] = "A2"
+        dg2[5] = "B2"
+        dg2[6] = "C2"
+        dg2[4 => 5] = "A2" => "B2"
+        dg2[5 => 6] = "B2" => "C2"
         dg = union(dg1, dg2)
         comps = connected_components(dg)
         @test length(comps) == 2
@@ -349,7 +364,7 @@ using Test: @test, @test_broken, @testset
         @test issetequal(comps[2], [4, 5, 6])
     end
     @testset "reverse" begin
-        g = DataGraph(SimpleDiGraph(4))
+        g = DataGraph(NamedDiGraph(4))
         add_edge!(g, 1 => 2)
         add_edge!(g, 3 => 4)
         g[1 => 2] = :A
@@ -392,7 +407,7 @@ using Test: @test, @test_broken, @testset
             (3, 1) => (4, 1),
             (4, 1) => (4, 2),
         ]
-        @test t isa NamedDiGraph{Tuple{Int, Int}}
+        @test underlying_graph(t) isa NamedDiGraph{Tuple{Int, Int}}
         @test nv(t) == nv(g)
         @test ne(t) == nv(g) - 1
         @test all(e -> has_edge(t, e), es)
@@ -407,7 +422,7 @@ using Test: @test, @test_broken, @testset
             (3, 2) => (2, 2),
             (2, 2) => (1, 2),
         ]
-        @test t isa NamedDiGraph{Tuple{Int, Int}}
+        @test underlying_graph(t) isa NamedDiGraph{Tuple{Int, Int}}
         @test nv(t) == nv(g)
         @test ne(t) == nv(g) - 1
         @test all(e -> has_edge(t, e), es)
@@ -442,8 +457,8 @@ using Test: @test, @test_broken, @testset
     @testset "OrdinalIndexing" begin
         g = DataGraph(
             NamedGraph(path_graph(3), ["a", "b", "c"]);
-            vertex_data_eltype = String,
-            edge_data_eltype = Symbol,
+            vertex_data_type = String,
+            edge_data_type = Symbol,
         )
         g[1st] = "v_a"
         g[2nd] = "v_b"
@@ -467,5 +482,101 @@ using Test: @test, @test_broken, @testset
         @test g[2nd => 1st] === :e_ab
         @test g[2nd => 3rd] === :e_bc
         @test g[3rd => 2nd] === :e_bc
+    end
+
+    @testset "Data views" begin
+        g = DataGraph(
+            NamedGraph(path_graph(3), ["a", "b", "c"]);
+            vertex_data_type = Int,
+            edge_data_type = Float64
+        )
+        g["b"] = 2
+        g["c"] = 3
+        g["a" => "b"] = -1.0
+        g["b" => "c"] = -2.0
+
+        vdata = vertex_data(g)
+        @test vdata isa VertexDataView
+
+        @test keytype(VertexDataView(g)) === String
+        @test eltype(VertexDataView(g)) === Int
+
+        @test collect(keys(vdata)) == ["a", "b", "c"]
+
+        @test haskey(vdata, "a")
+        @test haskey(vdata, "b")
+        @test haskey(vdata, "c")
+
+        @test !isassigned(vdata, "a")
+        @test isassigned(vdata, "b")
+        @test isassigned(vdata, "c")
+
+        @test_throws Dictionaries.IndexError vdata["a"]
+        @test_throws Dictionaries.IndexError collect(vdata)
+
+        g["a"] = 1
+        vdata = vertex_data(g)
+        @test collect(keys(vdata)) == collect(vertices(g))
+        vdata["a"] = 4
+        @test g["a"] == 4
+        @test vdata["a"] == 4
+
+        @test length(keys(EdgeDataView(g))) == 2
+        @test keytype(EdgeDataView(g)) === NamedEdge{String}
+        @test eltype(EdgeDataView(g)) === Float64
+
+        edata = edge_data(g)
+        @test edata["a" => "b"] == -1.0
+        @test edata[edgetype(g)("b" => "c")] == -2.0
+
+        vertex_data(g) .= dictionary(["b" => 2, "a" => 1, "c" => 3])
+        @test collect(vertex_data(g)) == [1, 2, 3]
+
+        edge_data(g) .= dictionary([("a" => "b") => 1, ("b" => "c") => 2])
+        @test collect(edge_data(g)) == [1.0, 2.0]
+
+        unset!(g.vertex_data, "b")
+        @test !isassigned(g, "b")
+
+        vertex_data(g) .= 4
+        @test g["a"] == 4
+        @test g["b"] == 4
+        @test g["c"] == 4
+
+        vdv = view(vertex_data(g), Indices(["a", "b"]))
+
+        @test isassigned(vdv, "a")
+        @test isassigned(vdv, "b")
+        @test !isassigned(vdv, "c")
+        @test_throws IndexError vdv["c"]
+
+        view(vertex_data(g), Indices(["b", "a"])) .= Dictionary(["a", "b"], [1, 2])
+
+        @test g["a"] == 1
+        @test g["b"] == 2
+
+        vdv["a"] = 2
+        vdv["b"] = 1
+
+        @test g["a"] == 2
+        @test g["b"] == 1
+
+        view(g, Indices(["b", "a"])) .= Dictionary(["a", "b"], [3, 4])
+
+        @test g["a"] == 3
+        @test g["b"] == 4
+
+        unset!(g.edge_data, edgetype(g)("b" => "c"))
+        @test !isassigned(g, "b" => "c")
+
+        edge_data(g) .= 4
+        @test g["a" => "b"] == 4.0
+        @test g["b" => "c"] == 4.0
+
+        edv = view(edge_data(g), Indices(["a" => "b", "b" => "c"]))
+
+        @test isassigned(edv, "a" => "b")
+        edv["a" => "b"] = 5.0
+        @test g["a" => "b"] == 5.0
     end
 end

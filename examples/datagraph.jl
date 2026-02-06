@@ -1,11 +1,13 @@
 using DataGraphs: DataGraph
-using Graphs: Edge, grid, has_edge, has_vertex
+using Graphs: has_edge, has_vertex
+using NamedGraphs: NamedEdge
+using NamedGraphs.NamedGraphGenerators: named_grid
 
-g = grid((4,))
-dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = Symbol)
-@show !isassigned(dg, Edge(1, 2))
+g = named_grid((4))
+dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
+@show !isassigned(dg, NamedEdge(1, 2))
 @show !isassigned(dg, 1 => 2)
-@show !isassigned(dg, Edge(1 => 2))
+@show !isassigned(dg, NamedEdge(1 => 2))
 @show !isassigned(dg, 1 => 3)
 @show !isassigned(dg, 1)
 @show !isassigned(dg, 2)
@@ -33,10 +35,10 @@ dg[4] = "V4"
 
 dg[1 => 2] = :E12
 dg[2 => 3] = :E23
-dg[Edge(3, 4)] = :E34
+dg[NamedEdge(3, 4)] = :E34
 #@show isassigned(dg, (1, 2))
-@show isassigned(dg, Edge(2, 3))
+@show isassigned(dg, NamedEdge(2, 3))
 @show isassigned(dg, 3 => 4)
-@show dg[Edge(1, 2)] == :E12
+@show dg[NamedEdge(1, 2)] == :E12
 @show dg[2 => 3] == :E23
 @show dg[3 => 4] == :E34

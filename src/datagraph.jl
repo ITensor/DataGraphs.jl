@@ -1,14 +1,20 @@
 using Dictionaries: Dictionary
-using Graphs: Graphs, edgetype
-using Graphs.SimpleGraphs: SimpleGraph
-using NamedGraphs.GraphsExtensions: convert_vertextype, directed_graph, vertextype
+using Graphs: Graphs, edgetype, has_edge, has_vertex
+using NamedGraphs: GenericNamedGraph
+using NamedGraphs.GraphsExtensions:
+    convert_vertextype,
+    directed_graph,
+    vertextype,
+    directed_graph_type,
+    similar_graph,
+    rename_vertices
 
 # TODO: define VertexDataGraph, a graph with only data on the
 # vertices, and EdgeDataGraph, a graph with only data on the edges.
 # TODO: Use https://github.com/vtjnash/ComputedFieldTypes.jl to
 # automatically determine `E` from `G` from `edgetype(G)`
 # and `V` from `G` as `vertextype(G)`.
-struct DataGraph{V, VD, ED, G <: AbstractGraph, E <: AbstractEdge} <: AbstractDataGraph{V, VD, ED}
+struct DataGraph{V, VD, ED, G <: AbstractNamedGraph, E <: AbstractEdge} <: AbstractDataGraph{V, VD, ED}
     underlying_graph::G
     vertex_data::Dictionary{V, VD}
     edge_data::Dictionary{E, ED}
@@ -26,18 +32,43 @@ struct DataGraph{V, VD, ED, G <: AbstractGraph, E <: AbstractEdge} <: AbstractDa
         )
     end
 end
-underlying_graph_type(G::Type{<:DataGraph}) = fieldtype(G, :underlying_graph)
-vertex_data_eltype(G::Type{<:DataGraph}) = eltype(fieldtype(G, :vertex_data))
-edge_data_eltype(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
+
+# Interface
 underlying_graph(graph::DataGraph) = getfield(graph, :underlying_graph)
-vertex_data(graph::DataGraph) = getfield(graph, :vertex_data)
-edge_data(graph::DataGraph) = getfield(graph, :edge_data)
 
-# TODO: Is this needed? Maybe define a generic `AbstractDataGraph` version.
-Graphs.is_directed(G::Type{<:DataGraph}) = Graphs.is_directed(underlying_graph_type(G))
+is_vertex_assigned(dg::DataGraph, vertex) = haskey(dg.vertex_data, vertex)
+is_edge_assigned(dg::DataGraph, edge) = haskey(dg.edge_data, edge)
 
-# TODO: Implement in terms of `set_underlying_graph`, `set_vertex_data`, etc.
-# TODO: Use `https://github.com/JuliaObjects/Accessors.jl`?
+get_vertex_data(dg::DataGraph, vertex) = dg.vertex_data[vertex]
+get_edge_data(dg::DataGraph, edge) = dg.edge_data[edge]
+
+function set_vertex_data!(dg::DataGraph, data, vertex)
+    set!(dg.vertex_data, vertex, data)
+    return dg
+end
+function set_edge_data!(dg::DataGraph, data, edge)
+    set!(dg.edge_data, edge, data)
+    return dg
+end
+
+underlying_graph_type(G::Type{<:DataGraph}) = fieldtype(G, :underlying_graph)
+vertex_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :vertex_data))
+edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
+
+# Extras
+
+function GraphsExtensions.similar_graph(T::Type{<:DataGraph})
+    similar_underlying_graph = similar_graph(underlying_graph_type(T))
+    return T(similar_underlying_graph)
+end
+function GraphsExtensions.similar_graph(dg::DataGraph, underlying_graph::AbstractGraph)
+    return DataGraph(
+        underlying_graph;
+        vertex_data_type = vertex_data_type(dg),
+        edge_data_type = edge_data_type(dg)
+    )
+end
+
 function Base.copy(graph::DataGraph)
     # Need to manually copy the keys of Dictionaries, see:
     # https://github.com/andyferris/Dictionaries.jl/issues/98
@@ -47,13 +78,13 @@ function Base.copy(graph::DataGraph)
 end
 
 function DataGraph{V}(
-        underlying_graph::AbstractGraph; vertex_data_eltype::Type = Any, edge_data_eltype::Type = Any
+        underlying_graph::AbstractGraph; vertex_data_type::Type = Any, edge_data_type::Type = Any
     ) where {V}
     converted_underlying_graph = convert_vertextype(V, underlying_graph)
     return _DataGraph(
         converted_underlying_graph,
-        Dictionary{vertextype(converted_underlying_graph), vertex_data_eltype}(),
-        Dictionary{edgetype(converted_underlying_graph), edge_data_eltype}(),
+        Dictionary{vertextype(converted_underlying_graph), vertex_data_type}(),
+        Dictionary{edgetype(converted_underlying_graph), edge_data_type}(),
     )
 end
 
@@ -84,18 +115,32 @@ function DataGraph{V}(graph::DataGraph) where {V}
     return _DataGraph(converted_underlying_graph, converted_vertex_data, converted_edge_data)
 end
 
-GraphsExtensions.convert_vertextype(::Type{V}, graph::DataGraph{V}) where {V} = graph
 function GraphsExtensions.convert_vertextype(vertextype::Type, graph::DataGraph)
     return DataGraph{vertextype}(graph)
 end
 
-# TODO: implement generic version in terms of `set_underlying_graph_type`.
 function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
     return DataGraph{
         vertextype(graph_type),
-        vertex_data_eltype(graph_type),
-        edgetype(graph_type),
+        vertex_data_type(graph_type),
+        edge_data_type(graph_type),
         directed_graph_type(underlying_graph_type(graph_type)),
         edgetype(graph_type),
     }
+end
+
+function Graphs.rem_vertex!(graph::DataGraph, vertex)
+    neighbor_edges = incident_edges(graph, vertex)
+    delete!(graph.vertex_data, vertex)
+    for neighbor_edge in neighbor_edges
+        delete!(graph.edge_data, neighbor_edge)
+    end
+    Graphs.rem_vertex!(graph.underlying_graph, vertex)
+    return graph
+end
+
+function Graphs.rem_edge!(graph::DataGraph, edge)
+    delete!(graph.edge_data, edge)
+    Graphs.rem_edge!(graph.underlying_graph, edge)
+    return graph
 end

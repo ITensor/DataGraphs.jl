@@ -11,11 +11,11 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 Aqua = "0.8.11"
-DataGraphs = "0.2.6"
+DataGraphs = "0.3"
 Dictionaries = "0.4.4"
 Graphs = "1.12"
 GraphsFlows = "0.1.1"
-NamedGraphs = "0.8.2"
+NamedGraphs = "0.10"
 SafeTestsets = "0.1"
 Suppressor = "0.2.8"
 Test = "1.10"

@@ -3,7 +3,7 @@ using NamedGraphs: NamedEdge
 using NamedGraphs.NamedGraphGenerators: named_grid
 
 g = named_grid((2, 2))
-dg = DataGraph(g; vertex_data_eltype = String, edge_data_eltype = String)
+dg = DataGraph(g; vertex_data_type = String, edge_data_type = String)
 
 dg[1, 1] = "X11"
 
