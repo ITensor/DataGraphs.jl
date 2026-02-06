@@ -25,19 +25,13 @@ get_index_data(graph::AbstractGraph, vertex) = _get_index_data(graph, vertex)
 
 # _get_index_data exists to avoid method ambiguity when overloading get_index_data
 function _get_index_data(graph::AbstractGraph, vertex)
-    if isassigned(graph, vertex)
-        return get_vertex_data(graph, vertex)
-    else
-        throw(IndexError("Vertex $vertex not assigned"))
-    end
+    isassigned(graph, vertex) || throw(IndexError("Vertex $vertex not assigned"))
+    return get_vertex_data(graph, vertex)
 end
 function _get_index_data(graph::AbstractGraph, edge::AbstractEdge)
-    if isassigned(graph, edge)
-        data = get_edge_data(graph, arrange_edge(graph, edge))
-        return reverse_data_direction(graph, edge, data)
-    else
-        throw(IndexError("Edge $edge not assigned"))
-    end
+    isassigned(graph, edge) || throw(IndexError("Edge $edge not assigned"))
+    data = get_edge_data(graph, arrange_edge(graph, edge))
+    return reverse_data_direction(graph, edge, data)
 end
 
 # Can force data retrivial instead of subgraphing by using `Keys`.

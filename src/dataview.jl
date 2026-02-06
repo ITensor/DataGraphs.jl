@@ -71,18 +71,12 @@ function Base.getindex(view::VertexOrEdgeDataView, key)
 end
 
 function _getindex(view::VertexDataView, key)
-    if key in keys(view)
-        return get_vertex_data(view.graph, key)
-    else
-        throw(IndexError("VertexDataView does not contain index: $key"))
-    end
+    key in keys(view) || throw(IndexError("VertexDataView does not contain index: $key"))
+    return get_vertex_data(view.graph, key)
 end
 function _getindex(view::EdgeDataView, key)
-    if key in keys(view)
-        return get_edge_data(view.graph, key)
-    else
-        throw(IndexError("EdgeDataView does not contain index: $key"))
-    end
+    key in keys(view) || throw(IndexError("EdgeDataView does not contain index: $key"))
+    return get_edge_data(view.graph, key)
 end
 
 # Support indexing with `Indices`.
