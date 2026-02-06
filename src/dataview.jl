@@ -135,8 +135,8 @@ end
 Base.isassigned(view::DataViewSlice{K}, key::K) where {K} = key in keys(view)
 Base.isassigned(view::DataViewSlice, key::Pair) = isassigned(view, to_graph_index(view.view.graph, key))
 
-Base.getindex(view::VertexOrEdgeDataView, keys::Indices) = DataViewSlice(view, keys)
-function Base.getindex(view::EdgeDataView, keys::Indices{<:Pair})
+Base.view(view::VertexOrEdgeDataView, keys::Indices) = DataViewSlice(view, keys)
+function Base.view(view::EdgeDataView, keys::Indices{<:Pair})
     return DataViewSlice(view, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
 end
 

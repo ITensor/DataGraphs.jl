@@ -134,6 +134,6 @@ Dictionaries.getindices(graph::AbstractDataGraph, inds::Indices) = map(ind -> gr
 
 # ========================================= view ========================================= #
 
-Base.view(graph::AbstractDataGraph, inds::Indices) = vertex_data(graph)[inds]
-Base.view(graph::AbstractDataGraph, inds::Indices{<:Pair}) = edge_data(graph)[inds]
-Base.view(graph::AbstractDataGraph, inds::Indices{<:AbstractEdge}) = edge_data(graph)[inds]
+Base.view(graph::AbstractDataGraph, inds::Indices) = view(vertex_data(graph), inds)
+Base.view(graph::AbstractDataGraph, inds::Indices{<:Pair}) = view(edge_data(graph), inds)
+Base.view(graph::AbstractDataGraph, inds::Indices{<:AbstractEdge}) = view(edge_data(graph), inds)

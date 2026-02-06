@@ -543,14 +543,14 @@ using Test: @test, @test_broken, @testset
         @test g["b"] == 4
         @test g["c"] == 4
 
-        vdv = vertex_data(g)[Indices(["a", "b"])]
+        vdv = view(vertex_data(g), Indices(["a", "b"]))
 
         @test isassigned(vdv, "a")
         @test isassigned(vdv, "b")
         @test !isassigned(vdv, "c")
         @test_throws IndexError vdv["c"]
 
-        vertex_data(g)[Indices(["b", "a"])] .= Dictionary(["a", "b"], [1, 2])
+        view(vertex_data(g), Indices(["b", "a"])) .= Dictionary(["a", "b"], [1, 2])
 
         @test g["a"] == 1
         @test g["b"] == 2
@@ -561,6 +561,11 @@ using Test: @test, @test_broken, @testset
         @test g["a"] == 2
         @test g["b"] == 1
 
+        view(g, Indices(["b", "a"])) .= Dictionary(["a", "b"], [3, 4])
+
+        @test g["a"] == 3
+        @test g["b"] == 4
+
         unset!(g.edge_data, edgetype(g)("b" => "c"))
         @test !isassigned(g, "b" => "c")
 
@@ -568,7 +573,7 @@ using Test: @test, @test_broken, @testset
         @test g["a" => "b"] == 4.0
         @test g["b" => "c"] == 4.0
 
-        edv = edge_data(g)[Indices(["a" => "b", "b" => "c"])]
+        edv = view(edge_data(g), Indices(["a" => "b", "b" => "c"]))
 
         @test isassigned(edv, "a" => "b")
         edv["a" => "b"] = 5.0
