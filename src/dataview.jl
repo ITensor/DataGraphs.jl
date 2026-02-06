@@ -142,10 +142,12 @@ end
 
 # For method ambiguity
 function Base.setindex!(view::DataViewSlice{K, V}, data::V, key::K) where {K, V}
-    return setindex!_dataview(view, data, key)
+    setindex!_dataview(view, data, key)
+    return view
 end
 function Base.setindex!(view::DataViewSlice{<:Any, V}, data::V, key::Pair) where {V}
-    return setindex!_dataview(view, data, key)
+    setindex!_dataview(view, data, key)
+    return view
 end
 
 function setindex!_dataview(view::DataViewSlice, data, key)

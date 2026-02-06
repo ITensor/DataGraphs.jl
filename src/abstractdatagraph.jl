@@ -103,7 +103,8 @@ function Graphs.vertices(graph::AbstractDataGraph)
     return Graphs.vertices(underlying_graph(graph))
 end
 function Graphs.add_vertex!(graph::AbstractDataGraph, vertex)
-    return Graphs.add_vertex!(underlying_graph(graph), vertex)
+    Graphs.add_vertex!(underlying_graph(graph), vertex)
+    return graph
 end
 
 # Simple NamedGraphs overloads
@@ -288,7 +289,8 @@ function Base.union(
 end
 
 function Graphs.rem_vertex!(graph::AbstractDataGraph, vertex)
-    return Graphs.rem_vertex!(underlying_graph(graph), vertex)
+    Graphs.rem_vertex!(underlying_graph(graph), vertex)
+    return graph
 end
 function Graphs.rem_edge!(graph::AbstractDataGraph, edge)
     Graphs.rem_edge!(underlying_graph(graph), edge)
