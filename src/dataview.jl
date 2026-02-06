@@ -93,7 +93,7 @@ function Base.setindex!(view::VertexOrEdgeDataView{K, V}, data::V, key::K) where
     setindex!(view.graph, data, key)
     return view
 end
-function Base.setindex!(view::EdgeDataView{<:Any, V}, data::V, key::Pair{V, V}) where {V}
+function Base.setindex!(view::EdgeDataView{<:Any, V}, data::V, key::Pair) where {V}
     setindex!(view, data, to_graph_index(view.graph, key))
     return view
 end
@@ -125,31 +125,38 @@ end
 
 Base.keys(dvs::DataViewSlice) = dvs.inds
 
-Base.getindex(dvs::DataViewSlice, key) = dvs.view[key]
-Base.getindex(view::DataViewSlice{K}, key::K) where {K} = view.view[key]
+Base.getindex(view::DataViewSlice, key) = getindex_dataview(view, key)
+Base.getindex(view::DataViewSlice{K}, key::K) where {K} = getindex_dataview(view, key)
+function getindex_dataview(dvs::DataViewSlice, key)
+    isassigned(dvs, key) || throw(IndexError("Dictionary does not contain index: $key"))
+    return dvs.view[key]
+end
 
-Base.isassigned(view::DataViewSlice, key) = key in keys(view)
 Base.isassigned(view::DataViewSlice{K}, key::K) where {K} = key in keys(view)
+Base.isassigned(view::DataViewSlice, key::Pair) = isassigned(view, to_graph_index(view.view.graph, key))
 
 Base.getindex(view::VertexOrEdgeDataView, keys::Indices) = DataViewSlice(view, keys)
 function Base.getindex(view::EdgeDataView, keys::Indices{<:Pair})
     return DataViewSlice(view, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
 end
 
+# For method ambiguity
 function Base.setindex!(view::DataViewSlice{K, V}, data::V, key::K) where {K, V}
+    return setindex!_dataview(view, data, key)
+end
+function Base.setindex!(view::DataViewSlice{<:Any, V}, data::V, key::Pair) where {V}
+    return setindex!_dataview(view, data, key)
+end
+
+function setindex!_dataview(view::DataViewSlice, data, key)
+    isassigned(view, key) || throw(IndexError("Dictionary does not contain index: $key"))
     setindex!(view.view, data, key)
     return view
 end
-function Base.setindex!(view::DataViewSlice{<:Any, V}, data::V, key::Pair{V, V}) where {V}
-    setindex!(view, data, to_graph_index(view.view.graph, key))
-    return view
-end
 
-Base.axes(view::DataViewSlice) = (Base.OneTo(length(keys(view))),)
-
-function Base.copyto!(dest::DataViewSlice, bc::Base.Broadcast.Broadcasted{Base.Broadcast.DefaultArrayStyle{1}})
-    for (i, key) in enumerate(keys(dest))
-        @inbounds dest[key] = bc[i]
+function Base.copyto!(dest::DataViewSlice, bc::Dictionaries.BroadcastedDictionary)
+    for (key, val) in pairs(bc)
+        dest[key] = val
     end
     return dest
 end

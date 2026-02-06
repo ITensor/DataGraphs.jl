@@ -15,7 +15,8 @@ using Dictionaries:
     Dictionary,
     Indices,
     dictionary,
-    unset!
+    unset!,
+    IndexError
 using Graphs:
     add_edge!,
     a_star,
@@ -542,10 +543,23 @@ using Test: @test, @test_broken, @testset
         @test g["b"] == 4
         @test g["c"] == 4
 
-        vertex_data(g)[Indices(["b", "a"])] .= [5, 6]
-        @test g["a"] == 6
-        @test g["b"] == 5
-        @test g["c"] == 4
+        vdv = vertex_data(g)[Indices(["a", "b"])]
+
+        @test isassigned(vdv, "a")
+        @test isassigned(vdv, "b")
+        @test !isassigned(vdv, "c")
+        @test_throws IndexError vdv["c"]
+
+        vertex_data(g)[Indices(["b", "a"])] .= Dictionary(["a", "b"], [1, 2])
+
+        @test g["a"] == 1
+        @test g["b"] == 2
+
+        vdv["a"] = 2
+        vdv["b"] = 1
+
+        @test g["a"] == 2
+        @test g["b"] == 1
 
         unset!(g.edge_data, edgetype(g)("b" => "c"))
         @test !isassigned(g, "b" => "c")
@@ -554,9 +568,10 @@ using Test: @test, @test_broken, @testset
         @test g["a" => "b"] == 4.0
         @test g["b" => "c"] == 4.0
 
-        edge_data(g)[Indices(["a" => "b", "b" => "c"])] .= [1.5, 2.5]
-        @test g["a" => "b"] == 1.5
-        @test g["b" => "c"] == 2.5
+        edv = edge_data(g)[Indices(["a" => "b", "b" => "c"])]
 
+        @test isassigned(edv, "a" => "b")
+        edv["a" => "b"] = 5.0
+        @test g["a" => "b"] == 5.0
     end
 end

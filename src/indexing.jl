@@ -6,18 +6,9 @@ using NamedGraphs:
     to_edges,
     AbstractGraphIndices
 using NamedGraphs.GraphsExtensions: subgraph
-using Dictionaries: AbstractIndices
+using Dictionaries: AbstractIndices, getindices
 
-struct Keys{I, Indices} <: AbstractIndices{I}
-    parent::Indices
-    Keys(parent::GI) where {GI} = new{eltype(GI), GI}(parent)
-end
-
-Base.iterate(keys::Keys, state...) = iterate(keys.parent, state...)
-Base.length(keys::Keys) = length(keys.parent)
-Base.in(i, keys::Keys) = in(i, keys.parent)
-
-# ====================================== getindex! ======================================= #
+# ====================================== getindex ======================================= #
 
 NamedGraphs.get_graph_index(graph::AbstractDataGraph, index) = get_index_data(graph, index)
 # If unknown, treat like  single vertex
@@ -32,19 +23,6 @@ function _get_index_data(graph::AbstractGraph, edge::AbstractEdge)
     isassigned(graph, edge) || throw(IndexError("Edge $edge not assigned"))
     data = get_edge_data(graph, arrange_edge(graph, edge))
     return reverse_data_direction(graph, edge, data)
-end
-
-# Can force data retrivial instead of subgraphing by using `Keys`.
-function NamedGraphs.getindex_namedgraph(graph::AbstractDataGraph, keys::Keys)
-    return get_indices_data(graph, to_graph_index(graph, keys.parent))
-end
-
-function get_indices_data(graph::AbstractGraph, vertices::AbstractVertices)
-    return get_vertices_data(graph, vertices)
-end
-
-function get_indices_data(graph::AbstractGraph, edges::AbstractEdges)
-    return get_edges_data(graph, edges)
 end
 
 # ====================================== isassigned ====================================== #
@@ -149,3 +127,13 @@ end
 function NamedGraphs.to_graph_index(graph::AbstractGraph, vertex::OrdinalSuffixedInteger)
     return to_graph_index(graph, vertices(graph)[vertex])
 end
+
+# ====================================== getindices ====================================== #
+
+Dictionaries.getindices(graph::AbstractDataGraph, inds::Indices) = map(ind -> graph[ind], inds)
+
+# ========================================= view ========================================= #
+
+Base.view(graph::AbstractDataGraph, inds::Indices) = vertex_data(graph)[inds]
+Base.view(graph::AbstractDataGraph, inds::Indices{<:Pair}) = edge_data(graph)[inds]
+Base.view(graph::AbstractDataGraph, inds::Indices{<:AbstractEdge}) = edge_data(graph)[inds]
