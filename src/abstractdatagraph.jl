@@ -76,14 +76,6 @@ function get_edges_data(g::AbstractGraph, edges)
     return map(e -> getindex(g, e), Indices(edges))
 end
 
-function vertices_data_eltype(G::Type{<:AbstractGraph}, V::Type{<:AbstractVertices})
-    return Dictionary{eltype(V), vertex_data_type(G)}
-end
-
-function edges_data_eltype(G::Type{<:AbstractGraph}, E::Type{<:AbstractEdges{V, ET} where {V, ET}})
-    return Dictionary{eltype(E), edge_data_type(G)}
-end
-
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
 Graphs.has_edge(g::AbstractDataGraph, edge) = has_edge(underlying_graph(g), edge)
 Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge) = has_edge(underlying_graph(g), edge)

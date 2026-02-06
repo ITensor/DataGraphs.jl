@@ -24,8 +24,6 @@ using ..DataGraphs:
     is_graph_index_assigned,
     is_vertex_assigned,
     is_edge_assigned,
-    vertices_data_eltype,
-    edges_data_eltype,
     get_index_data
 using NamedGraphs: NamedGraphs,
     to_graph_index,
@@ -200,21 +198,6 @@ end
 
 PartitionedGraphs.partitionedgraph(::AbstractDataGraph, parts) = not_implemented()
 PartitionedGraphs.departition(::AbstractDataGraph) = not_implemented()
-
-
-function DataGraphs.vertices_data_eltype(
-        T::Type{<:AbstractGraph},
-        QV::Type{<:QuotientVertices}
-    )
-    return eltype(Base.promote_op(get_vertices_data, T, QV))
-end
-
-function DataGraphs.edges_data_eltype(
-        T::Type{<:AbstractGraph},
-        QE::Type{<:QuotientEdges}
-    )
-    return eltype(Base.promote_op(get_edges_data, T, QE))
-end
 
 # ================================== DataGraph specific ================================== #
 
