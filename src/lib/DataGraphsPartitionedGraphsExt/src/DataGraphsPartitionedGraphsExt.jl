@@ -221,26 +221,24 @@ function PartitionedGraphs.departition(dg::DataGraph)
     end
 end
 
-function quotient_graph_vertex_data(f, dg)
+function quotient_graph_vertex_data(dg)
     ug = underlying_graph(dg)
     qvs = QuotientVertexSlice(QuotientVertices(ug))
-    return map(v -> f(dg[QuotientVertex(v)]), Indices(qvs))
+    return map(v -> dg[QuotientVertex(v)], Indices(qvs))
 end
 
-function quotient_graph_edge_data(f, dg)
+function quotient_graph_edge_data(dg)
     ug = underlying_graph(dg)
     qes = QuotientEdgeSlice(QuotientEdges(ug))
-    return map(e -> f(dg[QuotientEdge(e)]), Indices(qes))
+    return map(e -> dg[QuotientEdge(e)], Indices(qes))
 end
 
 function PartitionedGraphs.quotient_graph(
-        dg::DataGraph;
-        vertex_data_transform = identity,
-        edge_data_transform = identity
+        dg::DataGraph
     )
 
-    vertex_data = quotient_graph_vertex_data(vertex_data_transform, dg)
-    edge_data = quotient_graph_edge_data(edge_data_transform, dg)
+    vertex_data = quotient_graph_vertex_data(dg)
+    edge_data = quotient_graph_edge_data(dg)
 
     dg = _DataGraph(
         copy(quotient_graph(underlying_graph(dg))),

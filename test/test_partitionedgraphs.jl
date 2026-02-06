@@ -18,7 +18,9 @@ using NamedGraphs.PartitionedGraphs:
     PartitionedGraph,
     departition,
     unpartition,
-    quotient_graph
+    quotient_graph,
+    quotientvertices,
+    quotientedges
 using DataGraphs:
     DataGraphs,
     DataGraph,
@@ -33,7 +35,7 @@ using DataGraphs:
 using NamedGraphs.GraphsExtensions: GraphsExtensions, similar_graph, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_path_graph
 using Test: @testset, @test, @test_throws
-using Dictionaries: Dictionary, IndexError
+using Dictionaries: Dictionary, IndexError, Indices
 
 struct TestDataGraph{V, VD, ED, DG <: DataGraph{V, VD, ED}, QDG} <: AbstractDataGraph{V, VD, ED}
     graph::DG
@@ -42,10 +44,20 @@ end
 
 function TestDataGraph(graph)
 
-    vertex_data_transform = subgraph -> collect(assigned_vertex_data(subgraph))
-    edge_data_transform = subgraph -> collect(assigned_edge_data(subgraph))
+    ug = quotient_graph(underlying_graph(graph))
 
-    quotientgraph = quotient_graph(graph; vertex_data_transform, edge_data_transform)
+    vertex_data = map(Indices(vertices(ug))) do vertex
+        return collect(assigned_vertex_data(graph[QuotientVertex(vertex)]))
+    end
+    edge_data = map(Indices(edges(ug))) do edge
+        return collect(assigned_edge_data(graph[QuotientEdge(edge)]))
+    end
+
+    quotientgraph = DataGraphs._DataGraph(
+        ug,
+        vertex_data,
+        edge_data,
+    )
 
     return TestDataGraph(graph, quotientgraph)
 end
