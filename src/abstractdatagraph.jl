@@ -57,14 +57,6 @@ set_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 
 underlying_graph_type(T::Type{<:AbstractGraph}) = Base.promote_op(underlying_graph, T)
 
-
-# Devirved Interface functions with defaults
-# has_vertices_data(g::AbstractGraph, vertices) = _has_vertices_data(g, vertices)
-# has_edges_data(g::AbstractGraph, edges) = _has_edges_data(g, edges)
-
-# get_vertices_data(g::AbstractGraph, vertices) = _get_vertices_data(g, vertices)
-# get_edges_data(g::AbstractGraph, edges) = _get_edges_data(g, edges)
-
 # The defaults
 is_vertices_assigned(g::AbstractGraph, vertices) = all(v -> is_vertex_assigned(g, v), vertices)
 is_edges_assigned(g::AbstractGraph, edges) = all(e -> is_edge_assigned(g, e), edges)
