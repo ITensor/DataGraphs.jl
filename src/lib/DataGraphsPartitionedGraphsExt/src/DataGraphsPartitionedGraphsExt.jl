@@ -196,9 +196,6 @@ function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
     return partitioned_vertices(underlying_graph(dg))
 end
 
-PartitionedGraphs.partitionedgraph(::AbstractDataGraph, parts) = not_implemented()
-PartitionedGraphs.departition(::AbstractDataGraph) = not_implemented()
-
 # ================================== DataGraph specific ================================== #
 
 function PartitionedGraphs.partitionedgraph(dg::DataGraph, parts)
