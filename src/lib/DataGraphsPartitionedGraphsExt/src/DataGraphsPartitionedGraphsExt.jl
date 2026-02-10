@@ -184,11 +184,11 @@ end
 
 function DataGraphs.vertex_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
-    return Base.promote_op(get_index_data, PGT, QuotientVertex{vertextype(T)})
+    return Base.promote_op(getindex, PGT, QuotientVertex{vertextype(T)})
 end
 function DataGraphs.edge_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
-    return Base.promote_op(get_index_data, PGT, QuotientEdge{vertextype(T), edgetype(T)})
+    return Base.promote_op(getindex, PGT, QuotientEdge{vertextype(T), edgetype(T)})
 end
 
 # PartitionedGraphs interface
