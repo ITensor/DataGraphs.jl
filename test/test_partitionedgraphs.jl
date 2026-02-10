@@ -31,7 +31,9 @@ using DataGraphs:
     assigned_edge_data,
     underlying_graph,
     vertex_data_type,
-    edge_data_type
+    edge_data_type,
+    VertexDataView,
+    EdgeDataView
 using NamedGraphs.GraphsExtensions: GraphsExtensions, similar_graph, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_path_graph
 using Test: @testset, @test, @test_throws
@@ -136,6 +138,16 @@ end
         @test has_vertex(quotient_graph(pg), :b)
         @test has_vertex(quotient_graph(pg), :c)
 
+        qv = QuotientView(pg)
+        @test Union{} != vertex_data_type(qv) <: typeof(dg)
+        @test Union{} != edge_data_type(qv) <: typeof(dg)
+        @test vertex_data(qv) isa VertexDataView
+        @test vertex_data(qv)[:a] isa typeof(dg)
+        @test vertex_data(qv)[:b] == subgraph(dg, [2, 3])
+        @test edge_data(qv) isa EdgeDataView
+        @test edge_data(qv)[:a => :b] isa typeof(dg)
+        @test edge_data(qv)[:b => :c] == subgraph(dg, [3, 4])
+
         subgraph_type = DataGraph{vertextype(dg), String, Tuple{String, String}, <:NamedGraph}
 
         @test vertex_data_type(quotient_graph(pg)) <: subgraph_type
@@ -147,6 +159,7 @@ end
         @test edge_data_type(quotient_graph(tpg)) <: Vector{Tuple{String, String}}
         @test vertex_data_type(QuotientView(tpg)) <: Vector{String}
         @test edge_data_type(QuotientView(tpg)) <: Vector{Tuple{String, String}}
+
     end
 
     @testset "Scalar indexing" begin
