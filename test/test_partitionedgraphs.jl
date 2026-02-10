@@ -1,42 +1,42 @@
 module TestModule
 
-using Graphs: AbstractGraph, vertices, edges, src, dst, has_vertex, has_edge, edgetype
-using NamedGraphs: NamedGraphs, NamedGraph, Vertices, Edges
+using Graphs: AbstractGraph, dst, edges, edgetype, has_edge, has_vertex, src, vertices
+using NamedGraphs: NamedGraphs, NamedGraph, Edges, Vertices
 using NamedGraphs.PartitionedGraphs:
-    QuotientView,
+    PartitionedGraphs,
+    PartitionedGraph,
+    QuotientEdge,
+    QuotientEdges,
     QuotientVertex,
+    QuotientVertexOrEdge,
     QuotientVertexVertex,
     QuotientVertexVertices,
     QuotientVertices,
     QuotientVerticesVertices,
-    QuotientEdge,
-    QuotientEdges,
-    partitionedgraph,
-    QuotientVertexOrEdge,
-    PartitionedGraphs,
-    partitionedgraph,
-    PartitionedGraph,
+    QuotientView,
     departition,
-    unpartition,
+    partitionedgraph,
+    partitionedgraph,
     quotient_graph,
+    quotientedges,
     quotientvertices,
-    quotientedges
+    unpartition
 using DataGraphs:
-    DataGraphs,
     DataGraph,
     AbstractDataGraph,
-    vertex_data,
-    edge_data,
-    assigned_vertex_data,
-    assigned_edge_data,
-    underlying_graph,
-    vertex_data_type,
-    edge_data_type,
+    DataGraphs,
+    EdgeDataView,
     VertexDataView,
-    EdgeDataView
+    assigned_edge_data,
+    assigned_vertex_data,
+    edge_data,
+    edge_data_type,
+    underlying_graph,
+    vertex_data,
+    vertex_data_type
 using NamedGraphs.GraphsExtensions: GraphsExtensions, similar_graph, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_path_graph
-using Test: @testset, @test, @test_throws
+using Test: @test, @test_throws, @testset
 using Dictionaries: Dictionary, IndexError, Indices
 
 struct TestDataGraph{V, VD, ED, DG <: DataGraph{V, VD, ED}, QDG} <: AbstractDataGraph{V, VD, ED}
