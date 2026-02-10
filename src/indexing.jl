@@ -32,7 +32,7 @@ function Base.isassigned(graph::AbstractDataGraph, index)
 end
 
 isassigned_datagraph(graph::AbstractGraph, ind) = is_graph_index_assigned(graph, ind)
-isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = all(ind -> isassigned(graph, inds))
+isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = all(ind -> isassigned(graph, ind), inds)
 
 is_graph_index_assigned(graph::AbstractGraph, vertex) = is_vertex_assigned(graph, vertex)
 
