@@ -1,4 +1,4 @@
-using SimpleTraits: SimpleTraits, Not, @traitdef, @traitimpl
+using SimpleTraits: SimpleTraits, @traitdef, @traitimpl, Not
 
 @traitdef IsUnderlyingGraph{X}
 #! format: off

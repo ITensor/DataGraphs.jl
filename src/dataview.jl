@@ -1,13 +1,6 @@
-using Dictionaries:
-    Dictionaries,
-    AbstractDictionary,
-    gettokenvalue,
-    filterview,
-    IndexError,
-    Indices,
-    getindices,
-    istokenizable
-using NamedGraphs: to_graph_index, to_vertices, to_edges
+using Dictionaries: Dictionaries, AbstractDictionary, IndexError, Indices, filterview,
+    getindices, gettokenvalue, istokenizable
+using NamedGraphs: to_edges, to_graph_index, to_vertices
 
 abstract type AbstractDataView{K, V} <: AbstractDictionary{K, V} end
 
@@ -24,7 +17,11 @@ function Dictionaries.gettokenvalue(view::AbstractDataView, token)
     return view[ind]
 end
 
-function Dictionaries.settokenvalue!(view::AbstractDataView{<:Any, T}, token, value::T) where {T}
+function Dictionaries.settokenvalue!(
+        view::AbstractDataView{<:Any, T},
+        token,
+        value::T
+    ) where {T}
     setindex!(view, value, gettokenvalue(keys(view), token))
     return view
 end
@@ -62,8 +59,12 @@ Base.keys(view::EdgeDataView) = Indices(edges(view.graph))
 
 const VertexOrEdgeDataView{K, V, G} = Union{VertexDataView{K, V, G}, EdgeDataView{K, V, G}}
 
-Base.isassigned(view::VertexOrEdgeDataView{K}, key::K) where {K} = isassigned(view.graph, key)
-Base.isassigned(view::EdgeDataView, key::Pair) = isassigned(view, to_graph_index(view.graph, key))
+function Base.isassigned(view::VertexOrEdgeDataView{K}, key::K) where {K}
+    return isassigned(view.graph, key)
+end
+function Base.isassigned(view::EdgeDataView, key::Pair)
+    return isassigned(view, to_graph_index(view.graph, key))
+end
 
 Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = _getindex(view, key)
 function Base.getindex(view::VertexOrEdgeDataView, key)
@@ -133,11 +134,16 @@ function getindex_dataview(dvs::SubDataView, key)
 end
 
 Base.isassigned(view::SubDataView{K}, key::K) where {K} = key in keys(view)
-Base.isassigned(view::SubDataView, key::Pair) = isassigned(view, to_graph_index(view.view.graph, key))
+function Base.isassigned(view::SubDataView, key::Pair)
+    return isassigned(view, to_graph_index(view.view.graph, key))
+end
 
 Base.view(view::VertexOrEdgeDataView, keys::Indices) = SubDataView(view, keys)
 function Base.view(view::EdgeDataView, keys::Indices{<:Pair})
-    return SubDataView(view, Indices(map(k -> to_graph_index(view.graph, k), collect(keys))))
+    return SubDataView(
+        view,
+        Indices(map(k -> to_graph_index(view.graph, k), collect(keys)))
+    )
 end
 
 # For method ambiguity

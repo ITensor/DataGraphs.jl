@@ -1,7 +1,7 @@
 using DataGraphs: DataGraph
+using Graphs: ne, nv
 using NamedGraphs.GraphsExtensions: subgraph
 using NamedGraphs.NamedGraphGenerators: named_grid
-using Graphs: ne, nv
 
 g = named_grid((2, 2))
 dg = DataGraph(g; vertex_data_type = String, edge_data_type = String)

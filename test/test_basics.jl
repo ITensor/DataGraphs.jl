@@ -1,49 +1,15 @@
-using DataGraphs:
-    DataGraph,
-    DataGraphs,
-    EdgeDataView,
-    VertexDataView,
-    edge_data,
-    edge_data_type,
-    underlying_graph,
-    vertex_data,
-    vertex_data_type
-using Dictionaries:
-    Dictionaries,
-    AbstractDictionary,
-    AbstractIndices,
-    Dictionary,
-    Indices,
-    dictionary,
-    unset!,
-    IndexError
-using Graphs:
-    add_edge!,
-    a_star,
-    bfs_tree,
-    connected_components,
-    degree,
-    dfs_tree,
-    dijkstra_shortest_paths,
-    dst,
-    edges,
-    edgetype,
-    grid,
-    has_edge,
-    has_vertex,
-    indegree,
-    ne,
-    nv,
-    outdegree,
-    path_graph,
-    src,
-    steiner_tree,
-    vertices
+using DataGraphs: DataGraphs, DataGraph, EdgeDataView, VertexDataView, edge_data,
+    edge_data_type, underlying_graph, vertex_data, vertex_data_type
+using Dictionaries: Dictionaries, AbstractDictionary, AbstractIndices, Dictionary,
+    IndexError, Indices, dictionary, unset!
+using Graphs: a_star, add_edge!, bfs_tree, connected_components, degree, dfs_tree,
+    dijkstra_shortest_paths, dst, edges, edgetype, grid, has_edge, has_vertex, indegree, ne,
+    nv, outdegree, path_graph, src, steiner_tree, vertices
 using GraphsFlows: GraphsFlows
-using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
-using NamedGraphs.GraphsExtensions: ⊔, rename_vertices, subgraph, vertextype
+using NamedGraphs.GraphsExtensions: rename_vertices, subgraph, vertextype, ⊔
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
-using NamedGraphs.OrdinalIndexing: nd, st, rd, th
+using NamedGraphs.OrdinalIndexing: nd, rd, st, th
+using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
 using Test: @test, @test_broken, @testset
 
 @testset "DataGraphs.jl" begin
@@ -116,7 +82,8 @@ using Test: @test, @test_broken, @testset
         @test dg[(1, 1) => (1, (1, 1))] == "X"
 
         vdata = map(v -> "V$v", Indices(1:4))
-        edata = map(e -> "E$(src(e))$(dst(e))", Indices(NamedEdge.([1 => 2, 2 => 3, 3 => 4])))
+        edata =
+            map(e -> "E$(src(e))$(dst(e))", Indices(NamedEdge.([1 => 2, 2 => 3, 3 => 4])))
         # TODO: Make a more compact constructor that directly accepts
         # vertex and edge data? Maybe `DataGraph(g; vertex_data=vdata, edge_data=edata)`
         # or `DataGraph(g; vertex_data=v -> "V$v", edge_data=e -> "E$(src(e))$(dst(e))")`.
@@ -269,7 +236,11 @@ using Test: @test, @test_broken, @testset
     end
 
     @testset "Disjoint unions" begin
-        g = DataGraph(named_grid((2, 2)); vertex_data_type = String, edge_data_type = String)
+        g = DataGraph(
+            named_grid((2, 2));
+            vertex_data_type = String,
+            edge_data_type = String
+        )
 
         for v in vertices(g)
             g[v] = "V$v"
@@ -458,7 +429,7 @@ using Test: @test, @test_broken, @testset
         g = DataGraph(
             NamedGraph(path_graph(3), ["a", "b", "c"]);
             vertex_data_type = String,
-            edge_data_type = Symbol,
+            edge_data_type = Symbol
         )
         g[1st] = "v_a"
         g[2nd] = "v_b"

@@ -1,34 +1,13 @@
-using Dictionaries: set!, unset!, Indices
-using Graphs:
-    Graphs,
-    AbstractEdge,
-    IsDirected,
-    add_edge!,
-    add_vertex!,
-    a_star,
-    edges,
-    ne,
-    nv,
-    steiner_tree,
-    vertices
-using NamedGraphs:
-    NamedGraphs,
-    AbstractNamedGraph,
-    AbstractNamedEdge,
-    AbstractVertices,
-    AbstractEdges,
-    position_graph_type
-using NamedGraphs.GraphsExtensions:
-    GraphsExtensions,
-    arrange_edge,
-    incident_edges,
-    is_edge_arranged,
-    vertextype,
-    similar_graph,
-    add_vertices!
-using NamedGraphs.SimilarType: similar_type
+using Dictionaries: Indices, set!, unset!
+using Graphs: Graphs, AbstractEdge, IsDirected, a_star, add_edge!, add_vertex!, edges, ne,
+    nv, steiner_tree, vertices
+using NamedGraphs.GraphsExtensions: GraphsExtensions, add_vertices!, arrange_edge,
+    incident_edges, is_edge_arranged, similar_graph, vertextype
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
-using SimpleTraits: SimpleTraits, Not, @traitfn
+using NamedGraphs.SimilarType: similar_type
+using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
+    AbstractVertices, position_graph_type
+using SimpleTraits: SimpleTraits, @traitfn, Not
 
 is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
 
@@ -66,7 +45,9 @@ end
 
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
 Graphs.has_edge(g::AbstractDataGraph, edge) = has_edge(underlying_graph(g), edge)
-Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge) = has_edge(underlying_graph(g), edge)
+function Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge)
+    return has_edge(underlying_graph(g), edge)
+end
 
 vertex_data(dg::AbstractGraph) = VertexDataView(dg)
 edge_data(dg::AbstractGraph) = EdgeDataView(dg)
@@ -238,14 +219,13 @@ function Base.reverse(graph::AbstractDataGraph)
     return reversed_graph
 end
 
-
 function Graphs.merge_vertices(
         graph::AbstractDataGraph,
         merge_vertices;
         merge_data = (x, y) -> y,
         merge_vertex_data = merge_data,
         merge_edge_data = merge_data,
-        kwargs...,
+        kwargs...
     )
     return not_implemented()
 end
@@ -256,7 +236,7 @@ function Graphs.merge_vertices!(
         merge_data = (x, y) -> y,
         merge_vertex_data = merge_data,
         merge_edge_data = merge_data,
-        kwargs...,
+        kwargs...
     )
     return not_implemented()
 end
@@ -268,12 +248,16 @@ function Base.union(
         graph2::AbstractDataGraph;
         merge_data = (x, y) -> y,
         merge_vertex_data = merge_data,
-        merge_edge_data = merge_data,
+        merge_edge_data = merge_data
     )
-
     underlying_graph_union = union(underlying_graph(graph1), underlying_graph(graph2))
-    vertex_data_merge = mergewith(merge_vertex_data, assigned_vertex_data(graph1), assigned_vertex_data(graph2))
-    edge_data_merge = mergewith(merge_edge_data, assigned_edge_data(graph1), assigned_edge_data(graph2))
+    vertex_data_merge = mergewith(
+        merge_vertex_data,
+        assigned_vertex_data(graph1),
+        assigned_vertex_data(graph2)
+    )
+    edge_data_merge =
+        mergewith(merge_edge_data, assigned_edge_data(graph1), assigned_edge_data(graph2))
     # TODO: Convert to `promote_type(typeof(graph1), typeof(graph2))`
     return _DataGraph(underlying_graph_union, vertex_data_merge, edge_data_merge)
 end
@@ -283,7 +267,7 @@ function Base.union(
         graph2::AbstractDataGraph,
         graph3::AbstractDataGraph,
         graphs_tail::AbstractDataGraph...;
-        kwargs...,
+        kwargs...
     )
     return union(union(graph1, graph2; kwargs...), graph3, graphs_tail...; kwargs...)
 end
@@ -340,7 +324,6 @@ function map_data(f, graph::AbstractGraph; vertices = nothing, edges = nothing)
     return map_edge_data(f, graph; edges)
 end
 
-
 Base.get!(graph::AbstractDataGraph, key, default) = get!(() -> default, graph, key)
 function Base.get!(default::Base.Callable, graph::AbstractDataGraph, key)
     if isassigned(graph, key)
@@ -358,12 +341,12 @@ function Base.get(default::Base.Callable, graph::AbstractDataGraph, key)
     end
 end
 
-
 function NamedGraphs.induced_subgraph_from_vertices(graph::AbstractDataGraph, subvertices)
     return induced_subgraph_datagraph(graph, subvertices)
 end
 function induced_subgraph_datagraph(graph::AbstractDataGraph, subvertices)
-    underlying_subgraph, vlist = Graphs.induced_subgraph(underlying_graph(graph), subvertices)
+    underlying_subgraph, vlist =
+        Graphs.induced_subgraph(underlying_graph(graph), subvertices)
 
     subgraph = similar_graph(graph, underlying_subgraph)
 
