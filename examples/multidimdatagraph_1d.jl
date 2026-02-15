@@ -1,6 +1,6 @@
 using DataGraphs: DataGraph
 using Graphs: grid, has_edge, has_vertex
-using NamedGraphs: NamedGraph, NamedEdge
+using NamedGraphs: NamedEdge, NamedGraph
 
 g = NamedGraph(grid((4,)), ["A", "B", "C", "D"])
 dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)

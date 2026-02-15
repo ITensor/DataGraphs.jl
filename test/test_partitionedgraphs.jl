@@ -1,51 +1,27 @@
 module TestModule
 
+using DataGraphs: DataGraphs, AbstractDataGraph, DataGraph, EdgeDataView, VertexDataView,
+    assigned_edge_data, assigned_vertex_data, edge_data, edge_data_type, underlying_graph,
+    vertex_data, vertex_data_type
+using Dictionaries: Dictionary, IndexError, Indices
 using Graphs: AbstractGraph, dst, edges, edgetype, has_edge, has_vertex, src, vertices
-using NamedGraphs: NamedGraphs, NamedGraph, Edges, Vertices
-using NamedGraphs.PartitionedGraphs:
-    PartitionedGraphs,
-    PartitionedGraph,
-    QuotientEdge,
-    QuotientEdges,
-    QuotientVertex,
-    QuotientVertexOrEdge,
-    QuotientVertexVertex,
-    QuotientVertexVertices,
-    QuotientVertices,
-    QuotientVerticesVertices,
-    QuotientView,
-    departition,
-    partitionedgraph,
-    partitionedgraph,
-    quotient_graph,
-    quotientedges,
-    quotientvertices,
-    unpartition
-using DataGraphs:
-    DataGraph,
-    AbstractDataGraph,
-    DataGraphs,
-    EdgeDataView,
-    VertexDataView,
-    assigned_edge_data,
-    assigned_vertex_data,
-    edge_data,
-    edge_data_type,
-    underlying_graph,
-    vertex_data,
-    vertex_data_type
 using NamedGraphs.GraphsExtensions: GraphsExtensions, similar_graph, subgraph, vertextype
 using NamedGraphs.NamedGraphGenerators: named_path_graph
+using NamedGraphs.PartitionedGraphs: PartitionedGraph, PartitionedGraphs, QuotientEdge,
+    QuotientEdges, QuotientVertex, QuotientVertexOrEdge, QuotientVertexVertex,
+    QuotientVertexVertices, QuotientVertices, QuotientVerticesVertices, QuotientView,
+    departition, partitionedgraph, quotient_graph, quotientedges, quotientvertices,
+    unpartition
+using NamedGraphs: NamedGraphs, Edges, NamedGraph, Vertices
 using Test: @test, @test_throws, @testset
-using Dictionaries: Dictionary, IndexError, Indices
 
-struct TestDataGraph{V, VD, ED, DG <: DataGraph{V, VD, ED}, QDG} <: AbstractDataGraph{V, VD, ED}
+struct TestDataGraph{V, VD, ED, DG <: DataGraph{V, VD, ED}, QDG} <:
+    AbstractDataGraph{V, VD, ED}
     graph::DG
     quotientgraph::QDG
 end
 
 function TestDataGraph(graph)
-
     ug = quotient_graph(underlying_graph(graph))
 
     vertex_data = map(Indices(vertices(ug))) do vertex
@@ -58,7 +34,7 @@ function TestDataGraph(graph)
     quotientgraph = DataGraphs._DataGraph(
         ug,
         vertex_data,
-        edge_data,
+        edge_data
     )
 
     return TestDataGraph(graph, quotientgraph)
@@ -128,7 +104,6 @@ end
     tpg = TestDataGraph(pg)
 
     @testset "Basics" begin
-
         @test pg isa DataGraph
         @test underlying_graph(pg) isa PartitionedGraph
         @test departition(pg) == dg
@@ -148,7 +123,8 @@ end
         @test edge_data(qv)[:a => :b] isa typeof(dg)
         @test edge_data(qv)[:b => :c] == subgraph(dg, [3, 4])
 
-        subgraph_type = DataGraph{vertextype(dg), String, Tuple{String, String}, <:NamedGraph}
+        subgraph_type =
+            DataGraph{vertextype(dg), String, Tuple{String, String}, <:NamedGraph}
 
         @test vertex_data_type(quotient_graph(pg)) <: subgraph_type
         @test edge_data_type(quotient_graph(pg)) <: subgraph_type
@@ -159,11 +135,9 @@ end
         @test edge_data_type(quotient_graph(tpg)) <: Vector{Tuple{String, String}}
         @test vertex_data_type(QuotientView(tpg)) <: Vector{String}
         @test edge_data_type(QuotientView(tpg)) <: Vector{Tuple{String, String}}
-
     end
 
     @testset "Scalar indexing" begin
-
         @testset "Default data graph indexing" begin
             @test pg[1] == "1"
             @test pg[QuotientVertex(:a)[2]] == "2"
@@ -215,12 +189,10 @@ end
             @test tqv[:b => :c] == [("3", "4")]
             @test tqv[:c => :b] == [("3", "4")]
 
-
             tqv[:a] = ["one"]
             @test tqv[:a] == ["one"]
             @test tpg[QuotientVertex(:a)] == ["one"]
         end
-
     end
 
     @testset "Partition non-preserving indexing" begin
@@ -254,7 +226,6 @@ end
             @test !has_edge(sg, 3 => 4)
 
             @test edge_data(sg)[4 => 5] == ("4", "5")
-
         end
 
         for (type, sg) in zip(
@@ -279,7 +250,10 @@ end
     @testset "Partition-preserving indexing" begin
         sg1 = tpg[QuotientVertices([:a, :b])]
         sg2 = subgraph(tpg, [QuotientVertex(:a), QuotientVertex(:b)])
-        sg3 = subgraph(tpg, [QuotientVertex(:a)[Vertices([1])], QuotientVertex(:b)[Vertices([2, 3])]])
+        sg3 = subgraph(
+            tpg,
+            [QuotientVertex(:a)[Vertices([1])], QuotientVertex(:b)[Vertices([2, 3])]]
+        )
 
         for sg in (sg1, sg2, sg3)
             @test sg isa TestDataGraph

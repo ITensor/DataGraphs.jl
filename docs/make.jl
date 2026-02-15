@@ -12,9 +12,13 @@ makedocs(;
     format = Documenter.HTML(;
         canonical = "https://itensor.github.io/DataGraphs.jl",
         edit_link = "main",
-        assets = ["assets/favicon.ico", "assets/extras.css"],
+        assets = ["assets/favicon.ico", "assets/extras.css"]
     ),
-    pages = ["Home" => "index.md", "Reference" => "reference.md"],
+    pages = ["Home" => "index.md", "Reference" => "reference.md"]
 )
 
-deploydocs(; repo = "github.com/ITensor/DataGraphs.jl", devbranch = "main", push_preview = true)
+deploydocs(;
+    repo = "github.com/ITensor/DataGraphs.jl",
+    devbranch = "main",
+    push_preview = true
+)

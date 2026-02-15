@@ -1,12 +1,7 @@
-using NamedGraphs:
-    to_graph_index,
-    AbstractEdges,
-    AbstractVertices,
-    to_vertices,
-    to_edges,
-    AbstractGraphIndices
-using NamedGraphs.GraphsExtensions: subgraph
 using Dictionaries: AbstractIndices, getindices
+using NamedGraphs.GraphsExtensions: subgraph
+using NamedGraphs: AbstractEdges, AbstractGraphIndices, AbstractVertices, to_edges,
+    to_graph_index, to_vertices
 
 # ====================================== getindex ======================================= #
 
@@ -32,7 +27,9 @@ function Base.isassigned(graph::AbstractDataGraph, index)
 end
 
 isassigned_datagraph(graph::AbstractGraph, ind) = is_graph_index_assigned(graph, ind)
-isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices) = all(ind -> isassigned(graph, ind), inds)
+function isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices)
+    return all(ind -> isassigned(graph, ind), inds)
+end
 
 is_graph_index_assigned(graph::AbstractGraph, vertex) = is_vertex_assigned(graph, vertex)
 
@@ -130,10 +127,14 @@ end
 
 # ====================================== getindices ====================================== #
 
-Dictionaries.getindices(graph::AbstractDataGraph, inds::Indices) = map(ind -> graph[ind], inds)
+function Dictionaries.getindices(graph::AbstractDataGraph, inds::Indices)
+    return map(ind -> graph[ind], inds)
+end
 
 # ========================================= view ========================================= #
 
 Base.view(graph::AbstractDataGraph, inds::Indices) = view(vertex_data(graph), inds)
 Base.view(graph::AbstractDataGraph, inds::Indices{<:Pair}) = view(edge_data(graph), inds)
-Base.view(graph::AbstractDataGraph, inds::Indices{<:AbstractEdge}) = view(edge_data(graph), inds)
+function Base.view(graph::AbstractDataGraph, inds::Indices{<:AbstractEdge})
+    return view(edge_data(graph), inds)
+end
