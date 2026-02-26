@@ -1,6 +1,6 @@
 name = "DataGraphs"
 uuid = "b5a273c3-7e6c-41f6-98bd-8d7f1525a36a"
-version = "0.3.12"
+version = "0.3.13"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
 
 [deps]
