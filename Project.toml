@@ -1,7 +1,10 @@
 name = "DataGraphs"
 uuid = "b5a273c3-7e6c-41f6-98bd-8d7f1525a36a"
-version = "0.3.14"
+version = "0.3.15"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
+
+[workspace]
+projects = ["benchmark", "dev", "docs", "examples", "test"]
 
 [deps]
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
@@ -22,10 +25,3 @@ GraphsFlows = "0.1.1"
 NamedGraphs = "0.10"
 SimpleTraits = "0.9"
 julia = "1.7"
-
-[extras]
-GraphsFlows = "06909019-6f44-4949-96fc-b9d9aaa02889"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]
