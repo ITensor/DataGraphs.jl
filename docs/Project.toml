@@ -1,6 +1,7 @@
 [deps]
 DataGraphs = "b5a273c3-7e6c-41f6-98bd-8d7f1525a36a"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ITensorFormatter = "b6bf39f1-c9d3-4bad-aad8-593d802f65fd"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 
 [sources.DataGraphs]
@@ -9,4 +10,5 @@ path = ".."
 [compat]
 DataGraphs = "0.3"
 Documenter = "1.10"
+ITensorFormatter = "0.2.27"
 Literate = "2.20.1"
