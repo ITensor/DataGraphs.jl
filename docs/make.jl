@@ -1,9 +1,10 @@
 using DataGraphs: DataGraphs
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
+using ITensorFormatter: ITensorFormatter
 
 DocMeta.setdocmeta!(DataGraphs, :DocTestSetup, :(using DataGraphs); recursive = true)
 
-include("make_index.jl")
+ITensorFormatter.make_index!(pkgdir(DataGraphs))
 
 makedocs(;
     modules = [DataGraphs],
