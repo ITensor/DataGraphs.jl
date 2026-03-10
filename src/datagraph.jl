@@ -53,16 +53,24 @@ edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 
 # Extras
 
-function GraphsExtensions.similar_graph(T::Type{<:DataGraph})
-    similar_underlying_graph = similar_graph(underlying_graph_type(T))
-    return T(similar_underlying_graph)
-end
-function GraphsExtensions.similar_graph(dg::DataGraph, underlying_graph::AbstractGraph)
-    return DataGraph(
-        underlying_graph;
-        vertex_data_type = vertex_data_type(dg),
-        edge_data_type = edge_data_type(dg)
+# Overwrite the `AbstractDataGraph` fallback (even though they coincide for `DataGraph`)
+function GraphsExtensions.similar_graph(
+        ::DataGraph,
+        underlying_graph::AbstractGraph,
+        vertex_data_type,
+        edge_data_type
     )
+    return similar_graph(DataGraph, underlying_graph, vertex_data_type, edge_data_type)
+end
+
+# Constructor method needs overwritten.
+function GraphsExtensions.similar_graph(
+        T::Type{<:DataGraph},
+        underlying_graph::AbstractGraph,
+        vertex_data_type = vertex_data_type(T),
+        edge_data_type = edge_data_type(T)
+    )
+    return T(underlying_graph; vertex_data_type, edge_data_type)
 end
 
 function Base.copy(graph::DataGraph)
@@ -74,7 +82,8 @@ function Base.copy(graph::DataGraph)
 end
 
 function DataGraph{V}(
-        underlying_graph::AbstractGraph; vertex_data_type::Type = Any,
+        underlying_graph::AbstractGraph;
+        vertex_data_type::Type = Any,
         edge_data_type::Type = Any
     ) where {V}
     converted_underlying_graph = convert_vertextype(V, underlying_graph)
