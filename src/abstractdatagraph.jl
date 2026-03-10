@@ -9,8 +9,6 @@ using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedG
     AbstractVertices, position_graph_type
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
-is_underlying_graph(::Type{<:AbstractNamedGraph}) = true
-
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
 
 vertex_data_type(::Type{<:AbstractGraph}) = Any
