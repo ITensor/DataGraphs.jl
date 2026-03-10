@@ -69,7 +69,7 @@ function Base.copy(graph::DataGraph)
     # Need to manually copy the keys of Dictionaries, see:
     # https://github.com/andyferris/Dictionaries.jl/issues/98
     return _DataGraph(
-        copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph))
+        copy(graph.underlying_graph), copy(graph.vertex_data), copy(graph.edge_data)
     )
 end
 
