@@ -116,12 +116,12 @@ DataGraph{V}(graph::DataGraph{V}) where {V} = copy(graph)
 function DataGraph{V}(graph::DataGraph) where {V}
     # TODO: Make sure this properly copies
     converted_underlying_graph = convert_vertextype(V, underlying_graph(graph))
-    converted_vertex_data = Dictionary{V}(vertex_data(graph))
-    # This doesn't convert properly.
-    # converted_edge_data = Dictionary{edgetype(converted_underlying_graph)}(edge_data(graph))
+    converted_vertex_data = Dictionary{V}(assigned_vertex_data(graph))
+
+    old_edge_data = assigned_edge_data(graph)
     converted_edge_data = Dictionary(
-        edgetype(converted_underlying_graph).(keys(edge_data(graph))),
-        values(edge_data(graph))
+        edgetype(converted_underlying_graph).(keys(old_edge_data)),
+        collect(old_edge_data)
     )
     return _DataGraph(
         converted_underlying_graph,
