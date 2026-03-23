@@ -2,14 +2,14 @@ using DataGraphs: DataGraphs, DataGraph, EdgeDataView, VertexDataView, edge_data
     edge_data_type, underlying_graph, vertex_data, vertex_data_type
 using Dictionaries: Dictionaries, AbstractDictionary, AbstractIndices, Dictionary,
     IndexError, Indices, dictionary, unset!
-using Graphs: a_star, add_edge!, bfs_tree, connected_components, degree, dfs_tree,
-    dijkstra_shortest_paths, dst, edges, edgetype, grid, has_edge, has_vertex, indegree, ne,
-    nv, outdegree, path_graph, src, steiner_tree, vertices
+using Graphs: SimpleDiGraph, a_star, add_edge!, bfs_tree, connected_components, degree,
+    dfs_tree, dijkstra_shortest_paths, dst, edges, edgetype, grid, has_edge, has_vertex,
+    indegree, ne, nv, outdegree, path_graph, src, steiner_tree, vertices
 using GraphsFlows: GraphsFlows
 using NamedGraphs.GraphsExtensions: rename_vertices, subgraph, vertextype, ⊔
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
 using NamedGraphs.OrdinalIndexing: nd, rd, st, th
-using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph
+using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, empty_graph, similar_graph
 using Test: @test, @test_broken, @testset
 
 @testset "DataGraphs.jl" begin
@@ -549,5 +549,53 @@ using Test: @test, @test_broken, @testset
         @test isassigned(edv, "a" => "b")
         edv["a" => "b"] = 5.0
         @test g["a" => "b"] == 5.0
+    end
+
+    @testset "`similar_graph`" begin
+        g = DataGraph(
+            NamedGraph(path_graph(3), ["a", "b", "c"]);
+            vertex_data_type = Int,
+            edge_data_type = Float64
+        )
+
+        g["a"] = 1
+        g["b"] = 2
+        g["c"] = 3
+        g["a" => "b"] = -1.0
+        g["b" => "c"] = -2.0
+
+        g2 = similar_graph(g)
+
+        # Test that graph has no data.
+        @test !isassigned(g2, "a")
+        @test !isassigned(g2, "b")
+        @test !isassigned(g2, "c")
+        @test !isassigned(g2, "a" => "b")
+        @test !isassigned(g2, "b" => "c")
+
+        @test underlying_graph(g2) == underlying_graph(g)
+        @test !(underlying_graph(g2) === underlying_graph(g))
+
+        g2 = similar_graph(g, NamedDiGraph(SimpleDiGraph(4), ["x", "y", "z", "w"]))
+
+        @test underlying_graph(g2) isa NamedDiGraph
+
+        @test has_vertex(g2, "x")
+        @test has_vertex(g2, "y")
+        @test has_vertex(g2, "z")
+        @test has_vertex(g2, "w")
+
+        g_copy = copy(g)
+        @test g_copy == g
+        @test !(g_copy === g)
+
+        g_copy = copyto!(similar_graph(g_copy), g)
+        @test g_copy["a"] == 1
+        @test g_copy["b"] == 2
+        @test g_copy["c"] == 3
+        @test g_copy["a" => "b"] == -1.0
+        @test g_copy["b" => "c"] == -2.0
+
+        @test_throws IndexError copyto!(empty_graph(g_copy), g_copy)
     end
 end
