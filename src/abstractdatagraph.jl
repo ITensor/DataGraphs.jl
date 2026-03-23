@@ -2,11 +2,11 @@ using Dictionaries: Indices, set!, unset!
 using Graphs: Graphs, AbstractEdge, IsDirected, a_star, add_edge!, add_vertex!, edges,
     indegree, ne, nv, outdegree, steiner_tree, vertices
 using NamedGraphs.GraphsExtensions: GraphsExtensions, add_vertices!, arrange_edge,
-    incident_edges, is_edge_arranged, similar_graph, vertextype
+    incident_edges, is_edge_arranged, vertextype
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
-    AbstractVertices, NamedGraph, position_graph_type
+    AbstractVertices, NamedGraph, position_graph_type, similar_graph
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
@@ -107,7 +107,7 @@ GraphsExtensions.convert_vertextype(::Type, ::AbstractDataGraph) = not_implement
 # =================================== `similar_graph` ==================================== #
 
 # Construct a similar `AbstractDataGraph` with `vertices` and `edges`.
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         vertices,
         edges
@@ -117,7 +117,7 @@ function GraphsExtensions.similar_graph(
 end
 
 # Construct `graph_type` with `vertices` and `edges`.
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
         vertices,
         edges
@@ -128,7 +128,7 @@ end
 
 # Construct a similar `AbstractDataGraph` defined by an `underlying_graph_type` with
 # `vertex_data_type` and `edge_data_type`.
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         underlying_graph_type::Type{<:AbstractGraph},
         vertex_data_type,
@@ -137,7 +137,7 @@ function GraphsExtensions.similar_graph(
     underlying_graph = similar_graph(underlying_graph_type, vertices(graph), edges(graph))
     return similar_graph(graph, underlying_graph, vertex_data_type, edge_data_type)
 end
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         underlying_graph_type::Type{<:AbstractGraph}
     )
@@ -162,7 +162,7 @@ to choose the return type of the resulting graph, based on the arguments.
 If they do not specialize on this method, then the default is
 `DataGraph(graph; vertex_data_type, edge_data_type)`.
 """
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         ::AbstractDataGraph,
         underlying_graph::AbstractGraph,
         vertex_data_type,
@@ -170,7 +170,7 @@ function GraphsExtensions.similar_graph(
     )
     return DataGraph(underlying_graph; vertex_data_type, edge_data_type)
 end
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         underlying_graph::AbstractGraph
     )
@@ -181,7 +181,7 @@ end
 
 # Construct a subtype of `graph_type` with an empty underlying_graph of type `underlying_graph_type`
 # and `vertex_data_type` and `edge_data_type`.
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
         underlying_graph_type::Type{<:AbstractGraph},
         vertex_data_type,
@@ -190,7 +190,7 @@ function GraphsExtensions.similar_graph(
     underlying_graph = similar_graph(underlying_graph_type)
     return similar_graph(graph_type, underlying_graph, vertex_data_type, edge_data_type)
 end
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
         underlying_graph_type::Type{<:AbstractGraph}
     )
@@ -218,7 +218,7 @@ By default, calls the constructors `DG(graph)` and `DG(graph, VD, ED)` respectiv
 A given custom `AbstractDataGraph` subtype may specialize on the first two methods above
 (in terms a graph `graph`) if such constructors do not exist for that subtype.
 """
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
         underlying_graph::AbstractGraph,
         vertex_data_type,
@@ -226,7 +226,7 @@ function GraphsExtensions.similar_graph(
     )
     return graph_type(underlying_graph, vertex_data_type, edge_data_type)
 end
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
         underlying_graph::AbstractGraph
     )
