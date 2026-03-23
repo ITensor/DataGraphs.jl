@@ -4,6 +4,8 @@ on:
     branches:
       - "main"
     tags: "*"
+    paths:
+      - "Project.toml"
   pull_request_target:
     types:
       - "opened"
