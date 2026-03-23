@@ -108,6 +108,13 @@ GraphsExtensions.undirected_graph_type(::AbstractDataGraph) = not_implemented()
 # Thase canot be implemented abstractly.
 GraphsExtensions.convert_vertextype(::Type, ::AbstractDataGraph) = not_implemented()
 
+function Base.:(==)(dg1::AbstractDataGraph, dg2::AbstractDataGraph)
+    underlying_graph(dg1) == underlying_graph(dg2) || return false
+    vertex_data(dg1) == vertex_data(dg2) || return false
+    edge_data(dg1) == edge_data(dg2) || return false
+    return true
+end
+
 # =================================== `similar_graph` ==================================== #
 
 # Construct a similar `AbstractDataGraph` with `vertices` and `edges`.
@@ -146,7 +153,7 @@ function NamedGraphs.similar_graph(
         underlying_graph_type::Type{<:AbstractGraph}
     )
     underlying_graph = similar_graph(underlying_graph_type, vertices(graph), edges(graph))
-    return similar_graph(graph, underlying_graph_type)
+    return similar_graph(graph, underlying_graph)
 end
 
 # Construct a similar `AbstractDataGraph` defined by `underlying_graph` with `vertex_data_type` and `edge_data_type`.
@@ -249,8 +256,7 @@ function set_underlying_graph(datagraph::AbstractDataGraph, graph::AbstractGraph
 
     new_datagraph = similar_graph(datagraph, graph)
 
-    vertex_data(new_datagraph) .= vertex_data(datagraph)
-    edge_data(new_datagraph) .= edge_data(datagraph)
+    copyto!(new_datagraph, datagraph)
 
     return new_datagraph
 end
