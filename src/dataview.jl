@@ -98,9 +98,17 @@ function Base.setindex!(view::EdgeDataView{<:Any, V}, data::V, key::Pair) where 
 end
 
 function Base.copyto!(dest::VertexOrEdgeDataView, bc::Dictionaries.BroadcastedDictionary)
+
+    # Deal with the case where `bc` contains pairs.
+    graph_keys = map(key -> to_graph_index(dest.graph, key), keys(bc))
+
+    # Check indices match, but don't care about order.
+    isempty(setdiff(graph_keys, keys(dest))) || throw(IndexError("Indices do not match"))
+
     for (key, val) in pairs(bc)
-        dest[to_graph_index(dest.graph, key)] = val
+        dest[graph_keys[key]] = val
     end
+
     return dest
 end
 
