@@ -6,8 +6,7 @@ using ..DataGraphs: AbstractDataGraph, DataGraph, DataGraphs, IsUnderlyingGraph,
     set_index_data!, set_vertex_data!, set_vertices_data!, underlying_graph, vertex_data
 using Dictionaries: Dictionary, IndexError, Indices
 using Graphs: Graphs, AbstractEdge, AbstractGraph, edges, vertices
-using NamedGraphs.GraphsExtensions:
-    add_vertices!, edge_subgraph, similar_graph, subgraph, vertextype
+using NamedGraphs.GraphsExtensions: add_vertices!, edge_subgraph, subgraph, vertextype
 using NamedGraphs.PartitionedGraphs: AbstractPartitionedGraph, PartitionedGraph,
     PartitionedGraphs, PartitionedView, QuotientEdge, QuotientEdgeEdge, QuotientEdgeEdges,
     QuotientEdgeSlice, QuotientEdges, QuotientVertex, QuotientVertexOrEdge,
@@ -16,8 +15,8 @@ using NamedGraphs.PartitionedGraphs: AbstractPartitionedGraph, PartitionedGraph,
     has_quotientvertex, parent_graph_type, partitioned_vertices, partitionedgraph,
     quotient_graph, quotient_graph_type, quotientedges, quotientvertex, quotientvertices,
     unpartitioned_graph
-using NamedGraphs:
-    NamedGraphs, Edges, Vertices, get_graph_index, to_edges, to_graph_index, to_vertices
+using NamedGraphs: NamedGraphs, Edges, Vertices, get_graph_index, similar_graph, to_edges,
+    to_graph_index, to_vertices
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
 # ======================== DataGraphs interface for QuotientView ========================= #

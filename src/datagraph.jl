@@ -1,8 +1,8 @@
 using Dictionaries: Dictionary
 using Graphs: Graphs, edgetype, has_edge, has_vertex
-using NamedGraphs.GraphsExtensions: convert_vertextype, directed_graph, directed_graph_type,
-    rename_vertices, similar_graph, vertextype
-using NamedGraphs: GenericNamedGraph
+using NamedGraphs.GraphsExtensions:
+    convert_vertextype, directed_graph, directed_graph_type, rename_vertices, vertextype
+using NamedGraphs: GenericNamedGraph, similar_graph
 
 # TODO: define VertexDataGraph, a graph with only data on the
 # vertices, and EdgeDataGraph, a graph with only data on the edges.
@@ -54,7 +54,7 @@ edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 # Extras
 
 # Overwrite the `AbstractDataGraph` fallback (even though they coincide for `DataGraph`)
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         ::DataGraph,
         underlying_graph::AbstractGraph,
         vertex_data_type,
@@ -64,7 +64,7 @@ function GraphsExtensions.similar_graph(
 end
 
 # Constructor method needs overwritten.
-function GraphsExtensions.similar_graph(
+function NamedGraphs.similar_graph(
         T::Type{<:DataGraph},
         underlying_graph::AbstractGraph,
         vertex_data_type = vertex_data_type(T),
