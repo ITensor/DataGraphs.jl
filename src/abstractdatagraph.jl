@@ -75,7 +75,11 @@ function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
     return position_graph_type(underlying_graph_type(type))
 end
 
-Base.zero(graph_type::Type{<:AbstractDataGraph}) = similar_graph(graph_type)
+function Base.copyto!(dst_graph::AbstractDataGraph, src_graph::AbstractDataGraph)
+    vertex_data(dst_graph) .= vertex_data(src_graph)
+    edge_data(dst_graph) .= edge_data(src_graph)
+    return dst_graph
+end
 
 # Graphs overloads
 function Graphs.vertices(graph::AbstractDataGraph)
