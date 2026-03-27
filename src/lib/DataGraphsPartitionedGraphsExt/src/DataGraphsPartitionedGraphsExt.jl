@@ -1,23 +1,23 @@
 module DataGraphsPartitionedGraphsExt
-using ..DataGraphs: AbstractDataGraph, DataGraph, DataGraphs, _DataGraph, _getindex,
-    edge_data, edgetype, get_edge_data, get_edges_data, get_index_data, get_vertex_data,
-    get_vertices_data, is_edge_assigned, is_graph_index_assigned, is_vertex_assigned,
-    set_edge_data!, set_edges_data!, set_index_data!, set_vertex_data!, set_vertices_data!,
-    underlying_graph, vertex_data
+using ..DataGraphs: AbstractDataGraph, DataGraph, DataGraphs, IsUnderlyingGraph, _DataGraph,
+    _getindex, edge_data, edgetype, get_edge_data, get_edges_data, get_index_data,
+    get_vertex_data, get_vertices_data, is_edge_assigned, is_graph_index_assigned,
+    is_underlying_graph, is_vertex_assigned, set_edge_data!, set_edges_data!,
+    set_index_data!, set_vertex_data!, set_vertices_data!, underlying_graph, vertex_data
 using Dictionaries: Dictionary, IndexError, Indices
 using Graphs: Graphs, AbstractEdge, AbstractGraph, edges, vertices
-using NamedGraphs.GraphsExtensions:
-    add_vertices!, edge_subgraph, similar_graph, subgraph, vertextype
+using NamedGraphs.GraphsExtensions: add_vertices!, edge_subgraph, subgraph, vertextype
 using NamedGraphs.PartitionedGraphs: AbstractPartitionedGraph, PartitionedGraph,
     PartitionedGraphs, PartitionedView, QuotientEdge, QuotientEdgeEdge, QuotientEdgeEdges,
     QuotientEdgeSlice, QuotientEdges, QuotientVertex, QuotientVertexOrEdge,
     QuotientVertexSlice, QuotientVertexVertex, QuotientVertexVertices, QuotientVertices,
     QuotientVerticesVertices, QuotientView, departition, has_quotientedge,
     has_quotientvertex, parent_graph_type, partitioned_vertices, partitionedgraph,
-    quotient_graph, quotient_graph_vertextype, quotientedges, quotientvertex,
-    quotientvertices, unpartitioned_graph
-using NamedGraphs:
-    NamedGraphs, Edges, Vertices, get_graph_index, to_edges, to_graph_index, to_vertices
+    quotient_graph, quotient_graph_type, quotientedges, quotientvertex, quotientvertices,
+    unpartitioned_graph
+using NamedGraphs: NamedGraphs, Edges, Vertices, get_graph_index, similar_graph, to_edges,
+    to_graph_index, to_vertices
+using SimpleTraits: SimpleTraits, @traitfn, Not
 
 # ======================== DataGraphs interface for QuotientView ========================= #
 
@@ -50,7 +50,14 @@ function DataGraphs.set_edge_data!(qv::QuotientView, val, e)
     return qv
 end
 
-DataGraphs.underlying_graph(qv::QuotientView) = underlying_graph(copy(qv))
+function DataGraphs.is_underlying_graph(qv::Type{<:QuotientView})
+    return is_underlying_graph(quotient_graph_type(qv))
+end
+
+@traitfn DataGraphs.underlying_graph(qv::QuotientView::IsUnderlyingGraph) = copy(qv)
+@traitfn function DataGraphs.underlying_graph(qv::QuotientView::(!IsUnderlyingGraph))
+    return underlying_graph(copy(qv))
+end
 
 function Base.isassigned(qv::QuotientView, ind)
     return DataGraphs.isassigned_datagraph(qv, to_graph_index(qv, ind))

@@ -8,7 +8,7 @@ Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 path = ".."
 
 [compat]
-DataGraphs = "0.3"
+DataGraphs = "0.4"
 Documenter = "1.10"
 ITensorFormatter = "0.2.27"
 Literate = "2.20.1"

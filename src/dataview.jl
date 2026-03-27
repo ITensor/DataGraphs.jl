@@ -67,17 +67,15 @@ function Base.isassigned(view::EdgeDataView, key::Pair)
 end
 
 Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = _getindex(view, key)
-function Base.getindex(view::VertexOrEdgeDataView, key)
-    return _getindex(view, to_graph_index(view.graph, key))
-end
+Base.getindex(view::VertexOrEdgeDataView, key) = _getindex(view, key)
 
 function _getindex(view::VertexDataView, key)
-    key in keys(view) || throw(IndexError("VertexDataView does not contain index: $key"))
-    return get_vertex_data(view.graph, key)
+    isassigned(view, key) || throw(IndexError("VertexDataView does not contain index $key"))
+    return getindex(view.graph, key)
 end
 function _getindex(view::EdgeDataView, key)
-    key in keys(view) || throw(IndexError("EdgeDataView does not contain index: $key"))
-    return get_edge_data(view.graph, key)
+    isassigned(view, key) || throw(IndexError("EdgeDataView does not contain index $key"))
+    return getindex(view.graph, key)
 end
 
 # Support indexing with `Indices`.
@@ -100,9 +98,17 @@ function Base.setindex!(view::EdgeDataView{<:Any, V}, data::V, key::Pair) where 
 end
 
 function Base.copyto!(dest::VertexOrEdgeDataView, bc::Dictionaries.BroadcastedDictionary)
+
+    # Deal with the case where `bc` contains pairs.
+    graph_keys = map(key -> to_graph_index(dest.graph, key), keys(bc))
+
+    # Check indices match, but don't care about order.
+    isempty(setdiff(graph_keys, keys(dest))) || throw(IndexError("Indices do not match"))
+
     for (key, val) in pairs(bc)
-        dest[to_graph_index(dest.graph, key)] = val
+        dest[graph_keys[key]] = val
     end
+
     return dest
 end
 
