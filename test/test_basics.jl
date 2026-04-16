@@ -597,5 +597,32 @@ using Test: @test, @test_broken, @testset
         @test g_copy["b" => "c"] == -2.0
 
         @test_throws IndexError copyto!(empty_graph(g_copy), g_copy)
+
+        g2 = similar_graph(g, ["u", "v"], ["u" => "v"])
+        @test similar_graph(g, ["u", "v"], ["u" => "v"]) isa typeof(g)
+        @test has_vertex(g2, "u")
+        @test has_vertex(g2, "v")
+        @test has_edge(g2, "u" => "v")
+
+        g2 = similar_graph(g, Float64, Int)
+        @test has_vertex(g2, "a")
+        @test has_edge(g2, "a" => "b")
+        @test vertex_data_type(g2) === Float64
+        @test edge_data_type(g2) === Int
+
+        g2 = similar_graph(DataGraph, Float64, Int, NamedGraph{String})
+        @test g2 isa DataGraph
+        @test underlying_graph(g2) isa NamedGraph{String}
+        @test nv(g2) == 0
+        @test ne(g2) == 0
+        @test vertex_data_type(g2) === Float64
+        @test edge_data_type(g2) === Int
+
+        g2 = similar_graph(g, String, Tuple, [:a, :b], [:a => :b])
+        @test vertex_data_type(g2) === String
+        @test edge_data_type(g2) === Tuple
+        @test has_vertex(g2, :a)
+        @test has_vertex(g2, :b)
+        @test has_edge(g2, :a => :b)
     end
 end

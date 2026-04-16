@@ -56,19 +56,29 @@ edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 # Overwrite the `AbstractDataGraph` fallback (even though they coincide for `DataGraph`)
 function NamedGraphs.similar_graph(
         ::DataGraph,
-        underlying_graph::AbstractGraph,
-        vertex_data_type,
-        edge_data_type
+        vertex_data_type::Type,
+        edge_data_type::Type,
+        underlying_graph::AbstractGraph
     )
-    return similar_graph(DataGraph, underlying_graph, vertex_data_type, edge_data_type)
+    return similar_graph(DataGraph, vertex_data_type, edge_data_type, underlying_graph)
 end
 
 # Constructor method needs overwritten.
 function NamedGraphs.similar_graph(
         T::Type{<:DataGraph},
-        underlying_graph::AbstractGraph,
-        vertex_data_type = vertex_data_type(T),
-        edge_data_type = edge_data_type(T)
+        underlying_graph::AbstractGraph
+    )
+    vertex_data_type = vertex_data_type(T)
+    edge_data_type = edge_data_type(T)
+    return T(underlying_graph; vertex_data_type, edge_data_type)
+end
+
+# Constructor method needs overwritten.
+function NamedGraphs.similar_graph(
+        T::Type{<:DataGraph},
+        vertex_data_type::Type,
+        edge_data_type::Type,
+        underlying_graph::AbstractGraph
     )
     return T(underlying_graph; vertex_data_type, edge_data_type)
 end

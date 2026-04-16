@@ -115,7 +115,7 @@ function Base.:(==)(dg1::AbstractDataGraph, dg2::AbstractDataGraph)
     return true
 end
 
-# =================================== `similar_graph` ==================================== #
+# ============================ `similar_graph` (value domain) ============================ #
 
 # Construct a similar `AbstractDataGraph` with `vertices` and `edges`.
 function NamedGraphs.similar_graph(
@@ -127,40 +127,64 @@ function NamedGraphs.similar_graph(
     return similar_graph(graph, new_underlying_graph)
 end
 
-# Construct `graph_type` with `vertices` and `edges`.
 function NamedGraphs.similar_graph(
-        graph_type::Type{<:AbstractDataGraph},
+        graph::AbstractDataGraph,
+        G::Type{<:AbstractGraph}
+    )
+    underlying_graph = similar_graph(G, vertices(graph), edges(graph))
+    return similar_graph(graph, underlying_graph)
+end
+
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
+        underlying_graph::AbstractGraph
+    )
+    VD = vertex_data_type(graph)
+    ED = edge_data_type(graph)
+    return similar_graph(graph, VD, ED, underlying_graph)
+end
+
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
+        VD::Type,
+        ED::Type
+    )
+    new_underlying_graph = similar_graph(underlying_graph(graph))
+    return similar_graph(graph, VD, ED, new_underlying_graph)
+end
+
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
+        VD::Type,
+        ED::Type,
         vertices,
         edges
     )
-    underlying_graph = similar_graph(underlying_graph_type(graph_type), vertices, edges)
-    return similar_graph(graph_type, underlying_graph)
+    new_underlying_graph = similar_graph(underlying_graph(graph), vertices, edges)
+    return similar_graph(graph, VD, ED, new_underlying_graph)
 end
 
-# Construct a similar `AbstractDataGraph` defined by an `underlying_graph_type` with
-# `vertex_data_type` and `edge_data_type`.
+# Construct a similar `AbstractDataGraph` defined by an underlying graph type `G` with
+# vertex data type `VD` and edge data type `ED`.
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
-        underlying_graph_type::Type{<:AbstractGraph},
-        vertex_data_type,
-        edge_data_type
+        VD::Type,
+        ED::Type,
+        G::Type{<:AbstractGraph}
     )
-    underlying_graph = similar_graph(underlying_graph_type, vertices(graph), edges(graph))
-    return similar_graph(graph, underlying_graph, vertex_data_type, edge_data_type)
-end
-function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph,
-        underlying_graph_type::Type{<:AbstractGraph}
-    )
-    underlying_graph = similar_graph(underlying_graph_type, vertices(graph), edges(graph))
-    return similar_graph(graph, underlying_graph)
+    underlying_graph = similar_graph(G, vertices(graph), edges(graph))
+    return similar_graph(graph, VD, ED, underlying_graph)
 end
 
 # Construct a similar `AbstractDataGraph` defined by `underlying_graph` with `vertex_data_type` and `edge_data_type`.
 # To be specialized (has fallback).
 """
-    similar_graph(datagraph::AbstractDataGraph, graph::AbstractGraph, [VD=vertex_data_type(datagraph), ED=edge_data_type(datagraph)])
-    similar_graph(datagraph::AbstractDataGraph, G, [VD=vertex_data_type(datagraph), ED=edge_data_type(datagraph)])
+    similar_graph(datagraph::AbstractDataGraph, graph::AbstractGraph)
+    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, vertices, edges)
+    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, graph::AbstractGraph)
+
+    similar_graph(datagraph::AbstractDataGraph, G::Type{<:AbstractGraph})
+    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, G::Type{<:AbstractGraph})
 
 Create an uninitialized data graph, similar to the provided `datagraph`, but with underlying
 graph defined by `graph`. If instead a type `G` is given as the second argument,
@@ -173,40 +197,68 @@ to choose the return type of the resulting graph, based on the arguments.
 If they do not specialize on this method, then the default is
 `DataGraph(graph; vertex_data_type, edge_data_type)`.
 """
+
+# Base case (overload this).
 function NamedGraphs.similar_graph(
         ::AbstractDataGraph,
-        underlying_graph::AbstractGraph,
-        vertex_data_type,
-        edge_data_type
-    )
-    return DataGraph(underlying_graph; vertex_data_type, edge_data_type)
-end
-function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph,
+        VD::Type,
+        ED::Type,
         underlying_graph::AbstractGraph
     )
-    VD = vertex_data_type(graph)
-    ED = edge_data_type(graph)
-    return similar_graph(graph, underlying_graph, VD, ED)
+    return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
+end
+
+# ============================ `similar_graph` (type domain) ============================= #
+
+# Construct `graph_type` with `vertices` and `edges`.
+function NamedGraphs.similar_graph(
+        graph_type::Type{<:AbstractDataGraph},
+        vertices,
+        edges
+    )
+    underlying_graph = similar_graph(underlying_graph_type(graph_type), vertices, edges)
+    return similar_graph(graph_type, underlying_graph)
+end
+
+function NamedGraphs.similar_graph(
+        graph_type::Type{<:AbstractDataGraph},
+        G::Type{<:AbstractGraph}
+    )
+    underlying_graph = similar_graph(G)
+    return similar_graph(graph_type, underlying_graph)
+end
+
+# Construct `graph_type` with `vertex_data_type` and `edge_data_type`.
+function NamedGraphs.similar_graph(
+        graph_type::Type{<:AbstractDataGraph},
+        VD::Type,
+        ED::Type
+    )
+    underlying_graph = similar_graph(underlying_graph_type(graph_type))
+    return similar_graph(graph_type, VD, ED, underlying_graph)
+end
+
+function NamedGraphs.similar_graph(
+        graph_type::Type{<:AbstractDataGraph},
+        VD::Type,
+        ED::Type,
+        vertices,
+        edges
+    )
+    underlying_graph = similar_graph(underlying_graph_type(graph_type), vertices, edges)
+    return similar_graph(graph_type, VD, ED, underlying_graph)
 end
 
 # Construct a subtype of `graph_type` with an empty underlying_graph of type `underlying_graph_type`
 # and `vertex_data_type` and `edge_data_type`.
 function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
-        underlying_graph_type::Type{<:AbstractGraph},
-        vertex_data_type,
-        edge_data_type
+        VD::Type,
+        ED::Type,
+        G::Type{<:AbstractGraph}
     )
-    underlying_graph = similar_graph(underlying_graph_type)
-    return similar_graph(graph_type, underlying_graph, vertex_data_type, edge_data_type)
-end
-function NamedGraphs.similar_graph(
-        graph_type::Type{<:AbstractDataGraph},
-        underlying_graph_type::Type{<:AbstractGraph}
-    )
-    underlying_graph = similar_graph(underlying_graph_type)
-    return similar_graph(graph_type, underlying_graph)
+    underlying_graph = similar_graph(G)
+    return similar_graph(graph_type, VD, ED, underlying_graph)
 end
 
 # Construct a subtype of `graph_type` defined by `underlying_graph` with `vertex_data_type` and `edge_data_type`.
@@ -214,10 +266,10 @@ end
 # specialize on either the two or four argument method.
 """
     similar_graph(DG::Type{<:AbstractDataGraph}, graph::AbstractGraph)
-    similar_graph(DG::Type{<:AbstractDataGraph}, graph::AbstractGraph, VD, ED)
+    similar_graph(DG::Type{<:AbstractDataGraph}, VD::Type, ED::Type, graph::AbstractGraph)
 
     similar_graph(DG::Type{<:AbstractDataGraph}, G)
-    similar_graph(DG::Type{<:AbstractDataGraph}, G, VD, ED)
+    similar_graph(DG::Type{<:AbstractDataGraph}, VD::Type, ED::Type, G::Type{<:AbstractGraph})
 
 Create an uninitialized data graph that acts like the specified data graph type
 `DG`, but with underlying graph defined by `graph`.
@@ -231,11 +283,11 @@ A given custom `AbstractDataGraph` subtype may specialize on the first two metho
 """
 function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
-        underlying_graph::AbstractGraph,
-        vertex_data_type,
-        edge_data_type
+        VD::Type,
+        ED::Type,
+        underlying_graph::AbstractGraph
     )
-    return graph_type(underlying_graph, vertex_data_type, edge_data_type)
+    return graph_type(VD, ED, underlying_graph)
 end
 function NamedGraphs.similar_graph(
         graph_type::Type{<:AbstractDataGraph},
