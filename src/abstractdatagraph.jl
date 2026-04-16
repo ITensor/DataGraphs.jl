@@ -180,10 +180,9 @@ end
 # To be specialized (has fallback).
 """
     similar_graph(datagraph::AbstractDataGraph, graph::AbstractGraph)
+    similar_graph(datagraph::AbstractDataGraph, G::Type{<:AbstractGraph})
     similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, vertices, edges)
     similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, graph::AbstractGraph)
-
-    similar_graph(datagraph::AbstractDataGraph, G::Type{<:AbstractGraph})
     similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, G::Type{<:AbstractGraph})
 
 Create an uninitialized data graph, similar to the provided `datagraph`, but with underlying
@@ -197,7 +196,6 @@ to choose the return type of the resulting graph, based on the arguments.
 If they do not specialize on this method, then the default is
 `DataGraph(graph; vertex_data_type, edge_data_type)`.
 """
-
 # Base case (overload this).
 function NamedGraphs.similar_graph(
         ::AbstractDataGraph,
@@ -266,9 +264,8 @@ end
 # specialize on either the two or four argument method.
 """
     similar_graph(DG::Type{<:AbstractDataGraph}, graph::AbstractGraph)
-    similar_graph(DG::Type{<:AbstractDataGraph}, VD::Type, ED::Type, graph::AbstractGraph)
-
     similar_graph(DG::Type{<:AbstractDataGraph}, G)
+    similar_graph(DG::Type{<:AbstractDataGraph}, VD::Type, ED::Type, graph::AbstractGraph)
     similar_graph(DG::Type{<:AbstractDataGraph}, VD::Type, ED::Type, G::Type{<:AbstractGraph})
 
 Create an uninitialized data graph that acts like the specified data graph type
