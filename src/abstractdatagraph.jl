@@ -227,12 +227,12 @@ end
 
 # Fallback to constructing a concrete `DataGraph`.
 @traitfn function GraphsExtensions.directed_graph(graph::AbstractDataGraph::(!IsDirected))
-    ug = similar_graph(NamedDiGraph, vertices(graph), edges(graph))
+    underlying_digraph = similar_graph(NamedDiGraph, vertices(graph), edges(graph))
 
     VD = vertex_data_type(graph)
     ED = edge_data_type(graph)
 
-    digraph = DataGraph(ug; vertex_data_type = VD, edge_data_type = ED)
+    digraph = DataGraph(underlying_digraph; vertex_data_type = VD, edge_data_type = ED)
 
     for v in vertices(graph)
         # TODO: Only loop over `keys(vertex_data(graph))`
