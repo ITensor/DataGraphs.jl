@@ -48,6 +48,11 @@ function NamedGraphs.similar_graph(dg::TestDataGraph, graph::AbstractGraph)
     return TestDataGraph(dg)
 end
 
+function DataGraphs.similar_induced_subgraph(dg::TestDataGraph, subvertices)
+    dg, vlist = NamedGraphs.induced_subgraph(dg.graph, subvertices)
+    return TestDataGraph(dg), vlist
+end
+
 for f in [
         :(DataGraphs.is_vertex_assigned),
         :(DataGraphs.is_edge_assigned),

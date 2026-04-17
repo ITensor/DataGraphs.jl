@@ -576,9 +576,7 @@ using Test: @test, @test_broken, @testset
         @test underlying_graph(g2) == underlying_graph(g)
         @test !(underlying_graph(g2) === underlying_graph(g))
 
-        g2 = similar_graph(g, NamedDiGraph(SimpleDiGraph(4), ["x", "y", "z", "w"]))
-
-        @test underlying_graph(g2) isa NamedDiGraph
+        g2 = similar_graph(g, ["x", "y", "z", "w"])
 
         @test has_vertex(g2, "x")
         @test has_vertex(g2, "y")
@@ -607,14 +605,6 @@ using Test: @test, @test_broken, @testset
         g2 = similar_graph(g, Float64, Int)
         @test has_vertex(g2, "a")
         @test has_edge(g2, "a" => "b")
-        @test vertex_data_type(g2) === Float64
-        @test edge_data_type(g2) === Int
-
-        g2 = similar_graph(DataGraph, Float64, Int, NamedGraph{String})
-        @test g2 isa DataGraph
-        @test underlying_graph(g2) isa NamedGraph{String}
-        @test nv(g2) == 0
-        @test ne(g2) == 0
         @test vertex_data_type(g2) === Float64
         @test edge_data_type(g2) === Int
 
