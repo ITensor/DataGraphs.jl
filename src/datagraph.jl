@@ -169,23 +169,3 @@ function Graphs.rem_edge!(graph::DataGraph, edge)
     Graphs.rem_edge!(graph.underlying_graph, edge)
     return graph
 end
-
-# Set the underlying graph of a data graph, preserving data. Graphs must match.
-function set_underlying_graph(datagraph::DataGraph, graph::AbstractGraph)
-    if vertices(datagraph) != vertices(graph) || edges(datagraph) != edges(graph)
-        throw(
-            ArgumentError(
-                "New underlying graph must have the same vertices and edges as the data graph"
-            )
-        )
-    end
-
-    VD = vertex_data_type(datagraph)
-    ED = edge_data_type(datagraph)
-
-    new_datagraph = DataGraph(graph; vertex_data_type = VD, edge_data_type = ED)
-
-    copyto!(new_datagraph, datagraph)
-
-    return new_datagraph
-end
