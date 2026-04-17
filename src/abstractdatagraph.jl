@@ -176,22 +176,6 @@ end
 
     return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
 end
-# Set the underlying graph of a data graph, preserving data. Graphs must match.
-function set_underlying_graph(datagraph::AbstractDataGraph, graph::AbstractGraph)
-    if vertices(datagraph) != vertices(graph) || edges(datagraph) != edges(graph)
-        throw(
-            ArgumentError(
-                "New underlying graph must have the same vertices and edges as the data graph"
-            )
-        )
-    end
-
-    new_datagraph = similar_graph(datagraph, graph)
-
-    copyto!(new_datagraph, datagraph)
-
-    return new_datagraph
-end
 
 # Fix for ambiguity error with `AbstractGraph` version
 function Graphs.degree(graph::AbstractDataGraph, vertex::Integer)
