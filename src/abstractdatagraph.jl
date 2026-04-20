@@ -121,19 +121,15 @@ end
 # To be specialized (has fallback).
 """
     similar_graph(datagraph::AbstractDataGraph, vertices, edges)
+    similar_graph(datagraph::AbstractDataGraph, D::Type)
     similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type)
+    similar_graph(datagraph::AbstractDataGraph, D::Type, vertices, edges)
     similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, vertices, edges)
 
-Create an uninitialized data graph, similar to the provided `datagraph`, but with underlying
-graph defined by `graph`. If instead a type `G` is given as the second argument,
-then an empty underlying graph is first constructed using `graph = similar_graph(G)`.
-Optionally, one may specify the vertex and edge data types, which default to those of the
-provided source `datagraph`.
-
-Custom `AbstractDataGraph` subtypes may specialize on first method (either the two or four argument version)
-to choose the return type of the resulting graph, based on the arguments.
-If they do not specialize on this method, then the default is
-`DataGraph(graph; vertex_data_type, edge_data_type)`.
+Create an uninitialized data graph, similar to the provided `datagraph`, but with `vertices`
+and `edges`. If vertices and edges are not provided, then the vertices and edges of `datagraph` are used.
+One may also provide a vertex data type `VD`  and an edge data type `ED` or
+a type `D` such that `VD = ED = D`.
 """
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
@@ -146,12 +142,25 @@ function NamedGraphs.similar_graph(
 end
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
+        D::Type
+    )
+    return similar_graph(graph, D, D)
+end
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
         VD::Type,
         ED::Type
     )
     return similar_graph(graph, VD, ED, vertices(graph), edges(graph))
 end
-
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
+        D::Type,
+        vertices,
+        edges
+    )
+    return similar_graph(graph, D, D, vertices, edges)
+end
 # Base case (overload this if fallback not wanted).
 @traitfn function NamedGraphs.similar_graph(
         ::AbstractDataGraph::(!IsDirected),
@@ -426,6 +435,8 @@ function NamedGraphs.induced_subgraph_from_vertices(graph::AbstractDataGraph, su
             subgraph[e] = graph[e]
         end
     end
+
+    # copyto!(subgraph, graph)
 
     return subgraph, vlist
 end
