@@ -162,7 +162,6 @@ function NamedGraphs.similar_graph(
     return similar_graph(graph, D, D, vertices)
 end
 
-# Base case (overload this if fallback not wanted).
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         VD::Type,
@@ -173,6 +172,8 @@ function NamedGraphs.similar_graph(
 
     return new_graph
 end
+
+# Base case(s) (overload these if fallback not wanted).
 @traitfn function NamedGraphs.similar_graph(
         graph::AbstractDataGraph::(!IsDirected),
         VD::Type,
