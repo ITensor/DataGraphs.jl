@@ -163,16 +163,15 @@ function NamedGraphs.similar_graph(
 end
 
 # Base case (overload this if fallback not wanted).
-@traitfn function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph::(!IsDirected),
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
         VD::Type,
         ED::Type
     )
-    underlying_graph = similar_graph(NamedGraph, vertices(graph))
+    new_graph = similar_graph(graph, VD, ED, vertices(graph))
+    add_edges!(new_graph, edges(graph))
 
-    add_edges!(underlying_graph, edges(graph))
-
-    return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
+    return new_graph
 end
 @traitfn function NamedGraphs.similar_graph(
         graph::AbstractDataGraph::(!IsDirected),
@@ -181,18 +180,6 @@ end
         vertices
     )
     underlying_graph = similar_graph(NamedGraph, vertices)
-
-    return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
-end
-
-@traitfn function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph::IsDirected,
-        VD::Type,
-        ED::Type
-    )
-    underlying_graph = similar_graph(NamedDiGraph, vertices(graph))
-
-    add_edges!(underlying_graph, edges(graph))
 
     return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
 end
