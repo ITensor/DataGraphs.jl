@@ -596,11 +596,11 @@ using Test: @test, @test_broken, @testset
 
         @test_throws IndexError copyto!(empty_graph(g_copy), g_copy)
 
-        g2 = similar_graph(g, ["u", "v"], ["u" => "v"])
-        @test similar_graph(g, ["u", "v"], ["u" => "v"]) isa typeof(g)
+        g2 = similar_graph(g, ["u", "v"])
+        @test similar_graph(g2) isa typeof(g)
         @test has_vertex(g2, "u")
         @test has_vertex(g2, "v")
-        @test has_edge(g2, "u" => "v")
+        @test ne(g2) == 0
 
         g2 = similar_graph(g, Float64, Int)
         @test has_vertex(g2, "a")
@@ -608,11 +608,11 @@ using Test: @test, @test_broken, @testset
         @test vertex_data_type(g2) === Float64
         @test edge_data_type(g2) === Int
 
-        g2 = similar_graph(g, String, Tuple, [:a, :b], [:a => :b])
+        g2 = similar_graph(g, String, Tuple, [:a, :b])
         @test vertex_data_type(g2) === String
         @test edge_data_type(g2) === Tuple
         @test has_vertex(g2, :a)
         @test has_vertex(g2, :b)
-        @test has_edge(g2, :a => :b)
+        @test ne(g2) == 0
     end
 end

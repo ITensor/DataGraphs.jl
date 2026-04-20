@@ -58,13 +58,11 @@ function NamedGraphs.similar_graph(
         graph::DataGraph,
         vertex_data_type::Type,
         edge_data_type::Type,
-        vertices,
-        edges
+        vertices...
     )
     new_underlying_graph = similar_graph(
         underlying_graph(graph),
-        vertices,
-        edges
+        vertices...
     )
 
     return DataGraph(new_underlying_graph; vertex_data_type, edge_data_type)
@@ -72,13 +70,11 @@ end
 
 function NamedGraphs.similar_graph(
         graph_type::Type{<:DataGraph},
-        vertices,
-        edges
+        vertices...
     )
     new_underlying_graph = similar_graph(
         underlying_graph_type(graph_type),
-        vertices,
-        edges
+        vertices...
     )
 
     VD = vertex_data_type(graph_type)

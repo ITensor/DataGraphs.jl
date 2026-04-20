@@ -1,8 +1,8 @@
 using Dictionaries: Indices, set!, unset!
 using Graphs: Graphs, AbstractEdge, IsDirected, a_star, add_edge!, add_vertex!, edges,
     indegree, induced_subgraph, ne, nv, outdegree, steiner_tree, vertices
-using NamedGraphs.GraphsExtensions: GraphsExtensions, add_vertices!, arrange_edge,
-    incident_edges, is_edge_arranged, vertextype
+using NamedGraphs.GraphsExtensions: GraphsExtensions, add_edges!, add_vertices!,
+    arrange_edge, incident_edges, is_edge_arranged, vertextype
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
@@ -132,13 +132,20 @@ One may also provide a vertex data type `VD`  and an edge data type `ED` or
 a type `D` such that `VD = ED = D`.
 """
 function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph,
-        vertices,
-        edges
+        graph::AbstractDataGraph
     )
     VD = vertex_data_type(graph)
     ED = edge_data_type(graph)
-    return similar_graph(graph, VD, ED, vertices, edges)
+    return similar_graph(graph, VD, ED)
+end
+
+function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph,
+        vertices
+    )
+    VD = vertex_data_type(graph)
+    ED = edge_data_type(graph)
+    return similar_graph(graph, VD, ED, vertices)
 end
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
@@ -146,42 +153,56 @@ function NamedGraphs.similar_graph(
     )
     return similar_graph(graph, D, D)
 end
-function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph,
-        VD::Type,
-        ED::Type
-    )
-    return similar_graph(graph, VD, ED, vertices(graph), edges(graph))
-end
+
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         D::Type,
-        vertices,
-        edges
+        vertices
     )
-    return similar_graph(graph, D, D, vertices, edges)
+    return similar_graph(graph, D, D, vertices)
 end
+
 # Base case (overload this if fallback not wanted).
 @traitfn function NamedGraphs.similar_graph(
-        ::AbstractDataGraph::(!IsDirected),
+        graph::AbstractDataGraph::(!IsDirected),
+        VD::Type,
+        ED::Type
+    )
+    underlying_graph = similar_graph(NamedGraph, vertices(graph))
+
+    add_edges!(underlying_graph, edges(graph))
+
+    return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
+end
+@traitfn function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph::(!IsDirected),
         VD::Type,
         ED::Type,
-        vertices,
-        edges
+        vertices
     )
-    underlying_graph = similar_graph(NamedGraph, vertices, edges)
+    underlying_graph = similar_graph(NamedGraph, vertices)
 
     return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
 end
 
 @traitfn function NamedGraphs.similar_graph(
-        ::AbstractDataGraph::IsDirected,
+        graph::AbstractDataGraph::IsDirected,
+        VD::Type,
+        ED::Type
+    )
+    underlying_graph = similar_graph(NamedDiGraph, vertices(graph))
+
+    add_edges!(underlying_graph, edges(graph))
+
+    return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
+end
+@traitfn function NamedGraphs.similar_graph(
+        graph::AbstractDataGraph::IsDirected,
         VD::Type,
         ED::Type,
-        vertices,
-        edges
+        vertices
     )
-    underlying_graph = similar_graph(NamedDiGraph, vertices, edges)
+    underlying_graph = similar_graph(NamedDiGraph, vertices)
 
     return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
 end
