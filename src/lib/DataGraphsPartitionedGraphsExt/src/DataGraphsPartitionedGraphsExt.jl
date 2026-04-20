@@ -165,12 +165,12 @@ function DataGraphs.edge_data_type(T::Type{<:QuotientView})
     return Base.promote_op(getindex, PGT, QuotientEdge{vertextype(T), edgetype(T)})
 end
 
+# ================================== DataGraph specific ================================== #
+
 # PartitionedGraphs interface
-function PartitionedGraphs.partitioned_vertices(dg::AbstractDataGraph)
+function PartitionedGraphs.partitioned_vertices(dg::DataGraph)
     return partitioned_vertices(underlying_graph(dg))
 end
-
-# ================================== DataGraph specific ================================== #
 
 function PartitionedGraphs.partitionedgraph(dg::DataGraph, parts)
     pg = partitionedgraph(underlying_graph(dg), parts)
@@ -195,13 +195,13 @@ function PartitionedGraphs.departition(dg::DataGraph)
     end
 end
 
-function quotient_graph_vertex_data(dg)
+function quotient_graph_vertex_data(dg::DataGraph)
     ug = underlying_graph(dg)
     qvs = QuotientVertexSlice(QuotientVertices(ug))
     return map(v -> dg[QuotientVertex(v)], Indices(qvs))
 end
 
-function quotient_graph_edge_data(dg)
+function quotient_graph_edge_data(dg::DataGraph)
     ug = underlying_graph(dg)
     qes = QuotientEdgeSlice(QuotientEdges(ug))
     return map(e -> dg[QuotientEdge(e)], Indices(qes))
