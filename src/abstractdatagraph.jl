@@ -196,44 +196,12 @@ end
 end
 
 # Fix for ambiguity error with `AbstractGraph` version
-function Graphs.degree(graph::AbstractDataGraph, vertex::Integer)
-    return Graphs.degree(underlying_graph(graph), vertex)
-end
-
-# Fix for ambiguity error with `AbstractGraph` version
-function Graphs.dijkstra_shortest_paths(
-        graph::AbstractDataGraph, vertices::Vector{<:Integer}
+function Graphs.eccentricity(
+        graph::AbstractDataGraph,
+        vertex::Integer,
+        distmx::AbstractMatrix{<:Real} = NamedGraphs.weights(graph)
     )
-    return Graphs.dijkstra_shortest_paths(underlying_graph(graph), vertices)
-end
-
-# Fix for ambiguity error with `AbstractGraph` version
-function Graphs.eccentricity(graph::AbstractDataGraph, distmx::AbstractMatrix)
-    return Graphs.eccentricity(underlying_graph(graph), distmx)
-end
-
-# Fix for ambiguity error with `AbstractGraph` version
-function Graphs.indegree(graph::AbstractDataGraph, vertex::Integer)
-    return indegree(underlying_graph(graph), vertex)
-end
-
-# Fix for ambiguity error with `AbstractGraph` version
-function Graphs.outdegree(graph::AbstractDataGraph, vertex::Integer)
-    return outdegree(underlying_graph(graph), vertex)
-end
-
-# Fix for ambiguity error with `AbstractGraph` version
-function Graphs.a_star(
-        graph::AbstractDataGraph, source::Integer, destination::Integer, args...
-    )
-    return a_star(underlying_graph(graph), source, destination, args...)
-end
-
-# Fix for ambiguity error with `AbstractGraph` version
-@traitfn function Graphs.steiner_tree(
-        graph::AbstractDataGraph::(!IsDirected), term_vert::Vector{<:Integer}, args...
-    )
-    return steiner_tree(underlying_graph(graph), term_vert, args...)
+    return NamedGraphs.namedgraph_eccentricity(graph, vertex, distmx)
 end
 
 @traitfn GraphsExtensions.directed_graph(graph::AbstractDataGraph::IsDirected) = graph
@@ -369,24 +337,6 @@ end
 function Graphs.rem_edge!(graph::AbstractDataGraph, edge)
     Graphs.rem_edge!(underlying_graph(graph), edge)
     return graph
-end
-
-# Fix ambiguity with:
-# Graphs.neighbors(graph::AbstractGraph, v::Integer)
-function Graphs.neighbors(graph::AbstractDataGraph, v::Integer)
-    return Graphs.neighbors(underlying_graph(graph), v)
-end
-
-# Fix ambiguity with:
-# Graphs.bfs_tree(graph::AbstractGraph, s::Integer; dir)
-function Graphs.bfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
-    return Graphs.bfs_tree(underlying_graph(graph), s; kwargs...)
-end
-
-# Fix ambiguity with:
-# Graphs.dfs_tree(graph::AbstractGraph, s::Integer; dir)
-function Graphs.dfs_tree(graph::AbstractDataGraph, s::Integer; kwargs...)
-    return Graphs.dfs_tree(underlying_graph(graph), s; kwargs...)
 end
 
 function map_vertex_data(f, graph::AbstractGraph; vertices = nothing)

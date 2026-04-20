@@ -1,5 +1,5 @@
 using Dictionaries: Dictionary
-using Graphs: Graphs, edgetype, has_edge, has_vertex
+using Graphs: Graphs, bfs_tree, dfs_tree, edgetype, has_edge, has_vertex
 using NamedGraphs.GraphsExtensions:
     convert_vertextype, directed_graph, directed_graph_type, rename_vertices, vertextype
 using NamedGraphs: GenericNamedGraph, similar_graph

@@ -355,13 +355,13 @@ using Test: @test, @test_broken, @testset
 
         t = bfs_tree(g, 2)
         es = [2 => 1, 2 => 3, 3 => 4]
-        @test t isa NamedDiGraph{Int}
+        @test underlying_graph(t) isa NamedDiGraph{Int}
         @test nv(t) == nv(g)
         @test ne(t) == nv(g) - 1
         @test all(e -> has_edge(t, e), es)
 
         t = dfs_tree(g, 2)
-        @test t isa NamedDiGraph{Int}
+        @test underlying_graph(t) isa NamedDiGraph{Int}
         @test nv(t) == nv(g)
         @test ne(t) == nv(g) - 1
         @test all(e -> has_edge(t, e), es)
