@@ -10,8 +10,8 @@ using NamedGraphs.NamedGraphGenerators: named_path_graph
 using NamedGraphs.PartitionedGraphs: PartitionedGraph, PartitionedGraphs, QuotientEdge,
     QuotientEdges, QuotientVertex, QuotientVertexOrEdge, QuotientVertexVertex,
     QuotientVertexVertices, QuotientVertices, QuotientVerticesVertices, QuotientView,
-    departition, partitionedgraph, quotient_graph, quotientedges, quotientvertices,
-    unpartition
+    departition, partitioned_vertices, partitionedgraph, quotient_graph, quotientedges,
+    quotientvertices, unpartition
 using NamedGraphs: NamedGraphs, Edges, NamedGraph, Vertices, similar_graph
 using Test: @test, @test_throws, @testset
 
@@ -42,6 +42,10 @@ end
 
 DataGraphs.underlying_graph(graph::TestDataGraph) = underlying_graph(graph.graph)
 PartitionedGraphs.quotient_graph(graph::TestDataGraph) = graph.quotientgraph
+
+function PartitionedGraphs.partitioned_vertices(graph::TestDataGraph)
+    return partitioned_vertices(graph.graph)
+end
 
 function NamedGraphs.similar_graph(dg::TestDataGraph, graph::AbstractGraph)
     dg = similar_graph(dg.graph, graph)
