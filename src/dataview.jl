@@ -66,8 +66,9 @@ function Base.isassigned(view::EdgeDataView, key::Pair)
     return isassigned(view, to_graph_index(view.graph, key))
 end
 
-Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = _getindex(view, key)
 Base.getindex(view::VertexOrEdgeDataView, key) = _getindex(view, key)
+# For method ambiguity:
+Base.getindex(view::VertexOrEdgeDataView{K}, key::K) where {K} = _getindex(view, key)
 
 function _getindex(view::VertexDataView, key)
     isassigned(view, key) || throw(IndexError("VertexDataView does not contain index $key"))
@@ -133,7 +134,9 @@ end
 Base.keys(dvs::SubDataView) = dvs.inds
 
 Base.getindex(view::SubDataView, key) = getindex_dataview(view, key)
+# For method ambiguity:
 Base.getindex(view::SubDataView{K}, key::K) where {K} = getindex_dataview(view, key)
+
 function getindex_dataview(dvs::SubDataView, key)
     isassigned(dvs, key) || throw(IndexError("Dictionary does not contain index: $key"))
     return dvs.view[key]
