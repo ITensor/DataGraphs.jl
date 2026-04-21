@@ -68,6 +68,22 @@ function NamedGraphs.similar_graph(
     return DataGraph(new_underlying_graph; vertex_data_type, edge_data_type)
 end
 
+function NamedGraphs.similar_graph(
+        G::Type{<:DataGraph},
+        vertices
+    )
+    new_underlying_graph = similar_graph(
+        underlying_graph_type(G),
+        vertices
+    )
+
+    VD = vertex_data_type(G)
+    ED = edge_data_type(G)
+
+    V = vertextype(G)
+
+    return DataGraph{V}(new_underlying_graph; vertex_data_type = VD, edge_data_type = ED)
+end
 function Base.copy(graph::DataGraph)
     # Need to manually copy the keys of Dictionaries, see:
     # https://github.com/andyferris/Dictionaries.jl/issues/98
