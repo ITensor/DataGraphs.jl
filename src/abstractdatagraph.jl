@@ -2,7 +2,7 @@ using Dictionaries: Indices, set!, unset!
 using Graphs: Graphs, AbstractEdge, IsDirected, a_star, add_edge!, add_vertex!, edges,
     indegree, induced_subgraph, ne, nv, outdegree, steiner_tree, vertices
 using NamedGraphs.GraphsExtensions: GraphsExtensions, add_edges!, add_vertices!,
-    arrange_edge, incident_edges, is_edge_arranged, vertextype
+    arrange_edge, incident_edges, is_edge_arranged, rem_edges, vertextype
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
@@ -262,12 +262,7 @@ function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
 end
 
 function Base.reverse(graph::AbstractDataGraph)
-    reversed_graph = similar_graph(graph, vertices(graph))
-    for v in vertices(graph)
-        if isassigned(graph, v)
-            reversed_graph[v] = graph[v]
-        end
-    end
+    reversed_graph = rem_edges(graph, edges(graph))
     for e in edges(graph)
         add_edge!(reversed_graph, reverse(e))
         if isassigned(graph, e)
