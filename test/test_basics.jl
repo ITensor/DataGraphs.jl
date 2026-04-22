@@ -4,9 +4,9 @@ using Dictionaries: Dictionaries, AbstractDictionary, AbstractIndices, Dictionar
     IndexError, Indices, dictionary, unset!
 using Graphs: SimpleDiGraph, a_star, add_edge!, bfs_tree, connected_components, degree,
     dfs_tree, dijkstra_shortest_paths, dst, edges, edgetype, grid, has_edge, has_vertex,
-    indegree, ne, nv, outdegree, path_graph, src, steiner_tree, vertices
+    indegree, is_directed, ne, nv, outdegree, path_graph, src, steiner_tree, vertices
 using GraphsFlows: GraphsFlows
-using NamedGraphs.GraphsExtensions: rename_vertices, subgraph, vertextype, ⊔
+using NamedGraphs.GraphsExtensions: directed_graph, rename_vertices, subgraph, vertextype, ⊔
 using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
 using NamedGraphs.OrdinalIndexing: nd, rd, st, th
 using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, empty_graph, similar_graph
@@ -152,6 +152,32 @@ using Test: @test, @test_broken, @testset
         @test dg[2 => "X"] == "edge_2X"
         @test dg[2 => "Y"] == "edge_Y2"
         @test dg["Y" => 2] == "edge_Y2"
+    end
+    @testset "(un)directed graph" begin
+        dg = DataGraph(named_path_graph(3))
+        dg[1 => 2] = "edge_12"
+        @test dg[1 => 2] == "edge_12"
+        @test dg[2 => 1] == "edge_12"
+        dg[2 => 1] = "edge_21"
+        @test dg[1 => 2] == "edge_21"
+        @test dg[2 => 1] == "edge_21"
+
+        dg = DataGraph(named_path_graph(3))
+
+        dg[1 => 2] = "edge_12"
+
+        ddg = directed_graph(dg)
+        @test !is_directed(dg)
+        @test is_directed(ddg)
+        @test isassigned(ddg, 1 => 2)
+        @test isassigned(ddg, 2 => 1)
+        @test ddg[1 => 2] == ddg[2 => 1]
+
+        ddg[1 => 2] = "edge_12"
+        ddg[2 => 1] = "edge_21"
+
+        @test ddg[1 => 2] == "edge_12"
+        @test ddg[2 => 1] == "edge_21"
     end
 
     @testset "get and get! functions" begin

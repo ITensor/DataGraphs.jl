@@ -213,7 +213,7 @@ end
 
 # Fallback to constructing a concrete `DataGraph`.
 @traitfn function GraphsExtensions.directed_graph(graph::AbstractDataGraph::(!IsDirected))
-    underlying_digraph = similar_graph(NamedDiGraph, vertices(graph), edges(graph))
+    underlying_digraph = similar_graph(NamedDiGraph, vertices(graph)) # edgeless
 
     VD = vertex_data_type(graph)
     ED = edge_data_type(graph)
