@@ -120,16 +120,16 @@ end
 # Construct a similar `AbstractDataGraph` defined by `underlying_graph` with `vertex_data_type` and `edge_data_type`.
 # To be specialized (has fallback).
 """
-    similar_graph(datagraph::AbstractDataGraph, vertices, edges)
     similar_graph(datagraph::AbstractDataGraph, D::Type)
+    similar_graph(datagraph::AbstractDataGraph, D::Type, vertices)
     similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type)
-    similar_graph(datagraph::AbstractDataGraph, D::Type, vertices, edges)
-    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, vertices, edges)
+    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, vertices)
 
-Create an uninitialized data graph, similar to the provided `datagraph`, but with `vertices`
-and `edges`. If vertices and edges are not provided, then the vertices and edges of `datagraph` are used.
-One may also provide a vertex data type `VD`  and an edge data type `ED` or
-a type `D` such that `VD = ED = D`.
+Create an uninitialized data graph, similar to the provided `datagraph`, but with vertices
+defined by `vertices` and a vertex and edge data type `D`. One may also provide separate
+vertex and edge data types `VD` and `ED`.
+If vertices are not provided, then the graph is constructed with the same vertices and edges
+as the input graph.
 """
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph
