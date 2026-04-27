@@ -390,7 +390,7 @@ function NamedGraphs.induced_subgraph_from_vertices(graph::AbstractDataGraph, su
         end
     end
 
-    # copyto!(subgraph, graph)
+    # TODO: It would be nice to have `copyto!(subgraph, graph)` do the above.
 
     return subgraph, vlist
 end
