@@ -117,8 +117,6 @@ end
 
 # ============================ `similar_graph` (value domain) ============================ #
 
-# Construct a similar `AbstractDataGraph` defined by `underlying_graph` with `vertex_data_type` and `edge_data_type`.
-# To be specialized (has fallback).
 """
     similar_graph(datagraph::AbstractDataGraph, D::Type)
     similar_graph(datagraph::AbstractDataGraph, D::Type, vertices)
