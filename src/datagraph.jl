@@ -1,8 +1,8 @@
 using Dictionaries: Dictionary
-using Graphs: Graphs, edgetype, has_edge, has_vertex
-using NamedGraphs.GraphsExtensions: convert_vertextype, directed_graph, directed_graph_type,
-    rename_vertices, similar_graph, vertextype
-using NamedGraphs: GenericNamedGraph
+using Graphs: Graphs, bfs_tree, dfs_tree, edgetype, has_edge, has_vertex
+using NamedGraphs.GraphsExtensions:
+    convert_vertextype, directed_graph, directed_graph_type, rename_vertices, vertextype
+using NamedGraphs: GenericNamedGraph, similar_graph
 
 # TODO: define VertexDataGraph, a graph with only data on the
 # vertices, and EdgeDataGraph, a graph with only data on the edges.
@@ -53,28 +53,48 @@ edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 
 # Extras
 
-function GraphsExtensions.similar_graph(T::Type{<:DataGraph})
-    similar_underlying_graph = similar_graph(underlying_graph_type(T))
-    return T(similar_underlying_graph)
-end
-function GraphsExtensions.similar_graph(dg::DataGraph, underlying_graph::AbstractGraph)
-    return DataGraph(
-        underlying_graph;
-        vertex_data_type = vertex_data_type(dg),
-        edge_data_type = edge_data_type(dg)
+# Overwrite the `AbstractDataGraph` fallback (even though they coincide for `DataGraph`)
+function NamedGraphs.similar_graph(
+        graph::DataGraph,
+        vertex_data_type::Type,
+        edge_data_type::Type,
+        vertices
     )
+    new_underlying_graph = similar_graph(
+        underlying_graph(graph),
+        vertices
+    )
+
+    return DataGraph(new_underlying_graph; vertex_data_type, edge_data_type)
 end
 
+function NamedGraphs.similar_graph(
+        G::Type{<:DataGraph},
+        vertices
+    )
+    new_underlying_graph = similar_graph(
+        underlying_graph_type(G),
+        vertices
+    )
+
+    VD = vertex_data_type(G)
+    ED = edge_data_type(G)
+
+    V = vertextype(G)
+
+    return DataGraph{V}(new_underlying_graph; vertex_data_type = VD, edge_data_type = ED)
+end
 function Base.copy(graph::DataGraph)
     # Need to manually copy the keys of Dictionaries, see:
     # https://github.com/andyferris/Dictionaries.jl/issues/98
     return _DataGraph(
-        copy(underlying_graph(graph)), copy(vertex_data(graph)), copy(edge_data(graph))
+        copy(graph.underlying_graph), copy(graph.vertex_data), copy(graph.edge_data)
     )
 end
 
 function DataGraph{V}(
-        underlying_graph::AbstractGraph; vertex_data_type::Type = Any,
+        underlying_graph::AbstractGraph;
+        vertex_data_type::Type = Any,
         edge_data_type::Type = Any
     ) where {V}
     converted_underlying_graph = convert_vertextype(V, underlying_graph)
@@ -107,12 +127,12 @@ DataGraph{V}(graph::DataGraph{V}) where {V} = copy(graph)
 function DataGraph{V}(graph::DataGraph) where {V}
     # TODO: Make sure this properly copies
     converted_underlying_graph = convert_vertextype(V, underlying_graph(graph))
-    converted_vertex_data = Dictionary{V}(vertex_data(graph))
-    # This doesn't convert properly.
-    # converted_edge_data = Dictionary{edgetype(converted_underlying_graph)}(edge_data(graph))
+    converted_vertex_data = Dictionary{V}(assigned_vertex_data(graph))
+
+    old_edge_data = assigned_edge_data(graph)
     converted_edge_data = Dictionary(
-        edgetype(converted_underlying_graph).(keys(edge_data(graph))),
-        values(edge_data(graph))
+        edgetype(converted_underlying_graph).(keys(old_edge_data)),
+        collect(old_edge_data)
     )
     return _DataGraph(
         converted_underlying_graph,
