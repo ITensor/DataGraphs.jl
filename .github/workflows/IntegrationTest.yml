@@ -27,5 +27,6 @@ jobs:
       pkgs: |
         [
               "ITensorNetworks",
-              "ITensorNetworksNext"
+              "ITensorNetworksNext",
+              "https://github.com/ITensor/Tennis.jl"
             ]
