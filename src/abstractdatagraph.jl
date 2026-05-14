@@ -6,7 +6,8 @@ using NamedGraphs.GraphsExtensions: GraphsExtensions, add_edges!, add_vertices!,
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
-    AbstractVertices, NamedDiGraph, NamedGraph, position_graph_type, similar_graph
+    AbstractVertices, NamedDiGraph, NamedGraph, Vertices, position_graph_type,
+    similar_graph, subgraph_edges
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
@@ -75,10 +76,26 @@ function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
     return position_graph_type(underlying_graph_type(type))
 end
 
+function Base.copy(graph::AbstractDataGraph)
+    copy_graph = similar_graph(graph)
+    copyto!(copy_graph, graph)
+    return graph
+end
+
 function Base.copyto!(dst_graph::AbstractDataGraph, src_graph::AbstractDataGraph)
     vertex_data(dst_graph) .= vertex_data(src_graph)
     edge_data(dst_graph) .= edge_data(src_graph)
     return dst_graph
+end
+function Base.copyto!(
+        graph_dst::AbstractDataGraph,
+        dict_src::Union{Dict, AbstractDictionary},
+        dimnames = keys(dict_src)
+    )
+    for key in dimnames
+        graph_dst[key] = dict_src[key]
+    end
+    return graph_dst
 end
 
 # Graphs overloads
@@ -110,8 +127,8 @@ GraphsExtensions.convert_vertextype(::Type, ::AbstractDataGraph) = not_implement
 
 function Base.:(==)(dg1::AbstractDataGraph, dg2::AbstractDataGraph)
     underlying_graph(dg1) == underlying_graph(dg2) || return false
-    vertex_data(dg1) == vertex_data(dg2) || return false
-    edge_data(dg1) == edge_data(dg2) || return false
+    assigned_vertex_data(dg1) == assigned_vertex_data(dg2) || return false
+    assigned_edge_data(dg1) == assigned_edge_data(dg2) || return false
     return true
 end
 
