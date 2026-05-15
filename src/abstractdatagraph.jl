@@ -22,12 +22,15 @@ edge_data_type(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
 # TODO: Define for `AbstractGraph` as a `DataGraphInterface`.
 underlying_graph(::AbstractDataGraph) = not_implemented()
 
+# `isassigned`
 is_vertex_assigned(::AbstractDataGraph, vertex) = not_implemented()
 is_edge_assigned(::AbstractDataGraph, edge) = not_implemented()
 
+# `getindex`
 get_vertex_data(::AbstractDataGraph, vertex) = not_implemented()
 get_edge_data(::AbstractDataGraph, edge) = not_implemented()
 
+# `setindex!`
 set_vertex_data!(::AbstractDataGraph, data, vertex) = not_implemented()
 set_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 
