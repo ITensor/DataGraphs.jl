@@ -6,7 +6,7 @@ include("dataview.jl")
 include("abstractdatagraph.jl")
 include("indexing.jl")
 include("datagraph.jl")
-include("abstractindexdatagraph.jl")
+include("abstractedgeorvertexdatagraph.jl")
 include("vertexdatagraph.jl")
 include("edgedatagraph.jl")
 # TODO: Turn into an extension once `PartitionedGraphs` is excised.
