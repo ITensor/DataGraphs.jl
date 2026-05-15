@@ -1,4 +1,10 @@
+using Dictionaries: Dictionaries, Indices, set!
+using Graphs: edges, edgetype, has_edge, has_vertex, rem_edge!, rem_vertex!, vertices
+using NamedGraphs: NamedGraphs, Vertices, similar_graph, subgraph_edges, to_graph_index
+
 abstract type AbstractVertexOrEdgeDataGraph{I, T, V} <: AbstractDataGraph{V, T, T} end
+
+Graphs.edgetype(graph::AbstractVertexOrEdgeDataGraph) = edgetype(typeof(graph))
 
 function NamedGraphs.similar_graph(
         graph::AbstractVertexOrEdgeDataGraph,
