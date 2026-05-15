@@ -1,8 +1,136 @@
+abstract type AbstractVertexOrEdgeDataGraph{I, T, V} <: AbstractDataGraph{V, T, T} end
+
+function NamedGraphs.similar_graph(
+        graph::AbstractVertexOrEdgeDataGraph,
+        T::Type
+    )
+    return similar_graph(graph, T, vertices(graph))
+end
+
+function NamedGraphs.similar_graph(
+        graph::AbstractVertexOrEdgeDataGraph,
+        T::Type,
+        vertices
+    )
+    return similar_graph(graph, T, Vertices(vertices))
+end
+
+function Base.:(==)(dg1::AbstractVertexOrEdgeDataGraph, dg2::AbstractVertexOrEdgeDataGraph)
+    return underlying_graph(dg1) == underlying_graph(dg2) &&
+        index_data(dg1) == index_data(dg2)
+end
+
+function copyto!_indexdatagraph(
+        dst::AbstractVertexOrEdgeDataGraph,
+        src, # not a graph.
+        dimnames = nothing
+    )
+    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
+    view(index_data(dst), dimnames) .= view(src, dimnames)
+    return dst
+end
+
+function Base.copyto!(
+        graph_dst::G,
+        graph_src::G,
+        dimnames = nothing
+    ) where {G <: AbstractVertexOrEdgeDataGraph}
+    copyto!_indexdatagraph(graph_dst, index_data(graph_src), dimnames)
+    return graph_dst
+end
+function Base.copyto!(
+        graph_dst::AbstractVertexOrEdgeDataGraph,
+        dictionary_src::AbstractDictionary,
+        dimnames = nothing
+    )
+    copyto!_indexdatagraph(graph_dst, dictionary_src, dimnames)
+    return graph_dst
+end
+
+Base.iterate(graph::AbstractVertexOrEdgeDataGraph) = iterate(index_data(graph))
+function Base.iterate(graph::AbstractVertexOrEdgeDataGraph, state)
+    return iterate(index_data(graph), state)
+end
+
+Base.keytype(graph::AbstractVertexOrEdgeDataGraph) = keytype(typeof(graph))
+Base.keytype(::Type{<:AbstractVertexOrEdgeDataGraph{I, T, V}}) where {I, T, V} = I
+
+Base.valtype(graph::AbstractVertexOrEdgeDataGraph) = valtype(typeof(graph))
+Base.valtype(::Type{<:AbstractVertexOrEdgeDataGraph{I, T, V}}) where {I, T, V} = T
+
+Base.eltype(graph::AbstractVertexOrEdgeDataGraph) = eltype(typeof(graph))
+Base.eltype(::Type{<:AbstractVertexOrEdgeDataGraph{I, T, V}}) where {I, T, V} = T
+
+Base.length(graph::AbstractVertexOrEdgeDataGraph) = length(index_data(graph))
+Base.keys(graph::AbstractVertexOrEdgeDataGraph) = keys(index_data(graph))
+Base.values(graph::AbstractVertexOrEdgeDataGraph) = values(index_data(graph))
+
+Dictionaries.issettable(::AbstractVertexOrEdgeDataGraph) = true
+Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = true
+
+function Base.insert!(
+        graph::AbstractVertexOrEdgeDataGraph{I, T},
+        ind::I,
+        data::T
+    ) where {I, T}
+    insert!_datagraph(graph, to_graph_index(graph, ind), data)
+    return graph
+end
+function Base.delete!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::T) where {I, T}
+    delete!_datagraph(graph, to_graph_index(graph, ind))
+    return graph
+end
+# function Dictionaries.set!(graph::AbstractVertexOrEdgeDataGraph, ind)
+#     set!_datagraph(graph, to_graph_index(graph, ind))
+#     return graph
+# end
+
 # ================================== vertex data graph =================================== #
 
-const AbstractVertexDataGraph{V, VD} = AbstractDataGraph{V, VD, Nothing}
+abstract type AbstractVertexDataGraph{V, T} <: AbstractVertexOrEdgeDataGraph{V, T, V} end
 
 is_edge_assigned(::AbstractVertexDataGraph, _edge) = false
+
+# `setindex!`
+function set_index_data!(graph::AbstractVertexDataGraph, data, vertex)
+    if !has_vertex(graph, vertex)
+        throw(IndexError("Graph does not contain vertex $vertex"))
+    else
+        set_vertex_data!(graph, data, vertex)
+    end
+    return graph
+end
+
+# `insert!`
+function insert!_datagraph(graph::AbstractVertexDataGraph, vertex, data)
+    if has_vertex(graph, vertex)
+        throw(IndexError("Graph already contains vertex $vertex"))
+    else
+        add_vertex!(graph, vertex)
+        setindex!(graph, data, vertex)
+    end
+    return graph
+end
+
+# `delete!`
+function delete!_datagraph(graph::AbstractVertexDataGraph, vertex)
+    if !has_vertex(graph, vertex)
+        throw(IndexError("Graph does not contain vertex $vertex"))
+    else
+        rem_vertex!(graph, vertex)
+    end
+    return graph
+end
+
+# # `set!`
+# function set!_datagraph(graph::AbstractVertexDataGraph, data, vertex)
+#     if has_vertex(graph, vertex)
+#         set_vertex_data!(graph, vertex, data)
+#     else
+#         insert!_datagraph(graph, vertex, data)
+#     end
+#     return graph
+# end
 
 # For ambiguity resolution.
 function NamedGraphs.similar_graph(
@@ -64,9 +192,50 @@ end
 
 # =================================== edge data graph ==================================== #
 
-const AbstractEdgeDataGraph{V, ED} = AbstractDataGraph{V, Nothing, ED}
+abstract type AbstractEdgeDataGraph{E, T, V} <: AbstractVertexOrEdgeDataGraph{E, T, V} end
 
 is_vertex_assigned(::AbstractEdgeDataGraph, _vertex) = false
+
+# `setindex!`
+function set_index_data!(graph::AbstractEdgeDataGraph, data, edge::AbstractEdge)
+    if !has_edge(graph, edge)
+        throw(IndexError("Graph does not contain edge $edge"))
+    else
+        set_edge_data!(graph, data, edge)
+    end
+    return graph
+end
+
+# `insert!`
+function insert!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
+    if has_edge(graph, edge)
+        throw(IndexError("Graph already contains edge $edge"))
+    else
+        add_edge!(graph, edge)
+        setindex!(graph, data, edge)
+    end
+    return graph
+end
+
+# `delete!`
+function delete!_datagraph(graph::AbstractEdgeDataGraph, edge)
+    if !has_edge(graph, edge)
+        throw(IndexError("Graph does not contain edge $edge"))
+    else
+        rem_edge!(graph, edge)
+    end
+    return graph
+end
+#
+# # `set!`
+# function set!_datagraph(graph::AbstractEdgeDataGraph, data, edge::AbstractEdge)
+#     if has_edge(graph, edge)
+#         set_edge_data!(graph, edge, data)
+#     else
+#         insert!_datagraph(graph, edge, data)
+#     end
+#     return graph
+# end
 
 # For ambiguity resolution.
 function NamedGraphs.similar_graph(
@@ -131,69 +300,13 @@ function Base.show(io::IO, mime::MIME"text/plain", graph::AbstractEdgeDataGraph)
     return nothing
 end
 
-# ============================= index graph (vertex or edge) ============================= #
+# ============================== Dictionaries.jl interface =============================== #
 
-const AbstractIndexDataGraph{V, T} =
-    Union{AbstractVertexDataGraph{V, T}, AbstractEdgeDataGraph{V, T}}
-
-function NamedGraphs.similar_graph(
-        graph::AbstractIndexDataGraph,
-        T::Type
-    )
-    return similar_graph(graph, T, vertices(graph))
-end
-
-function NamedGraphs.similar_graph(
-        graph::AbstractIndexDataGraph,
-        T::Type,
-        vertices
-    )
-    return similar_graph(graph, T, Vertices(vertices))
-end
-
-function Base.:(==)(dg1::AbstractIndexDataGraph, dg2::AbstractIndexDataGraph)
-    return underlying_graph(dg1) == underlying_graph(dg2) &&
-        index_data(dg1) == index_data(dg2)
-end
-
-function copyto!_indexdatagraph(
-        dst::AbstractIndexDataGraph,
-        src, # not a graph.
-        dimnames = nothing
-    )
-    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
-    view(index_data(dst), dimnames) .= view(src, dimnames)
-    return dst
-end
-
-function Base.copyto!(
-        graph_dst::G,
-        graph_src::G,
-        dimnames = nothing
-    ) where {G <: AbstractIndexDataGraph}
-    copyto!_indexdatagraph(graph_dst, index_data(graph_src), dimnames)
-    return graph_dst
-end
-function Base.copyto!(
-        graph_dst::AbstractIndexDataGraph,
-        dictionary_src::AbstractDictionary,
-        dimnames = nothing
-    )
-    copyto!_indexdatagraph(graph_dst, dictionary_src, dimnames)
-    return graph_dst
-end
-
-Base.iterate(graph::AbstractIndexDataGraph) = iterate(index_data(graph))
-Base.iterate(graph::AbstractIndexDataGraph, state) = iterate(index_data(graph), state)
-
-Base.keytype(::AbstractIndexDataGraph{V, T}) where {V, T} = V
-Base.keytype(::Type{<:AbstractIndexDataGraph{V, T}}) where {V, T} = V
-
-Base.valtype(::AbstractIndexDataGraph{V, T}) where {V, T} = T
-Base.valtype(::Type{<:AbstractIndexDataGraph{V, T}}) where {V, T} = T
-
-Base.eltype(::AbstractIndexDataGraph{V, T}) where {V, T} = T
-Base.eltype(::Type{<:AbstractIndexDataGraph{V, T}}) where {V, T} = T
-
-Base.keys(graph::AbstractIndexDataGraph) = keys(index_data(graph))
-Base.length(graph::AbstractIndexDataGraph) = length(index_data(graph))
+# Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = true
+# function Dictionaries.insert!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::I, value::T)
+#     insert_graph_index!(graph, ind, value)
+#     return graph
+# end
+# function Dictionaries.delete!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::I, value::T)
+#     return graph
+# end
