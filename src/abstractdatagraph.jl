@@ -61,9 +61,7 @@ function assigned_edges(graph::AbstractGraph)
     return Indices(filter(e -> isassigned(graph, e), edges(graph)))
 end
 
-function Graphs.edgetype(graph::AbstractDataGraph)
-    return Graphs.edgetype(underlying_graph(graph))
-end
+Graphs.edgetype(graph::AbstractDataGraph) = edgetype(typeof(graph))
 function Graphs.edgetype(graph_type::Type{<:AbstractDataGraph})
     return edgetype(underlying_graph_type(graph_type))
 end

@@ -1,7 +1,7 @@
 using Dictionaries: Dictionary, set!
-using Graphs: Graphs, rem_vertex!
+using Graphs: Graphs, has_edge, rem_vertex!
 using NamedGraphs:
-    NamedDiGraph, NamedGraph, ordered_vertices, position_graph, vertex_positions
+    NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph, vertex_positions
 
 struct VertexDataGraph{V, T} <: AbstractVertexDataGraph{V, T}
     underlying_graph::NamedGraph{V}
@@ -48,8 +48,17 @@ Graphs.is_directed(::Type{<:VertexDataDiGraph}) = true
 
 # ====================================== Graphs.jl ======================================= #
 
+Graphs.edgetype(::Type{<:GenericVertexDataGraph{V, T}}) where {V, T} = NamedEdge{V}
+
+function Graphs.has_vertex(graph::GenericVertexDataGraph, vertex)
+    return has_vertex(graph.underlying_graph, vertex)
+end
+function Graphs.has_edge(graph::GenericVertexDataGraph, edge::NamedEdge)
+    return has_edge(graph.underlying_graph, edge)
+end
+
 function Graphs.rem_vertex!(graph::GenericVertexDataGraph, vertex)
-    delete!(graph.vertex_data, vertex)
+    unset!(graph.vertex_data, vertex)
     rem_vertex!(graph.underlying_graph, vertex)
     return graph
 end
@@ -78,7 +87,9 @@ underlying_graph(graph::VertexDataDiGraph) = getfield(graph, :underlying_graph)
 vertex_data_type(::Type{<:GenericVertexDataGraph{V, T}}) where {V, T} = T
 
 function set_vertex_data!(graph::GenericVertexDataGraph, data, vertex)
-    graph.vertex_data[vertex] = data
+    # We use an upsert here as we have already checked if the vertex (i.e. key) exists,
+    # but it might not exist in the internal `Dictionary`, so add it if not.
+    set!(graph.vertex_data, vertex, data)
     return graph
 end
 
@@ -88,3 +99,17 @@ function is_vertex_assigned(graph::GenericVertexDataGraph, vertex)
     return isassigned(graph.vertex_data, vertex)
 end
 is_edge_assigned(::GenericVertexDataGraph, _edge) = false
+
+# =================================== Dictionaries.jl ==================================== #
+
+Dictionaries.isinsertable(::Type{<:GenericVertexDataGraph}, _edge) = true
+
+function insert_vertex_data!(graph::AbstractVertexDataGraph, vertex, data)
+    if has_vertex(graph, vertex)
+        throw(IndexError("Graph already contains vertex $vertex"))
+    else
+        add_vertex!(graph.underlying_graph, vertex)
+        insert!(graph.vertex_data, vertex, data)
+    end
+    return graph
+end

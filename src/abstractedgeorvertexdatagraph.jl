@@ -20,16 +20,6 @@ function Base.:(==)(dg1::AbstractVertexOrEdgeDataGraph, dg2::AbstractVertexOrEdg
         index_data(dg1) == index_data(dg2)
 end
 
-function copyto!_indexdatagraph(
-        dst::AbstractVertexOrEdgeDataGraph,
-        src, # not a graph.
-        dimnames = nothing
-    )
-    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
-    view(index_data(dst), dimnames) .= view(src, dimnames)
-    return dst
-end
-
 function Base.copyto!(
         graph_dst::G,
         graph_src::G,
@@ -66,7 +56,7 @@ Base.keys(graph::AbstractVertexOrEdgeDataGraph) = keys(index_data(graph))
 Base.values(graph::AbstractVertexOrEdgeDataGraph) = values(index_data(graph))
 
 Dictionaries.issettable(::AbstractVertexOrEdgeDataGraph) = true
-Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = true
+Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = false
 
 function Base.insert!(
         graph::AbstractVertexOrEdgeDataGraph{I, T},
@@ -80,10 +70,11 @@ function Base.delete!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::T) where 
     delete!_datagraph(graph, to_graph_index(graph, ind))
     return graph
 end
-# function Dictionaries.set!(graph::AbstractVertexOrEdgeDataGraph, ind)
-#     set!_datagraph(graph, to_graph_index(graph, ind))
-#     return graph
-# end
+
+function Dictionaries.set!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
+    set!_datagraph(graph, to_graph_index(graph, ind), data)
+    return graph
+end
 
 # ================================== vertex data graph =================================== #
 
@@ -103,12 +94,7 @@ end
 
 # `insert!`
 function insert!_datagraph(graph::AbstractVertexDataGraph, vertex, data)
-    if has_vertex(graph, vertex)
-        throw(IndexError("Graph already contains vertex $vertex"))
-    else
-        add_vertex!(graph, vertex)
-        setindex!(graph, data, vertex)
-    end
+    insert_vertex_data!(graph, vertex, data)
     return graph
 end
 
@@ -122,15 +108,25 @@ function delete!_datagraph(graph::AbstractVertexDataGraph, vertex)
     return graph
 end
 
-# # `set!`
-# function set!_datagraph(graph::AbstractVertexDataGraph, data, vertex)
-#     if has_vertex(graph, vertex)
-#         set_vertex_data!(graph, vertex, data)
-#     else
-#         insert!_datagraph(graph, vertex, data)
-#     end
-#     return graph
-# end
+# `set!`
+function set!_datagraph(graph::AbstractVertexDataGraph, vertex, data)
+    if has_vertex(graph, vertex)
+        set_vertex_data!(graph, data, vertex)
+    else
+        insert_vertex_data!(graph, vertex, data)
+    end
+    return graph
+end
+
+function copyto!_indexdatagraph(
+        dst::AbstractVertexDataGraph,
+        src, # not a graph.
+        dimnames = nothing
+    )
+    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
+    view(index_data(dst), dimnames) .= view(src, dimnames)
+    return dst
+end
 
 # For ambiguity resolution.
 function NamedGraphs.similar_graph(
@@ -208,12 +204,7 @@ end
 
 # `insert!`
 function insert!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    if has_edge(graph, edge)
-        throw(IndexError("Graph already contains edge $edge"))
-    else
-        add_edge!(graph, edge)
-        setindex!(graph, data, edge)
-    end
+    insert_edge_data!(graph, edge, data)
     return graph
 end
 
@@ -226,16 +217,29 @@ function delete!_datagraph(graph::AbstractEdgeDataGraph, edge)
     end
     return graph
 end
-#
-# # `set!`
-# function set!_datagraph(graph::AbstractEdgeDataGraph, data, edge::AbstractEdge)
-#     if has_edge(graph, edge)
-#         set_edge_data!(graph, edge, data)
-#     else
-#         insert!_datagraph(graph, edge, data)
-#     end
-#     return graph
-# end
+
+# `set!`
+function set!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
+    if has_edge(graph, edge)
+        set_edge_data!(graph, data, edge)
+    else
+        insert_edge_data!(graph, edge, data)
+    end
+    return graph
+end
+
+function copyto!_indexdatagraph(
+        dst::AbstractEdgeDataGraph,
+        src, # not a graph.
+        dimnames = nothing
+    )
+    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
+    # In analogy to SparseArrays, we allow `copyto!` to add in missing edges.
+    for edge in dimnames
+        set!(dst, edge, src[edge])
+    end
+    return dst
+end
 
 # For ambiguity resolution.
 function NamedGraphs.similar_graph(
@@ -273,7 +277,6 @@ function NamedGraphs.induced_subgraph_from_vertices(
     )
     subnetwork = similar_graph(graph, subvertices)
     subedges = subgraph_edges(graph, subvertices)
-    add_edges!(subnetwork, subedges)
 
     tensors = view(edge_data(graph), Indices(subedges))
 
@@ -299,14 +302,3 @@ function Base.show(io::IO, mime::MIME"text/plain", graph::AbstractEdgeDataGraph)
     show(io, mime, edge_data(graph))
     return nothing
 end
-
-# ============================== Dictionaries.jl interface =============================== #
-
-# Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = true
-# function Dictionaries.insert!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::I, value::T)
-#     insert_graph_index!(graph, ind, value)
-#     return graph
-# end
-# function Dictionaries.delete!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::I, value::T)
-#     return graph
-# end
