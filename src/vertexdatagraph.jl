@@ -122,12 +122,8 @@ for GType in (:VertexDataGraph, :VertexDataDiGraph)
         Dictionaries.isinsertable(::Type{<:$GType}, _edge) = true
 
         function insert_vertex_data!(graph::$GType, vertex, data)
-            if has_vertex(graph, vertex)
-                throw(IndexError("Graph already contains vertex $vertex"))
-            else
-                add_vertex!(graph.underlying_graph, vertex)
-                insert!(graph.vertex_data, vertex, data)
-            end
+            add_vertex!(graph.underlying_graph, vertex)
+            insert!(graph.vertex_data, vertex, data)
             return graph
         end
     end

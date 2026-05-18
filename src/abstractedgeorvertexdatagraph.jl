@@ -91,6 +91,9 @@ end
 
 # `insert!`
 function insert!_datagraph(graph::AbstractVertexDataGraph, vertex, data)
+    if has_vertex(graph, vertex)
+        throw(IndexError("Graph already contains vertex $vertex"))
+    end
     insert_vertex_data!(graph, vertex, data)
     return graph
 end
