@@ -142,15 +142,12 @@ function NamedGraphs.similar_graph(
 end
 
 function NamedGraphs.similar_graph(
-        graph::AbstractVertexDataGraph,
+        ::AbstractVertexDataGraph,
         T::Type,
         vertices::Vertices
     )
-    return DataGraph(
-        similar_graph(underlying_graph(graph), collect(vertices));
-        vertex_data_type = Nothing,
-        edge_data_type = T
-    )
+    V = eltype(vertices)
+    return similar_graph(VertexDataGraph{V, T}, vertices)
 end
 
 function NamedGraphs.induced_subgraph_from_vertices(
@@ -262,11 +259,9 @@ function NamedGraphs.similar_graph(
         T::Type,
         vertices::Vertices
     )
-    return DataGraph(
-        similar_graph(underlying_graph(graph), collect(vertices));
-        vertex_data_type = Nothing,
-        edge_data_type = T
-    )
+    V = eltype(vertices)
+    E = convert_vertextype(V, edgetype(graph))
+    return similar_graph(EdgeDataGraph{E, T, V}, collect(vertices))
 end
 
 function NamedGraphs.induced_subgraph_from_vertices(
