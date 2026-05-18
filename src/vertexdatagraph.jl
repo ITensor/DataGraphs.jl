@@ -35,74 +35,91 @@ end
 VertexDataDiGraph(data) = VertexDataDiGraph{keytype(data)}(data)
 VertexDataDiGraph{V}(data) where {V} = VertexDataDiGraph{V, valtype(data)}(data)
 
-const GenericVertexDataGraph{V, T} = Union{VertexDataGraph{V, T}, VertexDataDiGraph{V, T}}
-
-function (GType::Type{<:GenericVertexDataGraph{V, T}})(data) where {V, T}
-    vertices = keys(data)
-    cache = GType(undef, vertices)
-    return copyto!(cache, data)
-end
-
 Graphs.is_directed(::Type{<:VertexDataGraph}) = false
 Graphs.is_directed(::Type{<:VertexDataDiGraph}) = true
 
+for GType in (:VertexDataGraph, :VertexDataDiGraph)
+    @eval begin
+        function $GType{V, T}(data) where {V, T}
+            vertices = keys(data)
+            cache = $GType{V, T}(undef, vertices)
+            return copyto!(cache, data)
+        end
+    end
+end
+
 # ====================================== Graphs.jl ======================================= #
 
-Graphs.edgetype(::Type{<:GenericVertexDataGraph{V, T}}) where {V, T} = NamedEdge{V}
+for GType in (:VertexDataGraph, :VertexDataDiGraph)
+    @eval begin
+        Graphs.edgetype(::Type{<:$GType{V, T}}) where {V, T} = NamedEdge{V}
 
-function Graphs.has_vertex(graph::GenericVertexDataGraph, vertex)
-    return has_vertex(graph.underlying_graph, vertex)
-end
-function Graphs.has_edge(graph::GenericVertexDataGraph, edge::NamedEdge)
-    return has_edge(graph.underlying_graph, edge)
-end
+        function Graphs.has_vertex(graph::$GType, vertex)
+            return has_vertex(graph.underlying_graph, vertex)
+        end
+        function Graphs.has_edge(graph::$GType, edge::NamedEdge)
+            return has_edge(graph.underlying_graph, edge)
+        end
 
-function Graphs.rem_vertex!(graph::GenericVertexDataGraph, vertex)
-    unset!(graph.vertex_data, vertex)
-    rem_vertex!(graph.underlying_graph, vertex)
-    return graph
-end
+        function Graphs.rem_vertex!(graph::$GType, vertex)
+            unset!(graph.vertex_data, vertex)
+            rem_vertex!(graph.underlying_graph, vertex)
+            return graph
+        end
 
-Graphs.vertices(graph::GenericVertexDataGraph) = vertices(graph.underlying_graph)
+        Graphs.vertices(graph::$GType) = vertices(graph.underlying_graph)
+    end
+end
 
 # ==================================== NamedGraphs.jl ==================================== #
 
-function NamedGraphs.vertex_positions(graph::GenericVertexDataGraph)
-    return vertex_positions(graph.underlying_graph)
-end
+for GType in (:VertexDataGraph, :VertexDataDiGraph)
+    @eval begin
+        function NamedGraphs.vertex_positions(graph::$GType)
+            return vertex_positions(graph.underlying_graph)
+        end
 
-function NamedGraphs.ordered_vertices(graph::GenericVertexDataGraph)
-    return ordered_vertices(graph.underlying_graph)
-end
+        function NamedGraphs.ordered_vertices(graph::$GType)
+            return ordered_vertices(graph.underlying_graph)
+        end
 
-function NamedGraphs.position_graph(graph::GenericVertexDataGraph)
-    return position_graph(graph.underlying_graph)
+        function NamedGraphs.position_graph(graph::$GType)
+            return position_graph(graph.underlying_graph)
+        end
+    end
 end
 
 # ==================================== DataGraphs.jl ===================================== #
 
-underlying_graph(graph::VertexDataGraph) = getfield(graph, :underlying_graph)
-underlying_graph(graph::VertexDataDiGraph) = getfield(graph, :underlying_graph)
+for GType in (:VertexDataGraph, :VertexDataDiGraph)
+    @eval begin
+        underlying_graph(graph::$GType) = getfield(graph, :underlying_graph)
 
-vertex_data_type(::Type{<:GenericVertexDataGraph{V, T}}) where {V, T} = T
+        vertex_data_type(::Type{<:$GType{V, T}}) where {V, T} = T
 
-function set_vertex_data!(graph::GenericVertexDataGraph, data, vertex)
-    # We use an upsert here as we have already checked if the vertex (i.e. key) exists,
-    # but it might not exist in the internal `Dictionary`, so add it if not.
-    set!(graph.vertex_data, vertex, data)
-    return graph
+        function set_vertex_data!(graph::$GType, data, vertex)
+            # We use an upsert here as we have already checked if the vertex (i.e. key) exists,
+            # but it might not exist in the internal `Dictionary`, so add it if not.
+            set!(graph.vertex_data, vertex, data)
+            return graph
+        end
+
+        get_vertex_data(graph::$GType, vertex) = graph.vertex_data[vertex]
+
+        function is_vertex_assigned(graph::$GType, vertex)
+            return isassigned(graph.vertex_data, vertex)
+        end
+        is_edge_assigned(::$GType, _edge) = false
+    end
 end
-
-get_vertex_data(graph::GenericVertexDataGraph, vertex) = graph.vertex_data[vertex]
-
-function is_vertex_assigned(graph::GenericVertexDataGraph, vertex)
-    return isassigned(graph.vertex_data, vertex)
-end
-is_edge_assigned(::GenericVertexDataGraph, _edge) = false
 
 # =================================== Dictionaries.jl ==================================== #
 
-Dictionaries.isinsertable(::Type{<:GenericVertexDataGraph}, _edge) = true
+for GType in (:VertexDataGraph, :VertexDataDiGraph)
+    @eval begin
+        Dictionaries.isinsertable(::Type{<:$GType}, _edge) = true
+    end
+end
 
 function insert_vertex_data!(graph::AbstractVertexDataGraph, vertex, data)
     if has_vertex(graph, vertex)

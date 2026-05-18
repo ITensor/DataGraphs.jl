@@ -39,74 +39,92 @@ EdgeDataDiGraph{I, T}(data) where {I, T} = EdgeDataDiGraph{I, T, vertextype(I)}(
 
 Graphs.is_directed(::Type{<:EdgeDataDiGraph}) = true
 
-const GenericEdgeDataGraph{I, T, V} =
-    Union{EdgeDataGraph{I, T, V}, EdgeDataDiGraph{I, T, V}}
-
-function (GType::Type{<:GenericEdgeDataGraph{I, T, V}})(data) where {I, T, V}
-    edges = keys(data)
-    vertices = union(src.(edges), dst.(edges))
-    graph = GType(undef, vertices)
-    copyto!(graph, data)
-    return graph
+for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
+    @eval begin
+        function $GType{E, T, V}(data) where {V, E <: NamedEdge{V}, T}
+            edges = keys(data)
+            vertices = union(src.(edges), dst.(edges))
+            graph = $GType{E, T, V}(undef, vertices)
+            copyto!(graph, data)
+            return graph
+        end
+    end
 end
 
 # ====================================== Graphs.jl ======================================= #
-Graphs.edgetype(::Type{<:GenericEdgeDataGraph{I, T}}) where {I, T} = I
 
-function Graphs.has_vertex(graph::GenericEdgeDataGraph, vertex)
-    return has_vertex(graph.underlying_graph, vertex)
-end
-function Graphs.has_edge(graph::GenericEdgeDataGraph, edge::NamedEdge)
-    return has_edge(graph.underlying_graph, edge)
-end
+for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
+    @eval begin
+        Graphs.edgetype(::Type{<:$GType{I, T, V}}) where {I, T, V} = I
 
-function Graphs.rem_edge!(graph::GenericEdgeDataGraph, edge)
-    unset!(graph.edge_data, edge)
-    rem_edge!(graph.underlying_graph, edge)
-    return graph
-end
+        function Graphs.has_vertex(graph::$GType, vertex)
+            return has_vertex(graph.underlying_graph, vertex)
+        end
+        function Graphs.has_edge(graph::$GType, edge::NamedEdge)
+            return has_edge(graph.underlying_graph, edge)
+        end
 
-function Graphs.rem_vertex!(graph::GenericEdgeDataGraph, vertex)
-    for edge in incident_edges(graph, vertex)
-        unset!(graph.edge_data, edge)
+        function Graphs.rem_edge!(graph::$GType, edge)
+            unset!(graph.edge_data, edge)
+            rem_edge!(graph.underlying_graph, edge)
+            return graph
+        end
+
+        function Graphs.rem_vertex!(graph::$GType, vertex)
+            for edge in incident_edges(graph, vertex)
+                unset!(graph.edge_data, edge)
+            end
+            rem_vertex!(graph.underlying_graph, vertex)
+            return graph
+        end
+
+        Graphs.vertices(graph::$GType) = vertices(graph.underlying_graph)
     end
-    rem_vertex!(graph.underlying_graph, vertex)
-    return graph
 end
-
-Graphs.vertices(graph::GenericEdgeDataGraph) = vertices(graph.underlying_graph)
 
 # ==================================== NamedGraphs.jl ==================================== #
 
-function NamedGraphs.vertex_positions(graph::GenericEdgeDataGraph)
-    return vertex_positions(graph.underlying_graph)
-end
+for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
+    @eval begin
+        function NamedGraphs.vertex_positions(graph::$GType)
+            return vertex_positions(graph.underlying_graph)
+        end
 
-function NamedGraphs.ordered_vertices(graph::GenericEdgeDataGraph)
-    return ordered_vertices(graph.underlying_graph)
-end
+        function NamedGraphs.ordered_vertices(graph::$GType)
+            return ordered_vertices(graph.underlying_graph)
+        end
 
-function NamedGraphs.position_graph(graph::GenericEdgeDataGraph)
-    return position_graph(graph.underlying_graph)
+        function NamedGraphs.position_graph(graph::$GType)
+            return position_graph(graph.underlying_graph)
+        end
+    end
 end
 
 # ==================================== DataGraphs.jl ===================================== #
 
-edge_data_type(::Type{<:GenericEdgeDataGraph{I, T}}) where {I, T} = T
+for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
+    @eval begin
+        edge_data_type(::Type{<:$GType{I, T, V}}) where {I, T, V} = T
 
-function set_edge_data!(graph::GenericEdgeDataGraph, data, edge)
-    graph.edge_data[edge] = data
-    return graph
+        function set_edge_data!(graph::$GType, data, edge)
+            graph.edge_data[edge] = data
+            return graph
+        end
+
+        get_edge_data(graph::$GType, edge) = graph.edge_data[edge]
+
+        is_vertex_assigned(::$GType, _vertex) = false
+        is_edge_assigned(graph::$GType, edge) = isassigned(graph.edge_data, edge)
+    end
 end
-
-get_edge_data(graph::GenericEdgeDataGraph, edge) = graph.edge_data[edge]
-
-is_vertex_assigned(::GenericEdgeDataGraph, _vertex) = false
-is_edge_assigned(graph::GenericEdgeDataGraph, edge) = isassigned(graph.edge_data, edge)
 
 # =================================== Dictionaries.jl ==================================== #
 
-Dictionaries.isinsertable(::Type{<:GenericEdgeDataGraph}, _edge) = true
+for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
+    @eval begin
+        Dictionaries.isinsertable(::Type{<:$GType}, _edge) = true
+    end
+end
 
 function insert_edge_data!(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
     if has_edge(graph, edge)
