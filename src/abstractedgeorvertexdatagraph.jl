@@ -134,7 +134,7 @@ end
 function NamedGraphs.similar_graph(
         graph::AbstractVertexDataGraph,
         VD::Type,
-        ::Type{<:Nothing},
+        ::Type{Nothing},
         vertices
     )
     return similar_graph(graph, VD, vertices)
@@ -248,7 +248,7 @@ end
 
 function NamedGraphs.similar_graph(
         graph::AbstractEdgeDataGraph,
-        ::Type{<:Nothing},
+        ::Type{Nothing},
         ED::Type,
         vertices
     )
