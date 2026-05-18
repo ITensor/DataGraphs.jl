@@ -91,9 +91,9 @@ end
 function Base.copyto!(
         graph_dst::AbstractDataGraph,
         dict_src::Union{Dict, AbstractDictionary},
-        dimnames = keys(dict_src)
+        keynames = keys(dict_src)
     )
-    for key in dimnames
+    for key in keynames
         graph_dst[key] = dict_src[key]
     end
     return graph_dst

@@ -29,17 +29,11 @@ end
 function Base.copyto!(
         graph_dst::G,
         graph_src::G,
-        dimnames = nothing
+        keynames = nothing
     ) where {G <: AbstractVertexOrEdgeDataGraph}
-    copyto!_indexdatagraph(graph_dst, index_data(graph_src), dimnames)
-    return graph_dst
-end
-function Base.copyto!(
-        graph_dst::AbstractVertexOrEdgeDataGraph,
-        dictionary_src::AbstractDictionary,
-        dimnames = nothing
-    )
-    copyto!_indexdatagraph(graph_dst, dictionary_src, dimnames)
+    dict_src = index_data(graph_src)
+    keynames = isnothing(keynames) ? keys(dict_src) : keynames
+    copyto!(graph_dst, dict_src, keynames)
     return graph_dst
 end
 
@@ -130,16 +124,6 @@ function set!_datagraph(graph::AbstractVertexDataGraph, vertex, data)
     return graph
 end
 
-function copyto!_indexdatagraph(
-        dst::AbstractVertexDataGraph,
-        src, # not a graph.
-        dimnames = nothing
-    )
-    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
-    view(index_data(dst), dimnames) .= view(src, dimnames)
-    return dst
-end
-
 # For ambiguity resolution.
 function NamedGraphs.similar_graph(
         graph::AbstractVertexDataGraph,
@@ -206,8 +190,12 @@ is_vertex_assigned(::AbstractEdgeDataGraph, _vertex) = false
 
 # `setindex!`
 function set_index_data!(graph::AbstractEdgeDataGraph, data, edge::AbstractEdge)
-    if !has_edge(graph, edge)
-        throw(IndexError("Graph does not contain edge $edge"))
+    v1 = src(edge)
+    v2 = dst(edge)
+    if !has_vertex(graph, v1)
+        throw(IndexError("Graph does not contain vertex $v1"))
+    elseif !has_vertex(graph, v2)
+        throw(IndexError("Graph does not contain vertex $v2"))
     else
         set_edge_data!(graph, data, edge)
     end
@@ -216,7 +204,21 @@ end
 
 # `insert!`
 function insert!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    insert_edge_data!(graph, edge, data)
+    v1 = src(edge)
+    v2 = dst(edge)
+    if has_vertex(graph, v1) && has_vertex(graph, v2)
+        throw(IndexError("Graph already contains vertices $v1 and $v2"))
+    else
+        insert_edge_data!(graph, edge, data)
+    end
+    return graph
+end
+function insert_edge_data!(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
+    v1 = src(edge)
+    v2 = dst(edge)
+    has_vertex(graph, v1) || add_vertex!(graph, v1)
+    has_vertex(graph, v2) || add_vertex!(graph, v2)
+    set_edge_data!(graph, data, edge)
     return graph
 end
 
@@ -232,25 +234,12 @@ end
 
 # `set!`
 function set!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    if has_edge(graph, edge)
-        set_edge_data!(graph, data, edge)
-    else
+    if !has_vertex(graph, src(edge)) || !has_vertex(graph, dst(edge))
         insert_edge_data!(graph, edge, data)
+    else
+        set_edge_data!(graph, data, edge)
     end
     return graph
-end
-
-function copyto!_indexdatagraph(
-        dst::AbstractEdgeDataGraph,
-        src, # not a graph.
-        dimnames = nothing
-    )
-    dimnames = isnothing(dimnames) ? Indices(keys(src)) : Indices(dimnames)
-    # In analogy to SparseArrays, we allow `copyto!` to add in missing edges.
-    for edge in dimnames
-        set!(dst, edge, src[edge])
-    end
-    return dst
 end
 
 # For ambiguity resolution.

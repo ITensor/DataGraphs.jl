@@ -57,6 +57,9 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
         Graphs.edgetype(::Type{<:$GType{I, T, V}}) where {I, T, V} = I
 
+        function Graphs.add_vertex!(graph::$GType, vertex)
+            return add_vertex!(graph.underlying_graph, vertex)
+        end
         function Graphs.has_vertex(graph::$GType, vertex)
             return has_vertex(graph.underlying_graph, vertex)
         end
@@ -107,7 +110,9 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
         edge_data_type(::Type{<:$GType{I, T, V}}) where {I, T, V} = T
 
         function set_edge_data!(graph::$GType, data, edge)
-            graph.edge_data[edge] = data
+            # Edges `upsert` if vertices are present.
+            has_edge(graph, edge) || add_edge!(graph.underlying_graph, edge)
+            set!(graph.edge_data, edge, data)
             return graph
         end
 
@@ -124,14 +129,4 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
         Dictionaries.isinsertable(::Type{<:$GType}, _edge) = true
     end
-end
-
-function insert_edge_data!(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    if has_edge(graph, edge)
-        throw(IndexError("Graph already contains edge $edge"))
-    else
-        add_edge!(graph.underlying_graph, edge)
-        insert!(graph.edge_data, edge, data)
-    end
-    return graph
 end
