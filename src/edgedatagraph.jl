@@ -1,50 +1,50 @@
 using Graphs: dst, has_edge, rem_edge!, rem_vertex!, src
 using NamedGraphs: NamedEdge, NamedGraph, ordered_vertices, position_graph, vertex_positions
 
-struct EdgeDataGraph{E <: NamedEdge{V} where {V}, T, V} <: AbstractEdgeDataGraph{E, T, V}
+struct EdgeDataGraph{T, V} <: AbstractEdgeDataGraph{T, V}
     underlying_graph::NamedGraph{V}
-    edge_data::Dictionary{E, T}
-    function EdgeDataGraph{E, T, V}(
+    edge_data::Dictionary{NamedEdge{V}, T}
+    function EdgeDataGraph{T, V}(
             ::UndefInitializer,
             vertices
-        ) where {V, E <: NamedEdge{V}, T}
+        ) where {T, V}
         graph = NamedGraph{V}(vertices)
-        edge_data = Dictionary{E, T}()
-        return new{E, T, V}(graph, edge_data)
+        edge_data = Dictionary{NamedEdge{V}, T}()
+        return new{T, V}(graph, edge_data)
     end
 end
-
-EdgeDataGraph(data) = EdgeDataGraph{keytype(data)}(data)
-EdgeDataGraph{I}(data) where {I} = EdgeDataGraph{I, valtype(data)}(data)
-EdgeDataGraph{I, T}(data) where {I, T} = EdgeDataGraph{I, T, vertextype(I)}(data)
 
 Graphs.is_directed(::Type{<:EdgeDataGraph}) = false
 
-struct EdgeDataDiGraph{E <: NamedEdge{V} where {V}, T, V} <: AbstractEdgeDataGraph{E, T, V}
+struct EdgeDataDiGraph{T, V} <: AbstractEdgeDataGraph{T, V}
     underlying_graph::NamedDiGraph{V}
-    edge_data::Dictionary{E, T}
-    function EdgeDataDiGraph{E, T, V}(
+    edge_data::Dictionary{NamedEdge{V}, T}
+    function EdgeDataDiGraph{T, V}(
             ::UndefInitializer,
             vertices
-        ) where {V, E <: NamedEdge{V}, T}
+        ) where {T, V}
         graph = NamedDiGraph{V}(vertices)
-        edge_data = Dictionary{E, T}()
-        return new{E, T, V}(graph, edge_data)
+        edge_data = Dictionary{NamedEdge{V}, T}()
+        return new{T, V}(graph, edge_data)
     end
 end
-
-EdgeDataDiGraph(data) = EdgeDataDiGraph{keytype(data)}(data)
-EdgeDataDiGraph{I}(data) where {I} = EdgeDataDiGraph{I, valtype(data)}(data)
-EdgeDataDiGraph{I, T}(data) where {I, T} = EdgeDataDiGraph{I, T, vertextype(I)}(data)
 
 Graphs.is_directed(::Type{<:EdgeDataDiGraph}) = true
 
 for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
-        function $GType{E, T, V}(data) where {V, E <: NamedEdge{V}, T}
+        $GType(::UndefInitializer, vertices) = $GType{Any}(undef, vertices)
+        function $GType{T}(::UndefInitializer, vertices) where {T}
+            return $GType{T, eltype(vertices)}(undef, vertices)
+        end
+
+        $GType(data) = $GType{valtype(data)}(data)
+        $GType{T}(data) where {T} = $GType{T, vertextype(keytype(data))}(data)
+
+        function $GType{T, V}(data) where {T, V}
             edges = keys(data)
             vertices = union(src.(edges), dst.(edges))
-            graph = $GType{E, T, V}(undef, vertices)
+            graph = $GType{T, V}(undef, vertices)
             copyto!(graph, data)
             return graph
         end
@@ -55,7 +55,7 @@ end
 
 for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
-        Graphs.edgetype(::Type{<:$GType{I, T, V}}) where {I, T, V} = I
+        Graphs.edgetype(::Type{<:$GType{T, V}}) where {T, V} = NamedEdge{V}
 
         function Graphs.add_vertex!(graph::$GType, vertex)
             return add_vertex!(graph.underlying_graph, vertex)
@@ -107,7 +107,7 @@ end
 
 for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
-        edge_data_type(::Type{<:$GType{I, T, V}}) where {I, T, V} = T
+        edge_data_type(::Type{<:$GType{T}}) where {T} = T
 
         function set_edge_data!(graph::$GType, data, edge)
             # Edges `upsert` if vertices are present.

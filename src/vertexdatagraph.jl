@@ -3,46 +3,48 @@ using Graphs: Graphs, has_edge, rem_vertex!
 using NamedGraphs:
     NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph, vertex_positions
 
-struct VertexDataGraph{V, T} <: AbstractVertexDataGraph{V, T}
+struct VertexDataGraph{T, V} <: AbstractVertexDataGraph{T, V}
     underlying_graph::NamedGraph{V}
     vertex_data::Dictionary{V, T}
-    function VertexDataGraph{V, T}(
+    function VertexDataGraph{T, V}(
             ::UndefInitializer,
             vertices
-        ) where {V, T}
+        ) where {T, V}
         graph = NamedGraph{V}(vertices)
         vertex_data = Dictionary{V, T}()
-        return new{V, T}(graph, vertex_data)
+        return new{T, V}(graph, vertex_data)
     end
 end
 
-VertexDataGraph(data) = VertexDataGraph{keytype(data)}(data)
-VertexDataGraph{V}(data) where {V} = VertexDataGraph{V, valtype(data)}(data)
-
-struct VertexDataDiGraph{V, T} <: AbstractVertexDataGraph{V, T}
+struct VertexDataDiGraph{T, V} <: AbstractVertexDataGraph{T, V}
     underlying_graph::NamedDiGraph{V}
     vertex_data::Dictionary{V, T}
-    function VertexDataDiGraph{V, T}(
+    function VertexDataDiGraph{T, V}(
             ::UndefInitializer,
             vertices
-        ) where {V, T}
+        ) where {T, V}
         graph = NamedDiGraph{V}(vertices)
         vertex_data = Dictionary{V, T}()
-        return new{V, T}(graph, vertex_data)
+        return new{T, V}(graph, vertex_data)
     end
 end
-
-VertexDataDiGraph(data) = VertexDataDiGraph{keytype(data)}(data)
-VertexDataDiGraph{V}(data) where {V} = VertexDataDiGraph{V, valtype(data)}(data)
 
 Graphs.is_directed(::Type{<:VertexDataGraph}) = false
 Graphs.is_directed(::Type{<:VertexDataDiGraph}) = true
 
 for GType in (:VertexDataGraph, :VertexDataDiGraph)
     @eval begin
-        function $GType{V, T}(data) where {V, T}
+        $GType(::UndefInitializer, vertices) = $GType{Any}(undef, vertices)
+        function $GType{T}(::UndefInitializer, vertices) where {T}
+            return $GType{T, eltype(vertices)}(undef, vertices)
+        end
+
+        $GType(data) = $GType{valtype(data)}(data)
+        $GType{T}(data) where {T} = $GType{T, keytype(data)}(data)
+
+        function $GType{T, V}(data) where {T, V}
             vertices = keys(data)
-            cache = $GType{V, T}(undef, vertices)
+            cache = $GType{T, V}(undef, vertices)
             return copyto!(cache, data)
         end
     end
@@ -52,7 +54,7 @@ end
 
 for GType in (:VertexDataGraph, :VertexDataDiGraph)
     @eval begin
-        Graphs.edgetype(::Type{<:$GType{V, T}}) where {V, T} = NamedEdge{V}
+        Graphs.edgetype(::Type{<:$GType{T, V}}) where {T, V} = NamedEdge{V}
 
         function Graphs.has_vertex(graph::$GType, vertex)
             return has_vertex(graph.underlying_graph, vertex)
@@ -95,7 +97,7 @@ for GType in (:VertexDataGraph, :VertexDataDiGraph)
     @eval begin
         underlying_graph(graph::$GType) = getfield(graph, :underlying_graph)
 
-        vertex_data_type(::Type{<:$GType{V, T}}) where {V, T} = T
+        vertex_data_type(::Type{<:$GType{T}}) where {T} = T
 
         function set_vertex_data!(graph::$GType, data, vertex)
             # We use an upsert here as we have already checked if the vertex (i.e. key) exists,

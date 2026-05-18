@@ -12,8 +12,8 @@ using Test: @test, @test_throws, @testset
 @testset "VertexDataGraph and EdgeDataGraph" begin
     @testset "VertexDataGraph" begin
         @testset "undef constructor" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
-            @test g isa VertexDataGraph{Int, String}
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
+            @test g isa VertexDataGraph{String, Int}
             @test nv(g) == 3
             @test ne(g) == 0
             @test has_vertex(g, 1)
@@ -26,7 +26,7 @@ using Test: @test, @test_throws, @testset
         @testset "data constructor" begin
             data = Dictionary([1, 2, 3], ["V1", "V2", "V3"])
             g = VertexDataGraph(data)
-            @test g isa VertexDataGraph{Int, String}
+            @test g isa VertexDataGraph{String, Int}
             @test nv(g) == 3
             @test isassigned(g, 1)
             @test isassigned(g, 2)
@@ -37,7 +37,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "Graphs.jl interface" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
             @test !is_directed(VertexDataGraph)
             @test !is_directed(g)
             @test vertextype(g) == Int
@@ -60,7 +60,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "rem_vertex!" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
             add_edge!(g, NamedEdge(1, 2))
             rem_vertex!(g, 1)
             @test !has_vertex(g, 1)
@@ -69,10 +69,10 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "DataGraphs interface" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
             @test underlying_graph(g) isa NamedGraph{Int}
             @test vertex_data_type(g) == String
-            @test vertex_data_type(VertexDataGraph{Int, String}) == String
+            @test vertex_data_type(VertexDataGraph{String, Int}) == String
             @test !isassigned(g, 1)
             @test !isassigned(g, 2)
             @test !isassigned(g, 3)
@@ -81,7 +81,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "setindex! and getindex" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
             g[1] = "V1"
             g[2] = "V2"
             g[3] = "V3"
@@ -94,7 +94,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "NamedGraphs interface" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
             @test underlying_graph(g) isa NamedGraph{Int}
             @test position_graph(g) isa AbstractGraph
             @test ordered_vertices(g) isa AbstractVector
@@ -102,7 +102,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "Dictionaries interface" begin
-            g = VertexDataGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
             @test keytype(g) == Int
             @test valtype(g) == String
             @test keys(g) isa Indices
@@ -132,8 +132,8 @@ using Test: @test, @test_throws, @testset
 
     @testset "VertexDataDiGraph" begin
         @testset "undef constructor" begin
-            g = VertexDataDiGraph{Int, String}(undef, [1, 2, 3])
-            @test g isa VertexDataDiGraph{Int, String}
+            g = VertexDataDiGraph{String, Int}(undef, [1, 2, 3])
+            @test g isa VertexDataDiGraph{String, Int}
             @test nv(g) == 3
             @test ne(g) == 0
             @test has_vertex(g, 1)
@@ -143,7 +143,7 @@ using Test: @test, @test_throws, @testset
         @testset "data constructor" begin
             data = Dictionary([1, 2, 3], ["V1", "V2", "V3"])
             g = VertexDataDiGraph(data)
-            @test g isa VertexDataDiGraph{Int, String}
+            @test g isa VertexDataDiGraph{String, Int}
             @test nv(g) == 3
             @test g[1] == "V1"
             @test g[2] == "V2"
@@ -151,14 +151,14 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "directed graph" begin
-            g = VertexDataDiGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataDiGraph{String, Int}(undef, [1, 2, 3])
             @test is_directed(VertexDataDiGraph)
             @test is_directed(g)
             @test underlying_graph(g) isa NamedDiGraph{Int}
         end
 
         @testset "directed edges" begin
-            g = VertexDataDiGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataDiGraph{String, Int}(undef, [1, 2, 3])
             add_edge!(g, NamedEdge(1, 2))
             @test has_edge(g, NamedEdge(1, 2))
             @test !has_edge(g, NamedEdge(2, 1))
@@ -166,15 +166,15 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "DataGraphs interface" begin
-            g = VertexDataDiGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataDiGraph{String, Int}(undef, [1, 2, 3])
             @test vertex_data_type(g) == String
-            @test vertex_data_type(VertexDataDiGraph{Int, String}) == String
+            @test vertex_data_type(VertexDataDiGraph{String, Int}) == String
             @test vertextype(g) == Int
             @test edgetype(g) == NamedEdge{Int}
         end
 
         @testset "Dictionaries interface" begin
-            g = VertexDataDiGraph{Int, String}(undef, [1, 2, 3])
+            g = VertexDataDiGraph{String, Int}(undef, [1, 2, 3])
             @test keytype(g) == Int
             @test valtype(g) == String
             @test keys(g) isa Indices
@@ -184,11 +184,9 @@ using Test: @test, @test_throws, @testset
     end
 
     @testset "EdgeDataGraph" begin
-        E = NamedEdge{Int}
-
         @testset "undef constructor" begin
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
-            @test g isa EdgeDataGraph{E, String, Int}
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
+            @test g isa EdgeDataGraph{String, Int}
             @test nv(g) == 3
             @test ne(g) == 0
         end
@@ -196,7 +194,7 @@ using Test: @test, @test_throws, @testset
         @testset "data constructor" begin
             data = Dictionary([NamedEdge(1, 2), NamedEdge(2, 3)], ["E12", "E23"])
             g = EdgeDataGraph(data)
-            @test g isa EdgeDataGraph{E, String, Int}
+            @test g isa EdgeDataGraph{String, Int}
             @test nv(g) == 3
             @test ne(g) == 2
             @test isassigned(g, NamedEdge(1, 2))
@@ -206,13 +204,13 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "Graphs.jl interface" begin
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             @test !is_directed(EdgeDataGraph)
             @test !is_directed(g)
             @test has_vertex(g, 1)
             @test has_vertex(g, 2)
             @test !has_vertex(g, 4)
-            @test edgetype(g) == E
+            @test edgetype(g) == NamedEdge{Int}
 
             add_edge!(g, NamedEdge(1, 2))
             add_edge!(g, NamedEdge(2, 3))
@@ -226,8 +224,8 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "DataGraphs interface" begin
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
-            @test edge_data_type(EdgeDataGraph{E, String, Int}) == String
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
+            @test edge_data_type(EdgeDataGraph{String, Int}) == String
             @test edge_data_type(g) == String
             @test !isassigned(g, 1)
             @test !isassigned(g, NamedEdge(1, 2))
@@ -259,7 +257,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "NamedGraphs interface" begin
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             @test Set(collect(vertices(g))) == Set([1, 2, 3])
             @test position_graph(g) isa AbstractGraph
             @test ordered_vertices(g) isa AbstractVector
@@ -267,19 +265,26 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "Dictionaries interface" begin
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
-            @test keytype(g) == E
+            g = EdgeDataGraph(undef, [1, 2, 3])
+            @test keytype(g) == NamedEdge{Int}
+            @test valtype(g) == Any
+
+            g = EdgeDataGraph{String}(undef, [1, 2, 3])
+            @test keytype(g) == NamedEdge{Int}
             @test valtype(g) == String
             @test edge_data(g) isa EdgeDataView
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Float64}(undef, [1, 2, 3])
+            @test keytype(g) == NamedEdge{Float64}
+
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             insert!(g, 3 => 4, "E34")
             @test has_vertex(g, 4)
             @test has_edge(g, 3 => 4)
             @test isassigned(g, 3 => 4)
             @test g[3 => 4] == "E34"
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             insert!(g, 5 => 6, "E56")
             @test has_vertex(g, 5)
             @test has_vertex(g, 6)
@@ -287,22 +292,22 @@ using Test: @test, @test_throws, @testset
             @test isassigned(g, 5 => 6)
             @test g[5 => 6] == "E56"
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             @test_throws IndexError insert!(g, 2 => 3, "E23")
             @test !has_edge(g, 2 => 3)
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             set!(g, 1 => 2, "E12")
             @test has_edge(g, 1 => 2)
             @test g[1 => 2] == "E12"
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             set!(g, 3 => 4, "E34")
             @test has_vertex(g, 4)
             @test has_edge(g, 3 => 4)
             @test g[3 => 4] == "E34"
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             set!(g, 4 => 5, "E45")
             @test has_vertex(g, 4)
             @test has_vertex(g, 5)
@@ -311,7 +316,7 @@ using Test: @test, @test_throws, @testset
             set!(g, 4 => 5, "E45_again")
             @test g[4 => 5] == "E45_again"
 
-            g = EdgeDataGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             g[2 => 3] = "E23"
             @test has_edge(g, 2 => 3)
             @test g[2 => 3] == "E23"
@@ -324,8 +329,8 @@ using Test: @test, @test_throws, @testset
         E = NamedEdge{Int}
 
         @testset "undef constructor" begin
-            g = EdgeDataDiGraph{E, String, Int}(undef, [1, 2, 3])
-            @test g isa EdgeDataDiGraph{E, String, Int}
+            g = EdgeDataDiGraph{String, Int}(undef, [1, 2, 3])
+            @test g isa EdgeDataDiGraph{String, Int}
             @test nv(g) == 3
             @test ne(g) == 0
         end
@@ -333,7 +338,7 @@ using Test: @test, @test_throws, @testset
         @testset "data constructor" begin
             data = Dictionary([NamedEdge(1, 2), NamedEdge(2, 3)], ["E12", "E23"])
             g = EdgeDataDiGraph(data)
-            @test g isa EdgeDataDiGraph{E, String, Int}
+            @test g isa EdgeDataDiGraph{String, Int}
             @test nv(g) == 3
             @test ne(g) == 2
             @test g[NamedEdge(1, 2)] == "E12"
@@ -341,7 +346,7 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "directed graph" begin
-            g = EdgeDataDiGraph{E, String, Int}(undef, [1, 2, 3])
+            g = EdgeDataDiGraph{String, Int}(undef, [1, 2, 3])
             @test is_directed(EdgeDataDiGraph)
             @test is_directed(g)
         end
@@ -355,10 +360,10 @@ using Test: @test, @test_throws, @testset
         end
 
         @testset "DataGraphs interface" begin
-            g = EdgeDataDiGraph{E, String, Int}(undef, [1, 2, 3])
-            @test edge_data_type(EdgeDataDiGraph{E, String, Int}) == String
+            g = EdgeDataDiGraph{String, Int}(undef, [1, 2, 3])
+            @test edge_data_type(EdgeDataDiGraph{String, Int}) == String
             @test edge_data_type(g) == String
-            @test keytype(g) == E
+            @test keytype(g) == NamedEdge{Int}
             @test valtype(g) == String
             @test edge_data(g) isa EdgeDataView
         end

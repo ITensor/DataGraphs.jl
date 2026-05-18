@@ -2,7 +2,7 @@ using Dictionaries: Dictionaries, Indices, set!
 using Graphs: edges, edgetype, has_edge, has_vertex, rem_edge!, rem_vertex!, vertices
 using NamedGraphs: NamedGraphs, Vertices, similar_graph, subgraph_edges, to_graph_index
 
-abstract type AbstractVertexOrEdgeDataGraph{I, T, V} <: AbstractDataGraph{V, T, T} end
+abstract type AbstractVertexOrEdgeDataGraph{T, V} <: AbstractDataGraph{V, T, T} end
 
 Graphs.edgetype(graph::AbstractVertexOrEdgeDataGraph) = edgetype(typeof(graph))
 
@@ -43,13 +43,12 @@ function Base.iterate(graph::AbstractVertexOrEdgeDataGraph, state)
 end
 
 Base.keytype(graph::AbstractVertexOrEdgeDataGraph) = keytype(typeof(graph))
-Base.keytype(::Type{<:AbstractVertexOrEdgeDataGraph{I, T, V}}) where {I, T, V} = I
 
 Base.valtype(graph::AbstractVertexOrEdgeDataGraph) = valtype(typeof(graph))
-Base.valtype(::Type{<:AbstractVertexOrEdgeDataGraph{I, T, V}}) where {I, T, V} = T
+Base.valtype(::Type{<:AbstractVertexOrEdgeDataGraph{T}}) where {T} = T
 
 Base.eltype(graph::AbstractVertexOrEdgeDataGraph) = eltype(typeof(graph))
-Base.eltype(::Type{<:AbstractVertexOrEdgeDataGraph{I, T, V}}) where {I, T, V} = T
+Base.eltype(::Type{<:AbstractVertexOrEdgeDataGraph{T}}) where {T} = T
 
 Base.length(graph::AbstractVertexOrEdgeDataGraph) = length(index_data(graph))
 Base.keys(graph::AbstractVertexOrEdgeDataGraph) = keys(index_data(graph))
@@ -62,17 +61,8 @@ function Base.insert!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
     insert!_datagraph(graph, to_graph_index(graph, ind), data)
     return graph
 end
-# For ambiguity resolution.
-function Base.insert!(
-        graph::AbstractVertexOrEdgeDataGraph{I, T},
-        ind::I,
-        data::T
-    ) where {I, T}
-    insert!_datagraph(graph, to_graph_index(graph, ind), data)
-    return graph
-end
 
-function Base.delete!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::T) where {I, T}
+function Base.delete!(graph::AbstractVertexOrEdgeDataGraph, ind)
     delete!_datagraph(graph, to_graph_index(graph, ind))
     return graph
 end
@@ -84,7 +74,9 @@ end
 
 # ================================== vertex data graph =================================== #
 
-abstract type AbstractVertexDataGraph{V, T} <: AbstractVertexOrEdgeDataGraph{V, T, V} end
+abstract type AbstractVertexDataGraph{T, V} <: AbstractVertexOrEdgeDataGraph{T, V} end
+
+Base.keytype(::Type{<:AbstractVertexDataGraph{T, V}}) where {T, V} = V
 
 is_edge_assigned(::AbstractVertexDataGraph, _edge) = false
 
@@ -146,8 +138,7 @@ function NamedGraphs.similar_graph(
         T::Type,
         vertices::Vertices
     )
-    V = eltype(vertices)
-    return similar_graph(VertexDataGraph{V, T}, vertices)
+    return similar_graph(VertexDataGraph{T}, vertices)
 end
 
 function NamedGraphs.induced_subgraph_from_vertices(
@@ -180,7 +171,9 @@ end
 
 # =================================== edge data graph ==================================== #
 
-abstract type AbstractEdgeDataGraph{E, T, V} <: AbstractVertexOrEdgeDataGraph{E, T, V} end
+abstract type AbstractEdgeDataGraph{T, V} <: AbstractVertexOrEdgeDataGraph{T, V} end
+
+Base.keytype(::Type{<:AbstractEdgeDataGraph{T, V}}) where {T, V} = NamedEdge{V}
 
 is_vertex_assigned(::AbstractEdgeDataGraph, _vertex) = false
 
@@ -255,13 +248,11 @@ function NamedGraphs.similar_graph(
 end
 
 function NamedGraphs.similar_graph(
-        graph::AbstractEdgeDataGraph,
+        ::AbstractEdgeDataGraph,
         T::Type,
         vertices::Vertices
     )
-    V = eltype(vertices)
-    E = convert_vertextype(V, edgetype(graph))
-    return similar_graph(EdgeDataGraph{E, T, V}, collect(vertices))
+    return similar_graph(EdgeDataGraph{T}, collect(vertices))
 end
 
 function NamedGraphs.induced_subgraph_from_vertices(
