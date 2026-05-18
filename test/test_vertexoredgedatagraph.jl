@@ -1,13 +1,13 @@
 using DataGraphs: DataGraphs, EdgeDataDiGraph, EdgeDataGraph, EdgeDataView,
     VertexDataDiGraph, VertexDataGraph, VertexDataView, edge_data, edge_data_type,
     underlying_graph, vertex_data, vertex_data_type
-using Dictionaries: AbstractDictionary, Dictionary, Indices
+using Dictionaries: AbstractDictionary, Dictionary, IndexError, Indices, set!
 using Graphs: AbstractGraph, add_edge!, dst, edges, edgetype, has_edge, has_vertex,
     is_directed, ne, nv, rem_edge!, rem_vertex!, src, vertices
 using NamedGraphs.GraphsExtensions: vertextype
 using NamedGraphs:
     NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph, vertex_positions
-using Test: @test, @testset
+using Test: @test, @test_throws, @testset
 
 @testset "VertexDataGraph and EdgeDataGraph" begin
     @testset "VertexDataGraph" begin
@@ -54,6 +54,9 @@ using Test: @test, @testset
             rem_edge!(g, NamedEdge(1, 2))
             @test ne(g) == 1
             @test !has_edge(g, NamedEdge(1, 2))
+
+            @test !is_directed(VertexDataGraph)
+            @test !is_directed(g)
         end
 
         @testset "rem_vertex!" begin
@@ -73,6 +76,8 @@ using Test: @test, @testset
             @test !isassigned(g, 1)
             @test !isassigned(g, 2)
             @test !isassigned(g, 3)
+            add_edge!(g, NamedEdge(1, 2))
+            @test !isassigned(g, 1 => 2)
         end
 
         @testset "setindex! and getindex" begin
@@ -103,6 +108,25 @@ using Test: @test, @testset
             @test keys(g) isa Indices
             @test length(g) == 3
             @test vertex_data(g) isa VertexDataView
+
+            insert!(g, 4, "V4")
+            @test_throws IndexError insert!(g, 4, "V4_again")
+            @test has_vertex(g, 4)
+            @test isassigned(g, 4)
+            @test g[4] == "V4"
+            @test nv(g) == 4
+
+            @test_throws IndexError g[5] = "V5"
+            @test !has_vertex(g, 5)
+            @test !isassigned(g, 5)
+
+            set!(g, 5, "V5")
+            @test has_vertex(g, 5)
+            @test g[5] == "V5"
+
+            g[5] = "V5_again"
+            @test g[5] == "V5_again"
+            @test nv(g) == 5
         end
     end
 
@@ -196,6 +220,9 @@ using Test: @test, @testset
             @test has_edge(g, NamedEdge(1, 2))
             @test has_edge(g, NamedEdge(2, 3))
             @test !has_edge(g, NamedEdge(1, 3))
+
+            @test !is_directed(EdgeDataGraph)
+            @test !is_directed(g)
         end
 
         @testset "DataGraphs interface" begin
@@ -244,6 +271,28 @@ using Test: @test, @testset
             @test keytype(g) == E
             @test valtype(g) == String
             @test edge_data(g) isa EdgeDataView
+
+            insert!(g, 1 => 2, "E12")
+            @test_throws IndexError insert!(g, 1 => 2, "E12_again")
+            @test_throws IndexError insert!(g, 2 => 1, "E12_again")
+            @test_throws IndexError insert!(g, NamedEdge(1, 2), "E12_again")
+            @test_throws IndexError insert!(g, NamedEdge(2, 1), "E12_again")
+            @test has_edge(g, 1 => 2)
+            @test isassigned(g, 1 => 2)
+            @test g[1 => 2] == "E12"
+            @test ne(g) == 1
+
+            @test_throws IndexError g[2 => 3] = "E23"
+            @test !has_edge(g, 2 => 3)
+            @test !isassigned(g, 2 => 3)
+
+            set!(g, 2 => 3, "E23")
+            @test has_edge(g, 2 => 3)
+            @test g[2 => 3] == "E23"
+
+            g[2 => 3] = "E23_again"
+            @test g[2 => 3] == "E23_again"
+            @test ne(g) == 2
         end
     end
 

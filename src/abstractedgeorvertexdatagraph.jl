@@ -64,6 +64,11 @@ Base.values(graph::AbstractVertexOrEdgeDataGraph) = values(index_data(graph))
 Dictionaries.issettable(::AbstractVertexOrEdgeDataGraph) = true
 Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = false
 
+function Base.insert!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
+    insert!_datagraph(graph, to_graph_index(graph, ind), data)
+    return graph
+end
+# For ambiguity resolution.
 function Base.insert!(
         graph::AbstractVertexOrEdgeDataGraph{I, T},
         ind::I,
@@ -72,6 +77,7 @@ function Base.insert!(
     insert!_datagraph(graph, to_graph_index(graph, ind), data)
     return graph
 end
+
 function Base.delete!(graph::AbstractVertexOrEdgeDataGraph{I, T}, ind::T) where {I, T}
     delete!_datagraph(graph, to_graph_index(graph, ind))
     return graph

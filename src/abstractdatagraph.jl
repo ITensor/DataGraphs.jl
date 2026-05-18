@@ -46,10 +46,10 @@ function get_edges_data(g::AbstractGraph, edges)
 end
 
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
-Graphs.has_edge(g::AbstractDataGraph, edge) = has_edge(underlying_graph(g), edge)
-function Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge)
+function Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedGraph)
     return has_edge(underlying_graph(g), edge)
 end
+Graphs.has_edge(g::AbstractDataGraph, pair::Pair) = has_edge(g, to_graph_index(g, pair))
 
 vertex_data(dg::AbstractGraph) = VertexDataView(dg)
 edge_data(dg::AbstractGraph) = EdgeDataView(dg)
