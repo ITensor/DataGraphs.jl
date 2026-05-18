@@ -322,12 +322,13 @@ using Test: @test, @test_throws, @testset
             @test g[2 => 3] == "E23"
             @test_throws IndexError g[3 => 4] = "E34"
             @test_throws IndexError g[4 => 5] = "E45"
+
+            g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
+            @test_throws IndexError edge_data(g)[2 => 3] = "E23"
         end
     end
 
     @testset "EdgeDataDiGraph" begin
-        E = NamedEdge{Int}
-
         @testset "undef constructor" begin
             g = EdgeDataDiGraph{String, Int}(undef, [1, 2, 3])
             @test g isa EdgeDataDiGraph{String, Int}
