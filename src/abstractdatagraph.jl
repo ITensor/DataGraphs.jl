@@ -6,7 +6,8 @@ using NamedGraphs.GraphsExtensions: GraphsExtensions, add_edges!, add_vertices!,
 using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
 using NamedGraphs.SimilarType: similar_type
 using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
-    AbstractVertices, NamedDiGraph, NamedGraph, position_graph_type, similar_graph
+    AbstractVertices, NamedDiGraph, NamedGraph, Vertices, position_graph_type,
+    similar_graph, subgraph_edges
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
@@ -21,12 +22,15 @@ edge_data_type(::Type{<:AbstractDataGraph{V, VD, ED}}) where {V, VD, ED} = ED
 # TODO: Define for `AbstractGraph` as a `DataGraphInterface`.
 underlying_graph(::AbstractDataGraph) = not_implemented()
 
+# `isassigned`
 is_vertex_assigned(::AbstractDataGraph, vertex) = not_implemented()
 is_edge_assigned(::AbstractDataGraph, edge) = not_implemented()
 
+# `getindex`
 get_vertex_data(::AbstractDataGraph, vertex) = not_implemented()
 get_edge_data(::AbstractDataGraph, edge) = not_implemented()
 
+# `setindex!`
 set_vertex_data!(::AbstractDataGraph, data, vertex) = not_implemented()
 set_edge_data!(::AbstractDataGraph, data, edge) = not_implemented()
 
@@ -42,10 +46,10 @@ function get_edges_data(g::AbstractGraph, edges)
 end
 
 Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
-Graphs.has_edge(g::AbstractDataGraph, edge) = has_edge(underlying_graph(g), edge)
-function Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedEdge)
+function Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedGraph)
     return has_edge(underlying_graph(g), edge)
 end
+Graphs.has_edge(g::AbstractDataGraph, pair::Pair) = has_edge(g, to_graph_index(g, pair))
 
 vertex_data(dg::AbstractGraph) = VertexDataView(dg)
 edge_data(dg::AbstractGraph) = EdgeDataView(dg)
@@ -57,9 +61,7 @@ function assigned_edges(graph::AbstractGraph)
     return Indices(filter(e -> isassigned(graph, e), edges(graph)))
 end
 
-function Graphs.edgetype(graph::AbstractDataGraph)
-    return Graphs.edgetype(underlying_graph(graph))
-end
+Graphs.edgetype(graph::AbstractDataGraph) = edgetype(underlying_graph(graph))
 function Graphs.edgetype(graph_type::Type{<:AbstractDataGraph})
     return edgetype(underlying_graph_type(graph_type))
 end
@@ -75,10 +77,26 @@ function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
     return position_graph_type(underlying_graph_type(type))
 end
 
+function Base.copy(graph::AbstractDataGraph)
+    copy_graph = similar_graph(graph)
+    copyto!(copy_graph, graph)
+    return graph
+end
+
 function Base.copyto!(dst_graph::AbstractDataGraph, src_graph::AbstractDataGraph)
     vertex_data(dst_graph) .= vertex_data(src_graph)
     edge_data(dst_graph) .= edge_data(src_graph)
     return dst_graph
+end
+function Base.copyto!(
+        graph_dst::AbstractDataGraph,
+        dict_src::Union{Dict, AbstractDictionary},
+        keynames = keys(dict_src)
+    )
+    for key in keynames
+        graph_dst[key] = dict_src[key]
+    end
+    return graph_dst
 end
 
 # Graphs overloads
@@ -110,8 +128,8 @@ GraphsExtensions.convert_vertextype(::Type, ::AbstractDataGraph) = not_implement
 
 function Base.:(==)(dg1::AbstractDataGraph, dg2::AbstractDataGraph)
     underlying_graph(dg1) == underlying_graph(dg2) || return false
-    vertex_data(dg1) == vertex_data(dg2) || return false
-    edge_data(dg1) == edge_data(dg2) || return false
+    assigned_vertex_data(dg1) == assigned_vertex_data(dg2) || return false
+    assigned_edge_data(dg1) == assigned_edge_data(dg2) || return false
     return true
 end
 

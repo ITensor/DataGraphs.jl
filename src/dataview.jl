@@ -90,6 +90,9 @@ function Base.setindex!(view::EdgeDataView, vals, keys::Indices{<:Pair})
 end
 
 function Base.setindex!(view::VertexOrEdgeDataView{K, V}, data::V, key::K) where {K, V}
+    if !haskey(view, key)
+        throw(IndexError("Dictionary does not contain index: $key"))
+    end
     setindex!(view.graph, data, key)
     return view
 end
