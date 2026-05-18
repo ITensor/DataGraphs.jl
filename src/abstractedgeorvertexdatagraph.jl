@@ -128,7 +128,8 @@ function NamedGraphs.similar_graph(
         VD::Type,
         ED::Type
     )
-    return similar_graph(graph, VD, ED, vertices(graph)) # goes to fallback
+    # Can't have edge data, so go to `AbstractDataGraph` fallback.
+    return similar_graph(graph, VD, ED, vertices(graph)) # -> DataGraph
 end
 
 function NamedGraphs.similar_graph(
@@ -243,7 +244,8 @@ function NamedGraphs.similar_graph(
         VD::Type,
         ED::Type
     )
-    return similar_graph(graph, VD, ED, vertices(graph)) # goes to fallback
+    # Can't have vertex data, so go to `AbstractDataGraph` fallback.
+    return similar_graph(graph, VD, ED, vertices(graph)) # -> DataGraph
 end
 
 function NamedGraphs.similar_graph(
