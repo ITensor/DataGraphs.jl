@@ -92,9 +92,8 @@ is_edge_assigned(::AbstractVertexDataGraph, _edge) = false
 function set_index_data!(graph::AbstractVertexDataGraph, data, vertex)
     if !has_vertex(graph, vertex)
         throw(IndexError("Graph does not contain vertex $vertex"))
-    else
-        set_vertex_data!(graph, data, vertex)
     end
+    set_vertex_data!(graph, data, vertex)
     return graph
 end
 
@@ -108,9 +107,8 @@ end
 function delete!_datagraph(graph::AbstractVertexDataGraph, vertex)
     if !has_vertex(graph, vertex)
         throw(IndexError("Graph does not contain vertex $vertex"))
-    else
-        rem_vertex!(graph, vertex)
     end
+    rem_vertex!(graph, vertex)
     return graph
 end
 
@@ -196,9 +194,8 @@ function set_index_data!(graph::AbstractEdgeDataGraph, data, edge::AbstractEdge)
         throw(IndexError("Graph does not contain vertex $v1"))
     elseif !has_vertex(graph, v2)
         throw(IndexError("Graph does not contain vertex $v2"))
-    else
-        set_edge_data!(graph, data, edge)
     end
+    set_edge_data!(graph, data, edge)
     return graph
 end
 
@@ -208,9 +205,8 @@ function insert!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, dat
     v2 = dst(edge)
     if has_vertex(graph, v1) && has_vertex(graph, v2)
         throw(IndexError("Graph already contains vertices $v1 and $v2"))
-    else
-        insert_edge_data!(graph, edge, data)
     end
+    insert_edge_data!(graph, edge, data)
     return graph
 end
 function insert_edge_data!(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
@@ -226,9 +222,8 @@ end
 function delete!_datagraph(graph::AbstractEdgeDataGraph, edge)
     if !has_edge(graph, edge)
         throw(IndexError("Graph does not contain edge $edge"))
-    else
-        rem_edge!(graph, edge)
     end
+    rem_edge!(graph, edge)
     return graph
 end
 
