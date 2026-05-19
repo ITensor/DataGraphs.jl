@@ -6,7 +6,7 @@ using Dictionaries:
 using Graphs: AbstractGraph, AbstractSimpleGraph, add_edge!, add_vertex!, dst, edges,
     edgetype, has_edge, has_vertex, is_directed, ne, nv, rem_edge!, rem_vertex!, src,
     vertices
-using NamedGraphs.GraphsExtensions: add_edge, vertextype
+using NamedGraphs.GraphsExtensions: add_edge, subgraph, vertextype
 using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph,
     similar_graph, vertex_positions
 using Test: @test, @test_throws, @testset
@@ -166,6 +166,20 @@ using Test: @test, @test_throws, @testset
             @test has_vertex(gs, 1)
             @test has_vertex(gs, 2)
             @test ne(gs) == 0
+
+            g = GType(Dictionary([1, 2, 3], ["V1", "V2", "V3"]))
+            add_edge!(g, NamedEdge(1, 2))
+            add_edge!(g, NamedEdge(2, 3))
+            sg = subgraph(g, [1, 2])
+            @test sg isa GType
+            @test has_vertex(sg, 1)
+            @test has_vertex(sg, 2)
+            @test !has_vertex(sg, 3)
+            @test has_edge(sg, 1 => 2)
+            @test !has_edge(sg, 2 => 3)
+            @test sg[1] == "V1"
+            @test sg[2] == "V2"
+            @test !isassigned(sg, 3)
         end
 
         @testset "Dictionaries interface" begin
@@ -197,6 +211,19 @@ using Test: @test, @test_throws, @testset
             g[5] = "V5_again"
             @test g[5] == "V5_again"
             @test nv(g) == 5
+        end
+
+        @testset "show" begin
+            g = GType(Dictionary([1, 2, 3], ["V1", "V2", "V3"]))
+            io = IOBuffer()
+            show(io, g)
+            str = String(take!(io))
+            @test occursin("$GType", str)
+            @test occursin("V1", str)
+            @test occursin("V2", str)
+            @test occursin("V3", str)
+            @test !occursin("edge data", str)
+            @test occursin("vertex data", str)
         end
     end
 
@@ -348,6 +375,16 @@ using Test: @test, @test_throws, @testset
             @test has_vertex(gs, 1)
             @test has_vertex(gs, 2)
             @test ne(gs) == 0
+
+            g = GType(Dictionary([1 => 2, 2 => 3], ["E12", "E23"]))
+            sg = subgraph(g, [1, 2])
+            @test sg isa GType
+            @test has_vertex(sg, 1)
+            @test has_vertex(sg, 2)
+            @test !has_vertex(sg, 3)
+            @test has_edge(sg, 1 => 2)
+            @test !has_edge(sg, 2 => 3)
+            @test sg[1 => 2] == "E12"
         end
 
         @testset "Dictionaries interface" begin
@@ -410,6 +447,18 @@ using Test: @test, @test_throws, @testset
 
             g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             @test_throws IndexError edge_data(g)[2 => 3] = "E23"
+        end
+
+        @testset "show" begin
+            g = GType(Dictionary([1 => 2, 2 => 3], ["E12", "E23"]))
+            io = IOBuffer()
+            show(io, g)
+            str = String(take!(io))
+            @test occursin("$GType", str)
+            @test occursin("edge data", str)
+            @test occursin("E12", str)
+            @test occursin("E23", str)
+            @test !occursin("vertex data", str)
         end
     end
 

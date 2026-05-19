@@ -155,6 +155,7 @@ function NamedGraphs.induced_subgraph_from_vertices(
         subvertices
     )
     subnetwork = similar_graph(graph, subvertices)
+    add_edges!(subnetwork, subgraph_edges(graph, subvertices))
     tensors = view(vertex_data(graph), Indices(subvertices))
     copyto!(subnetwork, tensors)
     return subnetwork, subvertices
