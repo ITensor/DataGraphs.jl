@@ -42,7 +42,7 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
         $GType{T}(data) where {T} = $GType{T, vertextype(keytype(data))}(data)
 
         function $GType{T, V}(data) where {T, V}
-            edges = keys(data)
+            edges = NamedEdge{V}.(keys(data))
             vertices = union(src.(edges), dst.(edges))
             graph = $GType{T, V}(undef, vertices)
             copyto!(graph, data)
