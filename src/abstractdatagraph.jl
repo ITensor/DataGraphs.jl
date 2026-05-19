@@ -444,3 +444,8 @@ function Base.show(io::IO, mime::MIME"text/plain", graph::AbstractDataGraph)
 end
 
 Base.show(io::IO, graph::AbstractDataGraph) = show(io, MIME"text/plain"(), graph)
+
+function GraphsExtensions.forest_cover_edge_sequence(graph::AbstractDataGraph; kwargs...)
+    dummy_graph = add_edges!(NamedGraph(vertices(graph)), edges(graph))
+    return GraphsExtensions.forest_cover_edge_sequence(dummy_graph; kwargs...)
+end
