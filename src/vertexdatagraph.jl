@@ -119,7 +119,7 @@ end
 
 for GType in (:VertexDataGraph, :VertexDataDiGraph)
     @eval begin
-        Dictionaries.isinsertable(::Type{<:$GType}, _edge) = true
+        Dictionaries.isinsertable(::$GType) = true
 
         function insert_vertex_data!(graph::$GType, vertex, data)
             add_vertex!(graph.underlying_graph, vertex)

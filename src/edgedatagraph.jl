@@ -127,6 +127,6 @@ end
 
 for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
-        Dictionaries.isinsertable(::Type{<:$GType}, _edge) = true
+        Dictionaries.isinsertable(::$GType) = true
     end
 end
