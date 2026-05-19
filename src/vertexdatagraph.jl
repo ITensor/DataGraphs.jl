@@ -47,6 +47,11 @@ for GType in (:VertexDataGraph, :VertexDataDiGraph)
             cache = $GType{T, V}(undef, vertices)
             return copyto!(cache, data)
         end
+
+        function Base.:(==)(dg1::$GType, dg2::$GType)
+            return dg1.underlying_graph == dg2.underlying_graph &&
+                dg1.vertex_data == dg2.vertex_data
+        end
     end
 end
 

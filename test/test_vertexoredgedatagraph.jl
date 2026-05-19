@@ -1,7 +1,8 @@
 using DataGraphs: DataGraphs, EdgeDataDiGraph, EdgeDataGraph, EdgeDataView,
     VertexDataDiGraph, VertexDataGraph, VertexDataView, edge_data, edge_data_type,
     underlying_graph, vertex_data, vertex_data_type
-using Dictionaries: AbstractDictionary, Dictionary, IndexError, Indices, set!
+using Dictionaries:
+    AbstractDictionary, Dictionary, IndexError, Indices, isinsertable, issettable, set!
 using Graphs: AbstractGraph, AbstractSimpleGraph, add_edge!, add_vertex!, dst, edges,
     edgetype, has_edge, has_vertex, is_directed, ne, nv, rem_edge!, rem_vertex!, src,
     vertices
@@ -42,6 +43,31 @@ using Test: @test, @test_throws, @testset
             data = Dictionary([1.0, 2.0, 3.0], SubString.(["V1", "V2", "V3"]))
             g = GType(data)
             @test g isa GType
+        end
+
+        @testset "copy" begin
+            data = Dictionary([1, 2, 3], ["V1", "V2", "V3"])
+            g = GType(data)
+            add_edge!(g, NamedEdge(1, 2))
+            g_copy = copy(g)
+
+            @test g_copy == g
+            @test g_copy !== g
+
+            # Test we can copy a graph with undefined data.
+            g = GType(undef, [1, 2, 3])
+            g[1] = "V1"
+            add_edge!(g, NamedEdge(2, 3))
+            g_copy = copy(g)
+
+            @test has_vertex(g_copy, 1)
+            @test has_vertex(g_copy, 2)
+            @test has_vertex(g_copy, 3)
+            @test has_edge(g_copy, 2 => 3)
+            @test isassigned(g_copy, 1)
+            @test g_copy[1] == "V1"
+            @test !isassigned(g_copy, 2)
+            @test !isassigned(g_copy, 3)
         end
 
         @testset "Graphs.jl interface" begin
@@ -150,6 +176,9 @@ using Test: @test, @test_throws, @testset
             @test length(g) == 3
             @test vertex_data(g) isa VertexDataView
 
+            @test issettable(g)
+            @test isinsertable(g)
+
             insert!(g, 4, "V4")
             @test_throws IndexError insert!(g, 4, "V4_again")
             @test has_vertex(g, 4)
@@ -201,6 +230,28 @@ using Test: @test, @test_throws, @testset
             @test isassigned(g, NamedEdge(2, 3))
             @test g[NamedEdge(1, 2)] == "E12"
             @test g[NamedEdge(2, 3)] == "E23"
+        end
+
+        @testset "copy" begin
+            data = Dictionary([1 => 2, 2 => 3], ["E12", "E23"])
+            g = GType(data)
+            g_copy = copy(g)
+
+            @test g_copy == g
+            @test g_copy !== g
+
+            # Test we can copy a graph with undefined data.
+            g = GType(undef, [1, 2, 3])
+            g[1 => 2] = "E12"
+            g_copy = copy(g)
+
+            @test has_vertex(g_copy, 1)
+            @test has_vertex(g_copy, 2)
+            @test has_vertex(g_copy, 3)
+            @test has_edge(g_copy, 1 => 2)
+            @test isassigned(g_copy, 1 => 2)
+            @test g_copy[1 => 2] == "E12"
+            @test !isassigned(g_copy, 2 => 3)
         end
 
         @testset "Graphs.jl interface" begin
@@ -304,6 +355,9 @@ using Test: @test, @test_throws, @testset
             @test keytype(g) == NamedEdge{Int}
             @test valtype(g) == String
             @test edge_data(g) isa EdgeDataView
+
+            @test issettable(g)
+            @test isinsertable(g)
 
             g = GType(undef, [1.0, 2.0, 3.0])
             @test keytype(g) == NamedEdge{Int}

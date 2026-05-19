@@ -48,6 +48,11 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
             copyto!(graph, data)
             return graph
         end
+
+        function Base.:(==)(dg1::$GType, dg2::$GType)
+            return dg1.underlying_graph == dg2.underlying_graph &&
+                dg1.edge_data == dg2.edge_data
+        end
     end
 end
 

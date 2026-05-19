@@ -38,17 +38,13 @@ function NamedGraphs.similar_graph(
     return new_graph
 end
 
-function Base.:(==)(dg1::AbstractVertexOrEdgeDataGraph, dg2::AbstractVertexOrEdgeDataGraph)
-    return underlying_graph(dg1) == underlying_graph(dg2) &&
-        index_data(dg1) == index_data(dg2)
-end
-
 function Base.copy(graph::AbstractVertexOrEdgeDataGraph)
     graph_dst = similar_graph(graph)
     # Allow copies of graphs with undefined data.
-    copyto!(graph_dst, src, filter(key -> isassigned(graph, key), keys(graph)))
+    copyto!(graph_dst, graph, filter(key -> isassigned(graph, key), keys(graph)))
     return graph_dst
 end
+
 function Base.copyto!(graph_dst::AbstractVertexOrEdgeDataGraph, src)
     copyto!(graph_dst, src, keys(src))
     return graph_dst
