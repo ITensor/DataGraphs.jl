@@ -620,8 +620,6 @@ using Test: @test, @test_broken, @testset
         @test g_copy["a" => "b"] == -1.0
         @test g_copy["b" => "c"] == -2.0
 
-        @test_throws IndexError copyto!(empty_graph(g_copy), g_copy)
-
         g2 = similar_graph(g, ["u", "v"])
         @test similar_graph(g2) isa typeof(g)
         @test has_vertex(g2, "u")

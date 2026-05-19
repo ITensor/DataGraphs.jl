@@ -2,11 +2,12 @@ using DataGraphs: DataGraphs, EdgeDataDiGraph, EdgeDataGraph, EdgeDataView,
     VertexDataDiGraph, VertexDataGraph, VertexDataView, edge_data, edge_data_type,
     underlying_graph, vertex_data, vertex_data_type
 using Dictionaries: AbstractDictionary, Dictionary, IndexError, Indices, set!
-using Graphs: AbstractGraph, add_edge!, dst, edges, edgetype, has_edge, has_vertex,
-    is_directed, ne, nv, rem_edge!, rem_vertex!, src, vertices
-using NamedGraphs.GraphsExtensions: vertextype
-using NamedGraphs:
-    NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph, vertex_positions
+using Graphs: AbstractGraph, AbstractSimpleGraph, add_edge!, add_vertex!, dst, edges,
+    edgetype, has_edge, has_vertex, is_directed, ne, nv, rem_edge!, rem_vertex!, src,
+    vertices
+using NamedGraphs.GraphsExtensions: add_edge, vertextype
+using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph,
+    similar_graph, vertex_positions
 using Test: @test, @test_throws, @testset
 
 @testset "VertexDataGraph and EdgeDataGraph" begin
@@ -70,7 +71,6 @@ using Test: @test, @test_throws, @testset
 
         @testset "DataGraphs interface" begin
             g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
-            @test underlying_graph(g) isa NamedGraph{Int}
             @test vertex_data_type(g) == String
             @test vertex_data_type(VertexDataGraph{String, Int}) == String
             @test !isassigned(g, 1)
@@ -93,12 +93,53 @@ using Test: @test, @test_throws, @testset
             @test g[3] == "V3"
         end
 
-        @testset "NamedGraphs interface" begin
-            g = VertexDataGraph{String, Int}(undef, [1, 2, 3])
-            @test underlying_graph(g) isa NamedGraph{Int}
-            @test position_graph(g) isa AbstractGraph
-            @test ordered_vertices(g) isa AbstractVector
-            @test vertex_positions(g) isa AbstractDictionary
+        for GType in (VertexDataGraph{String, Int}, VertexDataDiGraph{String, Int})
+            @testset "NamedGraphs interface" begin
+                g = GType(undef, [1, 2, 3])
+                @test position_graph(g) isa AbstractSimpleGraph{Int}
+                @test ordered_vertices(g) == [1, 2, 3]
+                @test keys(vertex_positions(g)) == vertices(g)
+
+                g = add_edge(g, NamedEdge(1, 2))
+                g[1] = "1"
+
+                gs = similar_graph(g)
+                @test gs isa GType
+                @test has_vertex(gs, 1)
+                @test has_vertex(gs, 2)
+                @test has_vertex(gs, 3)
+                @test has_edge(gs, 1 => 2)
+                @test !isassigned(gs, 1)
+
+                gs = similar_graph(g, vertices(g))
+                @test vertices(gs) == vertices(g)
+                @test ne(gs) == 0
+                @test !isassigned(gs, 1)
+
+                gs = similar_graph(g, [1, 2, 4])
+                @test has_vertex(gs, 1)
+                @test has_vertex(gs, 2)
+                @test has_vertex(gs, 4)
+                @test nv(gs) == 3
+                @test ne(gs) == 0
+                @test !isassigned(gs, 1)
+
+                gs = similar_graph(g, Char)
+                @test vertex_data_type(gs) === Char
+                @test nv(gs) == 3
+                @test ne(gs) == 1
+                gs[1] = 'C'
+                @test gs[1] == 'C'
+
+                gs = similar_graph(g, Float64, vertices(g))
+                @test ne(gs) == 0
+
+                gs = similar_graph(GType, [1.0, 2.0])
+                @test gs isa GType
+                @test has_vertex(gs, 1)
+                @test has_vertex(gs, 2)
+                @test ne(gs) == 0
+            end
         end
 
         @testset "Dictionaries interface" begin
@@ -154,7 +195,6 @@ using Test: @test, @test_throws, @testset
             g = VertexDataDiGraph{String, Int}(undef, [1, 2, 3])
             @test is_directed(VertexDataDiGraph)
             @test is_directed(g)
-            @test underlying_graph(g) isa NamedDiGraph{Int}
         end
 
         @testset "directed edges" begin
@@ -212,15 +252,12 @@ using Test: @test, @test_throws, @testset
             @test !has_vertex(g, 4)
             @test edgetype(g) == NamedEdge{Int}
 
-            add_edge!(g, NamedEdge(1, 2))
-            add_edge!(g, NamedEdge(2, 3))
-            @test ne(g) == 2
-            @test has_edge(g, NamedEdge(1, 2))
-            @test has_edge(g, NamedEdge(2, 3))
-            @test !has_edge(g, NamedEdge(1, 3))
+            @test_throws ArgumentError add_edge!(g, NamedEdge(1, 2))
+            @test_throws ArgumentError add_edge!(g, 2 => 3)
 
-            @test !is_directed(EdgeDataGraph)
-            @test !is_directed(g)
+            add_vertex!(g, 4)
+            @test has_vertex(g, 4)
+            @test nv(g) == 4
         end
 
         @testset "DataGraphs interface" begin

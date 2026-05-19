@@ -45,12 +45,6 @@ function get_edges_data(g::AbstractGraph, edges)
     return map(e -> getindex(g, e), Indices(edges))
 end
 
-Graphs.has_vertex(g::AbstractDataGraph, vertex) = has_vertex(underlying_graph(g), vertex)
-function Graphs.has_edge(g::AbstractDataGraph, edge::AbstractNamedGraph)
-    return has_edge(underlying_graph(g), edge)
-end
-Graphs.has_edge(g::AbstractDataGraph, pair::Pair) = has_edge(g, to_graph_index(g, pair))
-
 vertex_data(dg::AbstractGraph) = VertexDataView(dg)
 edge_data(dg::AbstractGraph) = EdgeDataView(dg)
 
@@ -79,24 +73,37 @@ end
 
 function Base.copy(graph::AbstractDataGraph)
     copy_graph = similar_graph(graph)
-    copyto!(copy_graph, graph)
-    return graph
+    # Allow copies of graphs with undefined data.
+    copyto!(copy_graph, graph, assigned_vertices(graph))
+    copyto!(copy_graph, graph, assigned_edges(graph))
+    return copy_graph
 end
 
-function Base.copyto!(dst_graph::AbstractDataGraph, src_graph::AbstractDataGraph)
-    vertex_data(dst_graph) .= vertex_data(src_graph)
-    edge_data(dst_graph) .= edge_data(src_graph)
-    return dst_graph
-end
-function Base.copyto!(
-        graph_dst::AbstractDataGraph,
-        dict_src::Union{Dict, AbstractDictionary},
-        keynames = keys(dict_src)
-    )
-    for key in keynames
-        graph_dst[key] = dict_src[key]
+# Base method to specialize on.
+function Base.copyto!(graph_dst::AbstractDataGraph, src, keys)
+    for key in keys
+        graph_dst[key] = src[key]
     end
     return graph_dst
+end
+
+function Base.copyto!(graph_dst::AbstractDataGraph, src)
+    copyto!_datagraph(graph_dst, src)
+    return graph_dst
+end
+
+# To prevent method ambiguities
+function copyto!_datagraph(dst::AbstractDataGraph, src::AbstractDataGraph)
+    if !issetequal(vertices(dst), vertices(src))
+        throw(ArgumentError("destination and source graphs must have the same vertices"))
+    end
+    copyto!(dst, src, vertices(src))
+    copyto!(dst, src, edges(src))
+    return dst
+end
+function copyto!_datagraph(dst_graph::AbstractDataGraph, src)
+    copyto!(dst_graph, src, keys(src))
+    return dst_graph
 end
 
 # Graphs overloads

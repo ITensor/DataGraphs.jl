@@ -1,4 +1,4 @@
-using Dictionaries: Dictionaries, Indices, set!
+using Dictionaries: Dictionaries, Indices, isinsertable, set!
 using Graphs: edges, edgetype, has_edge, has_vertex, rem_edge!, rem_vertex!, vertices
 using NamedGraphs: NamedGraphs, Vertices, similar_graph, subgraph_edges, to_graph_index
 
@@ -7,12 +7,17 @@ abstract type AbstractVertexOrEdgeDataGraph{T, V} <: AbstractDataGraph{V, T, T} 
 Graphs.edgetype(graph::AbstractVertexOrEdgeDataGraph) = edgetype(typeof(graph))
 
 function NamedGraphs.similar_graph(
-        graph::AbstractVertexOrEdgeDataGraph,
-        T::Type
+        graph::AbstractVertexOrEdgeDataGraph
     )
-    return similar_graph(graph, T, vertices(graph))
+    return similar_graph(graph, valtype(graph))
 end
 
+function NamedGraphs.similar_graph(
+        graph::AbstractVertexOrEdgeDataGraph,
+        vertices
+    )
+    return similar_graph(graph, valtype(graph), vertices)
+end
 function NamedGraphs.similar_graph(
         graph::AbstractVertexOrEdgeDataGraph,
         T::Type,
@@ -21,19 +26,31 @@ function NamedGraphs.similar_graph(
     return similar_graph(graph, T, Vertices(vertices))
 end
 
+# For ambiguity resolution only.
+function NamedGraphs.similar_graph(
+        graph::AbstractVertexOrEdgeDataGraph,
+        VD::Type,
+        ED::Type
+    )
+    # No notion of both vertex and edge data, will go to `AbstractDataGraph` fallback.
+    new_graph = similar_graph(graph, VD, ED, vertices(graph)) # -> DataGraph
+    add_edges!(new_graph, edges(graph))
+    return new_graph
+end
+
 function Base.:(==)(dg1::AbstractVertexOrEdgeDataGraph, dg2::AbstractVertexOrEdgeDataGraph)
     return underlying_graph(dg1) == underlying_graph(dg2) &&
         index_data(dg1) == index_data(dg2)
 end
 
-function Base.copyto!(
-        graph_dst::G,
-        graph_src::G,
-        keynames = nothing
-    ) where {G <: AbstractVertexOrEdgeDataGraph}
-    dict_src = index_data(graph_src)
-    keynames = isnothing(keynames) ? keys(dict_src) : keynames
-    copyto!(graph_dst, dict_src, keynames)
+function Base.copy(graph::AbstractVertexOrEdgeDataGraph)
+    graph_dst = similar_graph(graph)
+    # Allow copies of graphs with undefined data.
+    copyto!(graph_dst, src, filter(key -> isassigned(graph, key), keys(graph)))
+    return graph_dst
+end
+function Base.copyto!(graph_dst::AbstractVertexOrEdgeDataGraph, src)
+    copyto!(graph_dst, src, keys(src))
     return graph_dst
 end
 
@@ -58,6 +75,7 @@ Dictionaries.issettable(::AbstractVertexOrEdgeDataGraph) = true
 Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = false
 
 function Base.insert!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
+    isinsertable(graph) || throw(ArgumentError("Graph does not support insertion."))
     insert!_datagraph(graph, to_graph_index(graph, ind), data)
     return graph
 end
@@ -110,32 +128,24 @@ end
 # `set!`
 function set!_datagraph(graph::AbstractVertexDataGraph, vertex, data)
     if has_vertex(graph, vertex)
-        set_vertex_data!(graph, data, vertex)
+        graph[vertex] = data
     else
-        insert_vertex_data!(graph, vertex, data)
+        insert!(graph, vertex, data)
     end
     return graph
 end
 
-# For ambiguity resolution.
 function NamedGraphs.similar_graph(
         graph::AbstractVertexDataGraph,
-        VD::Type,
-        ED::Type
+        T::Type
     )
-    # Can't have edge data, so go to `AbstractDataGraph` fallback.
-    return similar_graph(graph, VD, ED, vertices(graph)) # -> DataGraph
+    new_graph = similar_graph(graph, T, vertices(graph))
+    # we can add edges to a `AbstractVertexDataGraph`.
+    add_edges!(new_graph, edges(graph))
+    return new_graph
 end
 
-function NamedGraphs.similar_graph(
-        graph::AbstractVertexDataGraph,
-        VD::Type,
-        ::Type{Nothing},
-        vertices
-    )
-    return similar_graph(graph, VD, vertices)
-end
-
+# Base method to overload.
 function NamedGraphs.similar_graph(
         ::AbstractVertexDataGraph,
         T::Type,
@@ -224,32 +234,23 @@ end
 # `set!`
 function set!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
     if !has_vertex(graph, src(edge)) || !has_vertex(graph, dst(edge))
-        insert_edge_data!(graph, edge, data)
+        insert!(graph, edge, data)
     else
-        set_edge_data!(graph, data, edge)
+        graph[edge] = data
     end
     return graph
 end
 
-# For ambiguity resolution.
 function NamedGraphs.similar_graph(
         graph::AbstractEdgeDataGraph,
-        VD::Type,
-        ED::Type
+        T::Type
     )
-    # Can't have vertex data, so go to `AbstractDataGraph` fallback.
-    return similar_graph(graph, VD, ED, vertices(graph)) # -> DataGraph
+    new_graph = similar_graph(graph, T, vertices(graph))
+    # we can't generically add edges to an `AbstractEdgeDataGraph`.
+    return new_graph
 end
 
-function NamedGraphs.similar_graph(
-        graph::AbstractEdgeDataGraph,
-        ::Type{Nothing},
-        ED::Type,
-        vertices
-    )
-    return similar_graph(graph, ED, vertices)
-end
-
+# Base method to overload.
 function NamedGraphs.similar_graph(
         ::AbstractEdgeDataGraph,
         T::Type,

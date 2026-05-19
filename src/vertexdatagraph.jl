@@ -56,16 +56,26 @@ for GType in (:VertexDataGraph, :VertexDataDiGraph)
     @eval begin
         Graphs.edgetype(::Type{<:$GType{T, V}}) where {T, V} = NamedEdge{V}
 
-        function Graphs.has_vertex(graph::$GType, vertex)
-            return has_vertex(graph.underlying_graph, vertex)
+        function Graphs.add_vertex!(graph::$GType, vertex)
+            return throw(
+                ArgumentError(
+                    "cannot add data-free vertices to $GType; use `insert!`, `setindex!` or `set!` instead"
+                )
+            )
         end
-        function Graphs.has_edge(graph::$GType, edge::NamedEdge)
-            return has_edge(graph.underlying_graph, edge)
+
+        function Graphs.add_edge!(graph::$GType, edge::NamedEdge)
+            return add_edge!(graph.underlying_graph, edge)
         end
 
         function Graphs.rem_vertex!(graph::$GType, vertex)
             unset!(graph.vertex_data, vertex)
             rem_vertex!(graph.underlying_graph, vertex)
+            return graph
+        end
+
+        function Graphs.rem_edge!(graph::$GType, vertex)
+            rem_edge!(graph.underlying_graph, vertex)
             return graph
         end
 
@@ -88,6 +98,13 @@ for GType in (:VertexDataGraph, :VertexDataDiGraph)
         function NamedGraphs.position_graph(graph::$GType)
             return position_graph(graph.underlying_graph)
         end
+
+        function NamedGraphs.similar_graph(graph::$GType, T::Type, vertices::Vertices)
+            new_graph = $GType{T}(undef, collect(vertices))
+            return new_graph
+        end
+
+        NamedGraphs.similar_graph(T::Type{<:$GType}, vertices) = T(undef, vertices)
     end
 end
 
@@ -95,8 +112,6 @@ end
 
 for GType in (:VertexDataGraph, :VertexDataDiGraph)
     @eval begin
-        underlying_graph(graph::$GType) = getfield(graph, :underlying_graph)
-
         vertex_data_type(::Type{<:$GType{T}}) where {T} = T
 
         function set_vertex_data!(graph::$GType, data, vertex)
@@ -108,9 +123,7 @@ for GType in (:VertexDataGraph, :VertexDataDiGraph)
 
         get_vertex_data(graph::$GType, vertex) = graph.vertex_data[vertex]
 
-        function is_vertex_assigned(graph::$GType, vertex)
-            return isassigned(graph.vertex_data, vertex)
-        end
+        is_vertex_assigned(graph::$GType, vertex) = isassigned(graph.vertex_data, vertex)
         is_edge_assigned(::$GType, _edge) = false
     end
 end

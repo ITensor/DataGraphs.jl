@@ -60,17 +60,15 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
         function Graphs.add_vertex!(graph::$GType, vertex)
             return add_vertex!(graph.underlying_graph, vertex)
         end
-        function Graphs.has_vertex(graph::$GType, vertex)
-            return has_vertex(graph.underlying_graph, vertex)
-        end
-        function Graphs.has_edge(graph::$GType, edge::NamedEdge)
-            return has_edge(graph.underlying_graph, edge)
-        end
 
-        function Graphs.rem_edge!(graph::$GType, edge)
-            unset!(graph.edge_data, edge)
-            rem_edge!(graph.underlying_graph, edge)
-            return graph
+        function Graphs.add_edge!(graph::$GType, edge)
+            G = esc($GType)
+            throw(
+                ArgumentError(
+                    "cannot add data-free edges to $G; use `insert!`, `setindex!` or `set!` instead"
+                )
+            )
+            return nothing
         end
 
         function Graphs.rem_vertex!(graph::$GType, vertex)
@@ -78,6 +76,12 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
                 unset!(graph.edge_data, edge)
             end
             rem_vertex!(graph.underlying_graph, vertex)
+            return graph
+        end
+
+        function Graphs.rem_edge!(graph::$GType, edge)
+            unset!(graph.edge_data, edge)
+            rem_edge!(graph.underlying_graph, edge)
             return graph
         end
 
@@ -100,6 +104,20 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
         function NamedGraphs.position_graph(graph::$GType)
             return position_graph(graph.underlying_graph)
         end
+
+        function NamedGraphs.similar_graph(graph::$GType, T::Type, vertices::Vertices)
+            new_graph = $GType{T}(undef, collect(vertices))
+            return new_graph
+        end
+
+        # We know how to add edges keys for these particurly concrete types
+        function NamedGraphs.similar_graph(graph::$GType, T::Type)
+            new_graph = similar_graph(graph, T, vertices(graph))
+            add_edges!(new_graph.underlying_graph, edges(graph))
+            return new_graph
+        end
+
+        NamedGraphs.similar_graph(T::Type{<:$GType}, vertices) = T(undef, vertices)
     end
 end
 
