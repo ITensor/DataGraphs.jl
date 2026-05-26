@@ -10,6 +10,11 @@ using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedG
     similar_graph, subgraph_edges
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
+struct VertexEdgeDataTypes{VD, ED}
+    vertex_data_type::VD
+    edge_data_type::ED
+end
+
 abstract type AbstractDataGraph{V, VD, ED} <: AbstractNamedGraph{V} end
 
 vertex_data_type(::Type{<:AbstractGraph}) = Any
@@ -145,21 +150,19 @@ end
 """
     similar_graph(datagraph::AbstractDataGraph, D::Type)
     similar_graph(datagraph::AbstractDataGraph, D::Type, vertices)
-    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type)
-    similar_graph(datagraph::AbstractDataGraph, VD::Type, ED::Type, vertices)
+    similar_graph(datagraph::AbstractDataGraph, D::VertexEdgeDataTypes)
+    similar_graph(datagraph::AbstractDataGraph, D::VertexEdgeDataTypes, vertices)
 
 Create an uninitialized data graph, similar to the provided `datagraph`, but with vertices
 defined by `vertices` and a vertex and edge data type `D`. One may also provide separate
-vertex and edge data types `VD` and `ED`.
+vertex and edge data types `VD` and `ED` by using the wrapper `VertexEdgeDataTypes(VD, ED)`.
 If vertices are not provided, then the graph is constructed with the same vertices and edges
 as the input graph.
 """
-function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph
-    )
-    VD = vertex_data_type(graph)
-    ED = edge_data_type(graph)
-    return similar_graph(graph, VD, ED)
+
+NamedGraphs.similar_graph(graph::AbstractDataGraph, D::Type) = similar_datagraph(graph, D)
+function NamedGraphs.similar_graph(graph::AbstractDataGraph, D::VertexEdgeDataTypes)
+    return similar_datagraph(graph, D)
 end
 
 function NamedGraphs.similar_graph(
@@ -168,37 +171,36 @@ function NamedGraphs.similar_graph(
     )
     VD = vertex_data_type(graph)
     ED = edge_data_type(graph)
-    return similar_graph(graph, VD, ED, vertices)
-end
-function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph,
-        D::Type
-    )
-    return similar_graph(graph, D, D)
+
+    return similar_graph(graph, VertexEdgeDataTypes(VD, ED), vertices)
 end
 
+# Base case(s) (overload these if fallback not wanted).
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
         D::Type,
         vertices
     )
-    return similar_graph(graph, D, D, vertices)
+    return similar_datagraph(graph, D, D, vertices)
 end
-
 function NamedGraphs.similar_graph(
         graph::AbstractDataGraph,
-        VD::Type,
-        ED::Type
+        D::VertexEdgeDataTypes,
+        vertices
     )
-    new_graph = similar_graph(graph, VD, ED, vertices(graph))
+    return similar_datagraph(graph, D.vertex_data_type, D.edge_data_type, vertices)
+end
+
+# Internal implementation functions,
+function similar_datagraph(graph::AbstractGraph, D)
+    new_graph = similar_graph(graph, D, vertices(graph))
     add_edges!(new_graph, edges(graph))
 
     return new_graph
 end
 
-# Base case(s) (overload these if fallback not wanted).
-@traitfn function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph::(!IsDirected),
+@traitfn function similar_datagraph(
+        graph::AbstractGraph::(!IsDirected),
         VD::Type,
         ED::Type,
         vertices
@@ -207,8 +209,8 @@ end
 
     return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
 end
-@traitfn function NamedGraphs.similar_graph(
-        graph::AbstractDataGraph::IsDirected,
+@traitfn function similar_datagraph(
+        graph::AbstractGraph::IsDirected,
         VD::Type,
         ED::Type,
         vertices

@@ -18,25 +18,6 @@ function NamedGraphs.similar_graph(
     )
     return similar_graph(graph, valtype(graph), vertices)
 end
-function NamedGraphs.similar_graph(
-        graph::AbstractVertexOrEdgeDataGraph,
-        T::Type,
-        vertices
-    )
-    return similar_graph(graph, T, Vertices(vertices))
-end
-
-# For ambiguity resolution only.
-function NamedGraphs.similar_graph(
-        graph::AbstractVertexOrEdgeDataGraph,
-        VD::Type,
-        ED::Type
-    )
-    # No notion of both vertex and edge data, will go to `AbstractDataGraph` fallback.
-    new_graph = similar_graph(graph, VD, ED, vertices(graph)) # -> DataGraph
-    add_edges!(new_graph, edges(graph))
-    return new_graph
-end
 
 function Base.copy(graph::AbstractVertexOrEdgeDataGraph)
     graph_dst = similar_graph(graph)
@@ -94,6 +75,11 @@ Base.keytype(::Type{<:AbstractVertexDataGraph{T, V}}) where {T, V} = V
 
 is_edge_assigned(::AbstractVertexDataGraph, _edge) = false
 
+# For method ambiguity resolution,
+# TODO: remove this method once generic `AbstractDataGraph` method is upgraded.
+function set_index_data!(graph::AbstractVertexDataGraph, data, vertex::AbstractEdge)
+    return throw(MethodError(graph, (data, vertex)))
+end
 # `setindex!`
 function set_index_data!(graph::AbstractVertexDataGraph, data, vertex)
     if !has_vertex(graph, vertex)
@@ -145,7 +131,7 @@ end
 function NamedGraphs.similar_graph(
         ::AbstractVertexDataGraph,
         T::Type,
-        vertices::Vertices
+        vertices
     )
     return similar_graph(VertexDataGraph{T}, vertices)
 end
@@ -251,9 +237,9 @@ end
 function NamedGraphs.similar_graph(
         ::AbstractEdgeDataGraph,
         T::Type,
-        vertices::Vertices
+        vertices
     )
-    return similar_graph(EdgeDataGraph{T}, collect(vertices))
+    return similar_graph(EdgeDataGraph{T}, vertices)
 end
 
 function NamedGraphs.induced_subgraph_from_vertices(

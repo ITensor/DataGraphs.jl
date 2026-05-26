@@ -110,8 +110,8 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
             return position_graph(graph.underlying_graph)
         end
 
-        function NamedGraphs.similar_graph(graph::$GType, T::Type, vertices::Vertices)
-            new_graph = $GType{T}(undef, collect(vertices))
+        function NamedGraphs.similar_graph(graph::$GType, T::Type, vertices)
+            new_graph = $GType{T}(undef, vertices)
             return new_graph
         end
 
