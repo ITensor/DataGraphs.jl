@@ -2,7 +2,11 @@ using Dictionaries: Dictionaries, Indices, isinsertable, set!
 using Graphs: edges, edgetype, has_edge, has_vertex, rem_edge!, rem_vertex!, vertices
 using NamedGraphs: NamedGraphs, Vertices, similar_graph, subgraph_edges, to_graph_index
 
-abstract type AbstractVertexOrEdgeDataGraph{T, V} <: AbstractDataGraph{V, T, T} end
+abstract type AbstractVertexDataGraph{T, V} <: AbstractDataGraph{V, T, Nothing} end
+abstract type AbstractEdgeDataGraph{T, V} <: AbstractDataGraph{V, Nothing, T} end
+
+const AbstractVertexOrEdgeDataGraph{T, V} =
+    Union{AbstractVertexDataGraph{T, V}, AbstractEdgeDataGraph{T, V}}
 
 Graphs.edgetype(graph::AbstractVertexOrEdgeDataGraph) = edgetype(typeof(graph))
 
@@ -68,8 +72,6 @@ function Dictionaries.set!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
 end
 
 # ================================== vertex data graph =================================== #
-
-abstract type AbstractVertexDataGraph{T, V} <: AbstractVertexOrEdgeDataGraph{T, V} end
 
 Base.keytype(::Type{<:AbstractVertexDataGraph{T, V}}) where {T, V} = V
 
@@ -166,8 +168,6 @@ function Base.show(io::IO, mime::MIME"text/plain", graph::AbstractVertexDataGrap
 end
 
 # =================================== edge data graph ==================================== #
-
-abstract type AbstractEdgeDataGraph{T, V} <: AbstractVertexOrEdgeDataGraph{T, V} end
 
 Base.keytype(::Type{<:AbstractEdgeDataGraph{T, V}}) where {T, V} = NamedEdge{V}
 
