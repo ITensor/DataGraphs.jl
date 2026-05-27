@@ -360,7 +360,7 @@ using Test: @test, @test_throws, @testset
             @test !isassigned(gs, 1 => 2)
 
             gs = similar_graph(g, Char)
-            @test vertex_data_type(gs) === Char
+            @test edge_data_type(gs) === Char
             @test nv(gs) == 3
             @test ne(gs) == 2
             gs[3 => 1] = 'C'
