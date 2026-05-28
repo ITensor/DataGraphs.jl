@@ -5,77 +5,78 @@ using NamedGraphs: NamedGraphs, Vertices, similar_graph, subgraph_edges, to_grap
 abstract type AbstractVertexDataGraph{T, V} <: AbstractDataGraph{V, T, Nothing} end
 abstract type AbstractEdgeDataGraph{T, V} <: AbstractDataGraph{V, Nothing, T} end
 
-const AbstractVertexOrEdgeDataGraph{T, V} =
-    Union{AbstractVertexDataGraph{T, V}, AbstractEdgeDataGraph{T, V}}
+for GType in (:AbstractVertexDataGraph, :AbstractEdgeDataGraph)
+    @eval begin
+        Graphs.edgetype(graph::$GType) = edgetype(typeof(graph))
 
-Graphs.edgetype(graph::AbstractVertexOrEdgeDataGraph) = edgetype(typeof(graph))
+        function NamedGraphs.similar_graph(
+                graph::$GType
+            )
+            return similar_graph(graph, valtype(graph))
+        end
 
-function NamedGraphs.similar_graph(
-        graph::AbstractVertexOrEdgeDataGraph
-    )
-    return similar_graph(graph, valtype(graph))
-end
+        function NamedGraphs.similar_graph(
+                graph::$GType,
+                vertices
+            )
+            return similar_graph(graph, valtype(graph), vertices)
+        end
 
-function NamedGraphs.similar_graph(
-        graph::AbstractVertexOrEdgeDataGraph,
-        vertices
-    )
-    return similar_graph(graph, valtype(graph), vertices)
-end
+        function Base.copy(graph::$GType)
+            graph_dst = similar_graph(graph)
+            # Allow copies of graphs with undefined data.
+            copyto!(graph_dst, graph, filter(key -> isassigned(graph, key), keys(graph)))
+            return graph_dst
+        end
 
-function Base.copy(graph::AbstractVertexOrEdgeDataGraph)
-    graph_dst = similar_graph(graph)
-    # Allow copies of graphs with undefined data.
-    copyto!(graph_dst, graph, filter(key -> isassigned(graph, key), keys(graph)))
-    return graph_dst
-end
+        function Base.copyto!(graph_dst::$GType, src)
+            copyto!(graph_dst, src, keys(src))
+            return graph_dst
+        end
 
-function Base.copyto!(graph_dst::AbstractVertexOrEdgeDataGraph, src)
-    copyto!(graph_dst, src, keys(src))
-    return graph_dst
-end
+        Base.iterate(graph::$GType) = iterate(index_data(graph))
+        function Base.iterate(graph::$GType, state)
+            return iterate(index_data(graph), state)
+        end
 
-Base.iterate(graph::AbstractVertexOrEdgeDataGraph) = iterate(index_data(graph))
-function Base.iterate(graph::AbstractVertexOrEdgeDataGraph, state)
-    return iterate(index_data(graph), state)
-end
+        Base.keytype(graph::$GType) = keytype(typeof(graph))
 
-Base.keytype(graph::AbstractVertexOrEdgeDataGraph) = keytype(typeof(graph))
+        Base.valtype(graph::$GType) = valtype(typeof(graph))
+        Base.valtype(::Type{<:$GType{T}}) where {T} = T
 
-Base.valtype(graph::AbstractVertexOrEdgeDataGraph) = valtype(typeof(graph))
-Base.valtype(::Type{<:AbstractVertexOrEdgeDataGraph{T}}) where {T} = T
+        Base.eltype(graph::$GType) = eltype(typeof(graph))
+        Base.eltype(::Type{<:$GType{T}}) where {T} = T
 
-Base.eltype(graph::AbstractVertexOrEdgeDataGraph) = eltype(typeof(graph))
-Base.eltype(::Type{<:AbstractVertexOrEdgeDataGraph{T}}) where {T} = T
+        Base.length(graph::$GType) = length(index_data(graph))
+        Base.keys(graph::$GType) = keys(index_data(graph))
+        Base.values(graph::$GType) = values(index_data(graph))
 
-Base.length(graph::AbstractVertexOrEdgeDataGraph) = length(index_data(graph))
-Base.keys(graph::AbstractVertexOrEdgeDataGraph) = keys(index_data(graph))
-Base.values(graph::AbstractVertexOrEdgeDataGraph) = values(index_data(graph))
+        Dictionaries.issettable(::$GType) = true
+        Dictionaries.isinsertable(::$GType) = false
 
-Dictionaries.issettable(::AbstractVertexOrEdgeDataGraph) = true
-Dictionaries.isinsertable(::AbstractVertexOrEdgeDataGraph) = false
+        function Base.insert!(graph::$GType, ind, data)
+            isinsertable(graph) || throw(ArgumentError("Graph does not support insertion."))
+            insert!_datagraph(graph, to_graph_index(graph, ind), data)
+            return graph
+        end
 
-function Base.insert!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
-    isinsertable(graph) || throw(ArgumentError("Graph does not support insertion."))
-    insert!_datagraph(graph, to_graph_index(graph, ind), data)
-    return graph
-end
+        function Base.delete!(graph::$GType, ind)
+            delete!_datagraph(graph, to_graph_index(graph, ind))
+            return graph
+        end
 
-function Base.delete!(graph::AbstractVertexOrEdgeDataGraph, ind)
-    delete!_datagraph(graph, to_graph_index(graph, ind))
-    return graph
-end
+        function Dictionaries.set!(graph::$GType, ind, data)
+            set!_datagraph(graph, to_graph_index(graph, ind), data)
+            return graph
+        end
 
-function Dictionaries.set!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
-    set!_datagraph(graph, to_graph_index(graph, ind), data)
-    return graph
-end
-
-function Base.merge!(graph::AbstractVertexOrEdgeDataGraph, other)
-    for key in keys(other)
-        set!(graph, key, other[key])
+        function Base.merge!(graph::$GType, other)
+            for key in keys(other)
+                set!(graph, key, other[key])
+            end
+            return graph
+        end
     end
-    return graph
 end
 
 # ================================== vertex data graph =================================== #
