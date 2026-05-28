@@ -14,10 +14,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [sources.DataGraphs]
 path = ".."
 
-[sources.NamedGraphs]
-rev = "jd/fix-forest-cover-edge-sequence"
-url = "https://www.github.com/ITensor/NamedGraphs.jl"
-
 [compat]
 Aqua = "0.8.11"
 DataGraphs = "0.4"
