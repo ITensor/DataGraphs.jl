@@ -54,7 +54,7 @@ edge_data_type(G::Type{<:DataGraph}) = eltype(fieldtype(G, :edge_data))
 # Extras
 
 # Overwrite the `AbstractDataGraph` fallback (even though they coincide for `DataGraph`)
-function NamedGraphs.similar_graph(
+function similar_datagraph(
         graph::DataGraph,
         vertex_data_type::Type,
         edge_data_type::Type,

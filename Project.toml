@@ -1,6 +1,6 @@
 name = "DataGraphs"
 uuid = "b5a273c3-7e6c-41f6-98bd-8d7f1525a36a"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
 
 [workspace]
@@ -25,6 +25,6 @@ Dictionaries = "0.4"
 Graphs = "1"
 GraphsFlows = "0.1.1"
 ITensorVisualizationBase = "0.1"
-NamedGraphs = "0.11.1"
+NamedGraphs = "0.11.4"
 SimpleTraits = "0.9"
 julia = "1.10"

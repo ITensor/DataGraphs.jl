@@ -16,7 +16,7 @@ path = ".."
 
 [compat]
 Aqua = "0.8.11"
-DataGraphs = "0.4"
+DataGraphs = "0.5"
 Dictionaries = "0.4.4"
 Graphs = "1.12"
 GraphsFlows = "0.1.1"
