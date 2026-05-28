@@ -4,10 +4,7 @@ using NamedGraphs: NamedEdge, NamedGraph, ordered_vertices, position_graph, vert
 struct EdgeDataGraph{T, V} <: AbstractEdgeDataGraph{T, V}
     underlying_graph::NamedGraph{V}
     edge_data::Dictionary{NamedEdge{V}, T}
-    function EdgeDataGraph{T, V}(
-            ::UndefInitializer,
-            vertices
-        ) where {T, V}
+    function EdgeDataGraph{T, V}(::UndefInitializer, vertices) where {T, V}
         graph = NamedGraph{V}(vertices)
         edge_data = Dictionary{NamedEdge{V}, T}()
         return new{T, V}(graph, edge_data)
@@ -19,10 +16,7 @@ Graphs.is_directed(::Type{<:EdgeDataGraph}) = false
 struct EdgeDataDiGraph{T, V} <: AbstractEdgeDataGraph{T, V}
     underlying_graph::NamedDiGraph{V}
     edge_data::Dictionary{NamedEdge{V}, T}
-    function EdgeDataDiGraph{T, V}(
-            ::UndefInitializer,
-            vertices
-        ) where {T, V}
+    function EdgeDataDiGraph{T, V}(::UndefInitializer, vertices) where {T, V}
         graph = NamedDiGraph{V}(vertices)
         edge_data = Dictionary{NamedEdge{V}, T}()
         return new{T, V}(graph, edge_data)
@@ -45,6 +39,7 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
             edges = NamedEdge{V}.(keys(data))
             vertices = union(src.(edges), dst.(edges))
             graph = $GType{T, V}(undef, vertices)
+            add_edges!(graph.underlying_graph, edges)
             copyto!(graph, data)
             return graph
         end
@@ -111,8 +106,7 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
         end
 
         function NamedGraphs.similar_graph(graph::$GType, T::Type, vertices)
-            new_graph = $GType{T}(undef, vertices)
-            return new_graph
+            return $GType{T}(undef, vertices)
         end
 
         # We know how to add edges keys for these particurly concrete types
