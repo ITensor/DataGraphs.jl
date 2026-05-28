@@ -127,8 +127,8 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
         edge_data_type(::Type{<:$GType{T}}) where {T} = T
 
         function set_edge_data!(graph::$GType, data, edge)
-            # Edges `upsert` if vertices are present.
-            has_edge(graph, edge) || add_edge!(graph.underlying_graph, edge)
+            # We use an upsert here as we have already checked if the edge (i.e. key) exists,
+            # but it might not exist in the internal `Dictionary`, so add it if not.
             set!(graph.edge_data, edge, data)
             return graph
         end
@@ -145,5 +145,11 @@ end
 for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
         Dictionaries.isinsertable(::$GType) = true
+
+        function insert_edge_data!(graph::$GType, vertex, data)
+            add_edge!(graph.underlying_graph, vertex)
+            insert!(graph.edge_data, vertex, data)
+            return graph
+        end
     end
 end

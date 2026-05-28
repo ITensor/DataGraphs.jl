@@ -269,7 +269,7 @@ using Test: @test, @test_throws, @testset
 
             # Test we can copy a graph with undefined data.
             g = GType(undef, [1, 2, 3])
-            g[1 => 2] = "E12"
+            insert!(g, 1 => 2, "E12")
             g_copy = copy(g)
 
             @test has_vertex(g_copy, 1)
@@ -363,9 +363,6 @@ using Test: @test, @test_throws, @testset
             @test edge_data_type(gs) === Char
             @test nv(gs) == 3
             @test ne(gs) == 2
-            gs[3 => 1] = 'C'
-            @test gs[3 => 1] == 'C'
-            @test ne(gs) == 3
 
             gs = similar_graph(g, Float64, vertices(g))
             @test ne(gs) == 0
@@ -399,51 +396,30 @@ using Test: @test, @test_throws, @testset
             g = GType(undef, [1.0, 2.0, 3.0])
             @test keytype(g) == NamedEdge{Int}
 
-            g = GType(undef, [1, 2, 3])
+            g = GType(undef, [1, 2, 3, 4])
+            # insert!
             insert!(g, 3 => 4, "E34")
             @test has_vertex(g, 4)
             @test has_edge(g, 3 => 4)
             @test isassigned(g, 3 => 4)
             @test g[3 => 4] == "E34"
-
-            g = GType(undef, [1, 2, 3])
-            insert!(g, 5 => 6, "E56")
-            @test has_vertex(g, 5)
-            @test has_vertex(g, 6)
-            @test has_edge(g, 5 => 6)
-            @test isassigned(g, 5 => 6)
-            @test g[5 => 6] == "E56"
-
-            g = GType(undef, [1, 2, 3])
-            @test_throws IndexError insert!(g, 2 => 3, "E23")
-            @test !has_edge(g, 2 => 3)
-
+            @test_throws IndexError insert!(g, 4 => 5, "E45")
+            @test_throws IndexError insert!(g, 5 => 6, "E56")
+            @test_throws IndexError insert!(g, 3 => 4, "E34_again")
+            # setindex!
+            g[3 => 4] = "E34_again"
+            @test g[3 => 4] == "E34_again"
+            @test_throws IndexError g[1 => 2] == ""
+            @test_throws IndexError g[2 => 3] == ""
+            # set!
             g = GType(undef, [1, 2, 3])
             set!(g, 1 => 2, "E12")
             @test has_edge(g, 1 => 2)
             @test g[1 => 2] == "E12"
-
-            g = GType(undef, [1, 2, 3])
-            set!(g, 3 => 4, "E34")
-            @test has_vertex(g, 4)
-            @test has_edge(g, 3 => 4)
-            @test g[3 => 4] == "E34"
-
-            g = GType(undef, [1, 2, 3])
-            set!(g, 4 => 5, "E45")
-            @test has_vertex(g, 4)
-            @test has_vertex(g, 5)
-            @test has_edge(g, 4 => 5)
-            @test g[4 => 5] == "E45"
-            set!(g, 4 => 5, "E45_again")
-            @test g[4 => 5] == "E45_again"
-
-            g = GType(undef, [1, 2, 3])
-            g[2 => 3] = "E23"
-            @test has_edge(g, 2 => 3)
-            @test g[2 => 3] == "E23"
-            @test_throws IndexError g[3 => 4] = "E34"
-            @test_throws IndexError g[4 => 5] = "E45"
+            set!(g, 1 => 2, "E12_again")
+            @test g[1 => 2] == "E12_again"
+            @test_throws IndexError set!(g, 3 => 4, "E34")
+            @test_throws IndexError set!(g, 4 => 5, "E45")
 
             g = EdgeDataGraph{String, Int}(undef, [1, 2, 3])
             @test_throws IndexError edge_data(g)[2 => 3] = "E23"

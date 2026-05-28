@@ -71,6 +71,13 @@ function Dictionaries.set!(graph::AbstractVertexOrEdgeDataGraph, ind, data)
     return graph
 end
 
+function Base.merge!(graph::AbstractVertexOrEdgeDataGraph, other)
+    for key in keys(other)
+        set!(graph, key, other[key])
+    end
+    return graph
+end
+
 # ================================== vertex data graph =================================== #
 
 Base.keytype(::Type{<:AbstractVertexDataGraph{T, V}}) where {T, V} = V
@@ -175,12 +182,8 @@ is_vertex_assigned(::AbstractEdgeDataGraph, _vertex) = false
 
 # `setindex!`
 function set_index_data!(graph::AbstractEdgeDataGraph, data, edge::AbstractEdge)
-    v1 = src(edge)
-    v2 = dst(edge)
-    if !has_vertex(graph, v1)
-        throw(IndexError("Graph does not contain vertex $v1"))
-    elseif !has_vertex(graph, v2)
-        throw(IndexError("Graph does not contain vertex $v2"))
+    if !has_edge(graph, edge)
+        throw(IndexError("Graph does not contain edge $edge"))
     end
     set_edge_data!(graph, data, edge)
     return graph
@@ -188,20 +191,10 @@ end
 
 # `insert!`
 function insert!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    v1 = src(edge)
-    v2 = dst(edge)
-    if has_vertex(graph, v1) && has_vertex(graph, v2)
-        throw(IndexError("Graph already contains vertices $v1 and $v2"))
+    if has_edge(graph, edge)
+        throw(IndexError("Graph already contains edge $edge"))
     end
     insert_edge_data!(graph, edge, data)
-    return graph
-end
-function insert_edge_data!(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    v1 = src(edge)
-    v2 = dst(edge)
-    has_vertex(graph, v1) || add_vertex!(graph, v1)
-    has_vertex(graph, v2) || add_vertex!(graph, v2)
-    set_edge_data!(graph, data, edge)
     return graph
 end
 
@@ -216,10 +209,10 @@ end
 
 # `set!`
 function set!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
-    if !has_vertex(graph, src(edge)) || !has_vertex(graph, dst(edge))
-        insert!(graph, edge, data)
-    else
+    if has_edge(graph, edge)
         graph[edge] = data
+    else
+        insert!(graph, edge, data)
     end
     return graph
 end
@@ -251,7 +244,7 @@ function NamedGraphs.induced_subgraph_from_vertices(
 
     tensors = view(edge_data(graph), Indices(subedges))
 
-    copyto!(subnetwork, tensors)
+    merge!(subnetwork, tensors)
 
     return subnetwork, subvertices
 end
