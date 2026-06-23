@@ -31,10 +31,13 @@ function isassigned_datagraph(graph::AbstractGraph, inds::AbstractGraphIndices)
     return all(ind -> isassigned(graph, ind), inds)
 end
 
-is_graph_index_assigned(graph::AbstractGraph, vertex) = is_vertex_assigned(graph, vertex)
+function is_graph_index_assigned(graph::AbstractGraph{V}, vertex) where {V}
+    return is_vertex_assigned(graph, convert(V, vertex))
+end
 
 function is_graph_index_assigned(graph::AbstractGraph, edge::AbstractEdge)
-    return is_edge_assigned(graph, arrange_edge(graph, edge))
+    E = edgetype(graph)
+    return is_edge_assigned(graph, convert(E, arrange_edge(graph, edge)))
 end
 
 # ====================================== setindex! ======================================= #

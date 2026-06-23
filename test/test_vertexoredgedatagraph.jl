@@ -104,6 +104,7 @@ using Test: @test, @test_throws, @testset
             @test !isassigned(g, 1)
             @test !isassigned(g, 2)
             @test !isassigned(g, 3)
+            @test !isassigned(g, 3.0)
             add_edge!(g, NamedEdge(1, 2))
             @test !isassigned(g, 1 => 2)
         end
@@ -116,6 +117,7 @@ using Test: @test, @test_throws, @testset
             @test isassigned(g, 1)
             @test isassigned(g, 2)
             @test isassigned(g, 3)
+            @test isassigned(g, 3.0)
             @test g[1] == "V1"
             @test g[2] == "V2"
             @test g[3] == "V3"
@@ -302,6 +304,7 @@ using Test: @test, @test_throws, @testset
             @test edge_data_type(g) == String
             @test !isassigned(g, 1)
             @test !isassigned(g, NamedEdge(1, 2))
+            @test !isassigned(g, NamedEdge(1.0, 2.0))
         end
 
         @testset "setindex! and getindex" begin
@@ -310,6 +313,8 @@ using Test: @test, @test_throws, @testset
             g[NamedEdge(1, 2)] = "E12_updated"
             @test g[NamedEdge(1, 2)] == "E12_updated"
             @test g[NamedEdge(2, 3)] == "E23"
+            @test isassigned(g, NamedEdge(1.0, 2.0 + 0.0im))
+            @test g[NamedEdge(2.0, 3.0)] == "E23"
         end
 
         @testset "rem_edge!" begin
