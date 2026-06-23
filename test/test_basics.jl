@@ -61,6 +61,7 @@ using Test: @test, @test_broken, @testset
         dg[3] = "V3"
         dg[4] = "V4"
         @test isassigned(dg, 1)
+        @test isassigned(dg, 1.0)
         @test dg[1] == "V1"
         @test dg[2] == "V2"
         @test dg[3] == "V3"
@@ -71,7 +72,9 @@ using Test: @test, @test_broken, @testset
         dg[NamedEdge(3, 4)] = :E34
         #@test isassigned(dg, (1, 2))
         @test isassigned(dg, NamedEdge(2, 3))
+        @test isassigned(dg, NamedEdge(2.0, 3.0))
         @test isassigned(dg, 3 => 4)
+        @test isassigned(dg, 3.0 => 4.0)
         @test dg[NamedEdge(1, 2)] == :E12
         @test dg[2 => 3] == :E23
         @test dg[3 => 4] == :E34
