@@ -9,4 +9,4 @@ path = ".."
 [compat]
 DataGraphs = "0.5"
 Graphs = "1.12"
-NamedGraphs = "0.11"
+NamedGraphs = "0.11, 0.12"
