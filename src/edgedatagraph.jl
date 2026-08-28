@@ -1,5 +1,5 @@
 using Graphs: dst, has_edge, rem_edge!, rem_vertex!, src
-using NamedGraphs: NamedEdge, NamedGraph, ordered_vertices, position_graph, vertex_positions
+using NamedGraphs: NamedEdge, NamedGraph, decoded_vertex, encoded_graph, encoded_vertex
 
 struct EdgeDataGraph{T, V} <: AbstractEdgeDataGraph{T, V}
     underlying_graph::NamedGraph{V}
@@ -75,14 +75,12 @@ for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
             for edge in incident_edges(graph, vertex)
                 unset!(graph.edge_data, edge)
             end
-            rem_vertex!(graph.underlying_graph, vertex)
-            return graph
+            return rem_vertex!(graph.underlying_graph, vertex)
         end
 
         function Graphs.rem_edge!(graph::$GType, edge)
             unset!(graph.edge_data, edge)
-            rem_edge!(graph.underlying_graph, edge)
-            return graph
+            return rem_edge!(graph.underlying_graph, edge)
         end
 
         Graphs.vertices(graph::$GType) = vertices(graph.underlying_graph)
@@ -93,16 +91,16 @@ end
 
 for GType in (:EdgeDataGraph, :EdgeDataDiGraph)
     @eval begin
-        function NamedGraphs.vertex_positions(graph::$GType)
-            return vertex_positions(graph.underlying_graph)
+        function NamedGraphs.encoded_vertex(graph::$GType, vertex)
+            return encoded_vertex(graph.underlying_graph, vertex)
         end
 
-        function NamedGraphs.ordered_vertices(graph::$GType)
-            return ordered_vertices(graph.underlying_graph)
+        function NamedGraphs.decoded_vertex(graph::$GType, code::Integer)
+            return decoded_vertex(graph.underlying_graph, code)
         end
 
-        function NamedGraphs.position_graph(graph::$GType)
-            return position_graph(graph.underlying_graph)
+        function NamedGraphs.encoded_graph(graph::$GType)
+            return encoded_graph(graph.underlying_graph)
         end
 
         function NamedGraphs.similar_graph(graph::$GType, T::Type, vertices)

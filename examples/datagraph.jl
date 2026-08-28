@@ -1,7 +1,6 @@
 using DataGraphs: DataGraph
 using Graphs: has_edge, has_vertex
-using NamedGraphs.NamedGraphGenerators: named_grid
-using NamedGraphs: NamedEdge
+using NamedGraphs: NamedEdge, named_grid
 
 g = named_grid((4))
 dg = DataGraph(g; vertex_data_type = String, edge_data_type = Symbol)
