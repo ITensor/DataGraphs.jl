@@ -1,13 +1,10 @@
 using Dictionaries: Indices, set!, unset!
 using Graphs: Graphs, AbstractEdge, IsDirected, a_star, add_edge!, add_vertex!, edges,
     indegree, induced_subgraph, ne, nv, outdegree, steiner_tree, vertices
-using NamedGraphs.GraphsExtensions: GraphsExtensions, add_edges!, add_vertices!,
-    arrange_edge, incident_edges, is_edge_arranged, rem_edges, vertextype
-using NamedGraphs.OrdinalIndexing: OrdinalSuffixedInteger
-using NamedGraphs.SimilarType: similar_type
-using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedEdge, AbstractNamedGraph,
-    AbstractVertices, NamedDiGraph, NamedGraph, Vertices, position_graph_type,
-    similar_graph, subgraph_edges
+using NamedGraphs: NamedGraphs, AbstractEdges, AbstractNamedGraph, AbstractVertices,
+    NamedDiGraph, NamedGraph, Vertices, add_edges!, arrange_edge, decoded_vertex,
+    encoded_graph, encoded_graph_type, encoded_vertex, incident_edges, is_edge_arranged,
+    rem_edges, similar_graph, subgraph_edges, vertextype
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
 struct VertexEdgeDataTypes{VD, ED}
@@ -72,8 +69,8 @@ underlying_graph_type(graph::AbstractGraph) = typeof(underlying_graph(graph))
 vertex_data_type(graph::AbstractGraph) = vertex_data_type(typeof(graph))
 edge_data_type(graph::AbstractGraph) = edge_data_type(typeof(graph))
 
-function NamedGraphs.position_graph_type(type::Type{<:AbstractDataGraph})
-    return position_graph_type(underlying_graph_type(type))
+function NamedGraphs.encoded_graph_type(type::Type{<:AbstractDataGraph})
+    return encoded_graph_type(underlying_graph_type(type))
 end
 
 function Base.copy(graph::AbstractDataGraph)
@@ -116,27 +113,24 @@ function Graphs.vertices(graph::AbstractDataGraph)
     return Graphs.vertices(underlying_graph(graph))
 end
 function Graphs.add_vertex!(graph::AbstractDataGraph, vertex)
-    Graphs.add_vertex!(underlying_graph(graph), vertex)
-    return graph
+    return Graphs.add_vertex!(underlying_graph(graph), vertex)
 end
 
 # Simple NamedGraphs overloads
-for f in [
-        :(NamedGraphs.ordered_vertices),
-        :(NamedGraphs.vertex_positions),
-        :(NamedGraphs.position_graph),
-    ]
-    @eval begin
-        $f(graph::AbstractDataGraph) = $f(underlying_graph(graph))
-    end
+NamedGraphs.encoded_graph(graph::AbstractDataGraph) = encoded_graph(underlying_graph(graph))
+function NamedGraphs.encoded_vertex(graph::AbstractDataGraph, vertex)
+    return encoded_vertex(underlying_graph(graph), vertex)
+end
+function NamedGraphs.decoded_vertex(graph::AbstractDataGraph, code::Integer)
+    return decoded_vertex(underlying_graph(graph), code)
 end
 
 # These cannot be known abstractly.
-GraphsExtensions.directed_graph_type(::AbstractDataGraph) = not_implemented()
-GraphsExtensions.undirected_graph_type(::AbstractDataGraph) = not_implemented()
+NamedGraphs.directed_graph_type(::AbstractDataGraph) = not_implemented()
+NamedGraphs.undirected_graph_type(::AbstractDataGraph) = not_implemented()
 
 # Thase canot be implemented abstractly.
-GraphsExtensions.convert_vertextype(::Type, ::AbstractDataGraph) = not_implemented()
+NamedGraphs.convert_vertextype(::Type, ::AbstractDataGraph) = not_implemented()
 
 function Base.:(==)(dg1::AbstractDataGraph, dg2::AbstractDataGraph)
     underlying_graph(dg1) == underlying_graph(dg2) || return false
@@ -220,24 +214,15 @@ end
     return DataGraph(underlying_graph; vertex_data_type = VD, edge_data_type = ED)
 end
 
-# Fix for ambiguity error with `AbstractGraph` version
-function Graphs.eccentricity(
-        graph::AbstractDataGraph,
-        vertex::Integer,
-        distmx::AbstractMatrix{<:Real} = NamedGraphs.weights(graph)
-    )
-    return NamedGraphs.namedgraph_eccentricity(graph, vertex, distmx)
-end
+@traitfn NamedGraphs.directed_graph(graph::AbstractDataGraph::IsDirected) = graph
 
-@traitfn GraphsExtensions.directed_graph(graph::AbstractDataGraph::IsDirected) = graph
-
-reverse_data_direction(graph::AbstractDataGraph, data) = data
-function reverse_data_direction(graph::AbstractDataGraph, edge::AbstractEdge, data)
+reverse_data_direction(graph::AbstractGraph, data) = data
+function reverse_data_direction(graph::AbstractGraph, edge::AbstractEdge, data)
     return is_edge_arranged(graph, edge) ? data : reverse_data_direction(graph, data)
 end
 
 # Fallback to constructing a concrete `DataGraph`.
-@traitfn function GraphsExtensions.directed_graph(graph::AbstractDataGraph::(!IsDirected))
+@traitfn function NamedGraphs.directed_graph(graph::AbstractDataGraph::(!IsDirected))
     underlying_digraph = similar_graph(NamedDiGraph, vertices(graph)) # edgeless
 
     VD = vertex_data_type(graph)
@@ -264,7 +249,7 @@ end
     return digraph
 end
 
-function GraphsExtensions.rename_vertices(f::Function, graph::AbstractDataGraph)
+function NamedGraphs.rename_vertices(f::Function, graph::AbstractDataGraph)
     # Uses the two-argument `similar_graph` method so the new graph has correct vertex type
     renamed_vertices = map(f, vertices(graph))
     renamed_graph = similar_graph(graph, renamed_vertices)
@@ -351,12 +336,10 @@ function Base.union(
 end
 
 function Graphs.rem_vertex!(graph::AbstractDataGraph, vertex)
-    Graphs.rem_vertex!(underlying_graph(graph), vertex)
-    return graph
+    return Graphs.rem_vertex!(underlying_graph(graph), vertex)
 end
 function Graphs.rem_edge!(graph::AbstractDataGraph, edge)
-    Graphs.rem_edge!(underlying_graph(graph), edge)
-    return graph
+    return Graphs.rem_edge!(underlying_graph(graph), edge)
 end
 
 function map_vertex_data(f, graph::AbstractGraph; vertices = nothing)

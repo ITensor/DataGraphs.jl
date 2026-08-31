@@ -1,18 +1,18 @@
 module TestModule
 
-using DataGraphs: DataGraphs, AbstractDataGraph, DataGraph, EdgeDataView, VertexDataView,
-    assigned_edge_data, assigned_vertex_data, edge_data, edge_data_type, underlying_graph,
-    vertex_data, vertex_data_type
+using DataGraphs: DataGraphs, AbstractDataGraph, DataGraph, EdgeDataGraph, EdgeDataView,
+    VertexDataGraph, VertexDataView, assigned_edge_data, assigned_vertex_data, edge_data,
+    edge_data_type, set_index_data!, underlying_graph, vertex_data, vertex_data_type
 using Dictionaries: Dictionary, IndexError, Indices
-using Graphs: AbstractGraph, dst, edges, edgetype, has_edge, has_vertex, src, vertices
-using NamedGraphs.GraphsExtensions: GraphsExtensions, subgraph, vertextype
-using NamedGraphs.NamedGraphGenerators: named_path_graph
-using NamedGraphs.PartitionedGraphs: PartitionedGraph, PartitionedGraphs, QuotientEdge,
-    QuotientEdges, QuotientVertex, QuotientVertexOrEdge, QuotientVertexVertex,
+using Graphs:
+    AbstractGraph, dst, edges, edgetype, has_edge, has_vertex, path_graph, src, vertices
+using NamedGraphs.PartitionedGraphs: PartitionedGraph, PartitionedGraphs, PartitionedView,
+    QuotientEdge, QuotientEdges, QuotientVertex, QuotientVertexOrEdge, QuotientVertexVertex,
     QuotientVertexVertices, QuotientVertices, QuotientVerticesVertices, QuotientView,
     departition, partitioned_vertices, partitionedgraph, quotient_graph, quotientedges,
     quotientvertices, unpartition
-using NamedGraphs: NamedGraphs, Edges, NamedGraph, Vertices, similar_graph
+using NamedGraphs: NamedGraphs, Edges, NamedEdge, NamedGraph, Vertices, named_path_graph,
+    similar_graph, subgraph, vertextype
 using Test: @test, @test_throws, @testset
 
 struct TestDataGraph{V, VD, ED, DG <: DataGraph{V, VD, ED}, QDG} <:
@@ -305,6 +305,59 @@ end
             @test !has_edge(QuotientView(sg), :b => :c)
         end
     end
+
+    @testset "Quotient indexing of vertex or edge data graphs" begin
+        vdg = VertexDataGraph(Dictionary([1, 2], ["1", "2"]))
+        edg = EdgeDataGraph(Dictionary([NamedEdge(1, 2)], [("1", "2")]))
+
+        # A quotient index is never a vertex or an edge of these graphs, so it takes the
+        # quotient meaning rather than the vertex or edge meaning.
+        for (graph, ind) in (
+                (vdg, QuotientVertex(1)),
+                (vdg, QuotientEdge(NamedEdge(1, 2))),
+                (edg, QuotientEdge(NamedEdge(1, 2))),
+            )
+            method = which(set_index_data!, Tuple{typeof(graph), String, typeof(ind)})
+            @test method.module === DataGraphs.DataGraphsPartitionedGraphsExt
+            @test_throws MethodError set_index_data!(graph, "x", ind)
+        end
+    end
+end
+
+@testset "quotient_graph of a PartitionedView over a DataGraph" begin
+    # Nothing else reaches
+    # `quotient_graph(::PartitionedView{<:Any, PV, <:DataGraph})`, since the other
+    # tests build a `PartitionedGraph` from the underlying `NamedGraph` instead.
+    g = DataGraph(
+        NamedGraph(path_graph(4), ["a", "b", "c", "d"]);
+        vertex_data_type = String,
+        edge_data_type = Symbol
+    )
+    for (v, d) in zip(["a", "b", "c", "d"], ["v_a", "v_b", "v_c", "v_d"])
+        g[v] = d
+    end
+    g["a" => "b"] = :e_ab
+    g["b" => "c"] = :e_bc
+    g["c" => "d"] = :e_cd
+
+    pvs = Dictionary([:L, :R], [["a", "b"], ["c", "d"]])
+    pv = PartitionedView(g, pvs)
+    qg = quotient_graph(pv)
+
+    @test qg isa DataGraph
+    @test issetequal(vertices(qg), [:L, :R])
+    @test issetequal(edges(qg), [edgetype(qg)(:L => :R)])
+
+    # The data types come from `Base.promote_op`, which infers `Union{}` rather
+    # than throwing if the inner call is broken.
+    @test vertex_data_type(typeof(qg)) !== Union{}
+    @test edge_data_type(typeof(qg)) !== Union{}
+
+    # Each quotient vertex carries its induced subgraph, each quotient edge the
+    # edges crossing between the two blocks.
+    @test issetequal(vertices(qg[:L]), ["a", "b"])
+    @test issetequal(vertices(qg[:R]), ["c", "d"])
+    @test issetequal(edges(qg[:L => :R]), [NamedEdge("b" => "c")])
 end
 
 end

@@ -1,14 +1,13 @@
-using DataGraphs: DataGraphs, EdgeDataDiGraph, EdgeDataGraph, EdgeDataView,
-    VertexDataDiGraph, VertexDataGraph, VertexDataView, edge_data, edge_data_type,
-    underlying_graph, vertex_data, vertex_data_type
+using DataGraphs: DataGraphs, DataGraph, EdgeDataDiGraph, EdgeDataGraph, EdgeDataView,
+    VertexDataDiGraph, VertexDataGraph, VertexDataView, VertexEdgeDataTypes, edge_data,
+    edge_data_type, underlying_graph, vertex_data, vertex_data_type
 using Dictionaries:
     AbstractDictionary, Dictionary, IndexError, Indices, isinsertable, issettable, set!
 using Graphs: AbstractGraph, AbstractSimpleGraph, add_edge!, add_vertex!, dst, edges,
     edgetype, has_edge, has_vertex, is_directed, ne, nv, rem_edge!, rem_vertex!, src,
     vertices
-using NamedGraphs.GraphsExtensions: add_edge, subgraph, vertextype
-using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, ordered_vertices, position_graph,
-    similar_graph, vertex_positions
+using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, add_edge, decoded_vertex,
+    encoded_graph, encoded_vertex, similar_graph, subgraph, vertextype
 using Test: @test, @test_throws, @testset
 
 @testset "VertexDataGraph and EdgeDataGraph" begin
@@ -125,9 +124,9 @@ using Test: @test, @test_throws, @testset
 
         @testset "NamedGraphs interface" begin
             g = GType(undef, [1, 2, 3])
-            @test position_graph(g) isa AbstractSimpleGraph{Int}
-            @test ordered_vertices(g) == [1, 2, 3]
-            @test keys(vertex_positions(g)) == vertices(g)
+            @test encoded_graph(g) isa AbstractSimpleGraph{Int}
+            @test [decoded_vertex(g, c) for c in 1:nv(g)] == [1, 2, 3]
+            @test [encoded_vertex(g, v) for v in vertices(g)] == 1:nv(g)
 
             g = add_edge(g, NamedEdge(1, 2))
             g[1] = "1"
@@ -162,6 +161,14 @@ using Test: @test, @test_throws, @testset
 
             gs = similar_graph(g, Float64, vertices(g))
             @test ne(gs) == 0
+
+            # A `VertexEdgeDataTypes` is data types, not vertices.
+            gs = similar_graph(g, VertexEdgeDataTypes(Float64, Char))
+            @test gs isa DataGraph
+            @test vertex_data_type(gs) === Float64
+            @test edge_data_type(gs) === Char
+            @test issetequal(vertices(gs), vertices(g))
+            @test issetequal(edges(gs), edges(g))
 
             gs = similar_graph(GType, [1.0, 2.0])
             @test gs isa GType
@@ -339,9 +346,9 @@ using Test: @test, @test_throws, @testset
         @testset "NamedGraphs interface" begin
             g = GType(Dictionary([1 => 2, 2 => 3], ["E12", "E23"]))
             @test issetequal(vertices(g), [1, 2, 3])
-            @test position_graph(g) isa AbstractSimpleGraph{Int}
-            @test ordered_vertices(g) isa AbstractVector
-            @test vertex_positions(g) isa AbstractDictionary
+            @test encoded_graph(g) isa AbstractSimpleGraph{Int}
+            @test issetequal([decoded_vertex(g, c) for c in 1:nv(g)], vertices(g))
+            @test [encoded_vertex(g, v) for v in vertices(g)] == 1:nv(g)
 
             gs = similar_graph(g)
             @test gs isa GType
@@ -371,6 +378,14 @@ using Test: @test, @test_throws, @testset
 
             gs = similar_graph(g, Float64, vertices(g))
             @test ne(gs) == 0
+
+            # A `VertexEdgeDataTypes` is data types, not vertices.
+            gs = similar_graph(g, VertexEdgeDataTypes(Float64, Char))
+            @test gs isa DataGraph
+            @test vertex_data_type(gs) === Float64
+            @test edge_data_type(gs) === Char
+            @test issetequal(vertices(gs), vertices(g))
+            @test issetequal(edges(gs), edges(g))
 
             gs = similar_graph(GType, [1.0, 2.0])
             @test gs isa GType
