@@ -1,6 +1,6 @@
 using Dictionaries: Dictionaries, AbstractDictionary, IndexError, Indices, filterview,
     getindices, gettokenvalue, istokenizable
-using NamedGraphs: to_edges, to_graph_index, to_vertices
+using NamedGraphs: to_graph_index
 
 abstract type AbstractDataView{K, V} <: AbstractDictionary{K, V} end
 

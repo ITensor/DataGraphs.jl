@@ -6,11 +6,9 @@ using Graphs: SimpleDiGraph, a_star, add_edge!, bfs_tree, connected_components, 
     dfs_tree, dijkstra_shortest_paths, dst, edges, edgetype, grid, has_edge, has_vertex,
     indegree, is_directed, ne, nv, outdegree, path_graph, src, steiner_tree, vertices
 using GraphsFlows: GraphsFlows
-using NamedGraphs.GraphsExtensions:
-    directed_graph, empty_graph, rename_vertices, subgraph, vertextype, ⊔
-using NamedGraphs.NamedGraphGenerators: named_grid, named_path_graph
-using NamedGraphs.OrdinalIndexing: nd, rd, st, th
-using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, similar_graph
+using NamedGraphs: NamedDiGraph, NamedEdge, NamedGraph, decoded_vertex, directed_graph,
+    empty_graph, named_grid, named_path_graph, rename_vertices, similar_graph, subgraph,
+    vertextype, ⊔
 using Test: @test, @test_broken, @testset
 
 @testset "DataGraphs.jl" begin
@@ -455,17 +453,18 @@ using Test: @test, @test_broken, @testset
         @test verts[4] ∈ part2
         @test flow == 1
     end
-    @testset "OrdinalIndexing" begin
+    @testset "Indexing by decoded vertex" begin
         g = DataGraph(
             NamedGraph(path_graph(3), ["a", "b", "c"]);
             vertex_data_type = String,
             edge_data_type = Symbol
         )
-        g[1st] = "v_a"
-        g[2nd] = "v_b"
-        g[3rd] = "v_c"
-        g[1st => 2nd] = :e_ab
-        g[2nd => 3rd] = :e_bc
+        v1, v2, v3 = map(c -> decoded_vertex(g, c), 1:3)
+        g[v1] = "v_a"
+        g[v2] = "v_b"
+        g[v3] = "v_c"
+        g[v1 => v2] = :e_ab
+        g[v2 => v3] = :e_bc
         @test g["a"] == "v_a"
         @test g["b"] == "v_b"
         @test g["c"] == "v_c"
@@ -473,16 +472,13 @@ using Test: @test, @test_broken, @testset
         @test g["b" => "a"] === :e_ab
         @test g["b" => "c"] === :e_bc
         @test g["c" => "b"] === :e_bc
-        @test g[1st] == "v_a"
-        @test g[1th] == "v_a"
-        @test g[2nd] == "v_b"
-        @test g[2th] == "v_b"
-        @test g[3rd] == "v_c"
-        @test g[3th] == "v_c"
-        @test g[1st => 2nd] === :e_ab
-        @test g[2nd => 1st] === :e_ab
-        @test g[2nd => 3rd] === :e_bc
-        @test g[3rd => 2nd] === :e_bc
+        @test g[v1] == "v_a"
+        @test g[v2] == "v_b"
+        @test g[v3] == "v_c"
+        @test g[v1 => v2] === :e_ab
+        @test g[v2 => v1] === :e_ab
+        @test g[v2 => v3] === :e_bc
+        @test g[v3 => v2] === :e_bc
     end
 
     @testset "Data views" begin

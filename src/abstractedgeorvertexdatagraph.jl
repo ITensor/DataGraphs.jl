@@ -1,5 +1,6 @@
 using Dictionaries: Dictionaries, Indices, isinsertable, set!
-using Graphs: edges, edgetype, has_edge, has_vertex, rem_edge!, rem_vertex!, vertices
+using Graphs:
+    dst, edges, edgetype, has_edge, has_vertex, rem_edge!, rem_vertex!, src, vertices
 using NamedGraphs: NamedGraphs, Vertices, similar_graph, subgraph_edges, to_graph_index
 
 abstract type AbstractVertexDataGraph{T, V} <: AbstractDataGraph{V, T, Nothing} end
@@ -20,6 +21,15 @@ for GType in (:AbstractVertexDataGraph, :AbstractEdgeDataGraph)
                 vertices
             )
             return similar_graph(graph, valtype(graph), vertices)
+        end
+
+        # `VertexEdgeDataTypes` is a wrapper that names data types, so the second argument
+        # keeps its data-type meaning here rather than the vertices meaning above.
+        function NamedGraphs.similar_graph(
+                graph::$GType,
+                D::VertexEdgeDataTypes
+            )
+            return similar_datagraph(graph, D)
         end
 
         function Base.copy(graph::$GType)
@@ -194,6 +204,9 @@ end
 function insert!_datagraph(graph::AbstractEdgeDataGraph, edge::AbstractEdge, data)
     if has_edge(graph, edge)
         throw(IndexError("Graph already contains edge $edge"))
+    end
+    if !has_vertex(graph, src(edge)) || !has_vertex(graph, dst(edge))
+        throw(IndexError("Graph does not contain the vertices of edge $edge"))
     end
     insert_edge_data!(graph, edge, data)
     return graph

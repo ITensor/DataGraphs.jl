@@ -1,22 +1,21 @@
 module DataGraphsPartitionedGraphsExt
-using ..DataGraphs: AbstractDataGraph, DataGraph, DataGraphs, IsUnderlyingGraph, _DataGraph,
-    _getindex, edge_data, edgetype, get_edge_data, get_edges_data, get_index_data,
-    get_vertex_data, get_vertices_data, is_edge_assigned, is_graph_index_assigned,
-    is_underlying_graph, is_vertex_assigned, set_edge_data!, set_edges_data!,
-    set_index_data!, set_vertex_data!, set_vertices_data!, underlying_graph, vertex_data
+using ..DataGraphs: AbstractDataGraph, AbstractEdgeDataGraph, AbstractVertexDataGraph,
+    DataGraph, DataGraphs, IsUnderlyingGraph, _DataGraph, _getindex, edge_data, edgetype,
+    get_edge_data, get_edges_data, get_index_data, get_vertex_data, get_vertices_data,
+    is_edge_assigned, is_graph_index_assigned, is_underlying_graph, is_vertex_assigned,
+    set_edge_data!, set_edges_data!, set_index_data!, set_vertex_data!, set_vertices_data!,
+    underlying_graph, vertex_data
 using Dictionaries: Dictionary, IndexError, Indices
-using Graphs: Graphs, AbstractEdge, AbstractGraph, edges, vertices
-using NamedGraphs.GraphsExtensions: add_vertices!, edge_subgraph, subgraph, vertextype
+using Graphs: Graphs, AbstractEdge, AbstractGraph, add_edge!, add_vertices!, dst, edges,
+    has_edge, src, vertices
 using NamedGraphs.PartitionedGraphs: AbstractPartitionedGraph, PartitionedGraph,
-    PartitionedGraphs, PartitionedView, QuotientEdge, QuotientEdgeEdge, QuotientEdgeEdges,
-    QuotientEdgeSlice, QuotientEdges, QuotientVertex, QuotientVertexOrEdge,
-    QuotientVertexSlice, QuotientVertexVertex, QuotientVertexVertices, QuotientVertices,
-    QuotientVerticesVertices, QuotientView, departition, has_quotientedge,
-    has_quotientvertex, parent_graph_type, partitioned_vertices, partitionedgraph,
-    quotient_graph, quotient_graph_type, quotientedges, quotientvertex, quotientvertices,
-    unpartitioned_graph
-using NamedGraphs: NamedGraphs, Edges, Vertices, get_graph_index, similar_graph, to_edges,
-    to_graph_index, to_vertices
+    PartitionedGraphs, PartitionedView, QuotientEdge, QuotientEdgeSlice, QuotientEdges,
+    QuotientVertex, QuotientVertexOrEdge, QuotientVertexSlice, QuotientVertices,
+    QuotientVerticesVertices, QuotientView, departition, parent_graph_type,
+    partitioned_vertices, partitionedgraph, quotient_graph, quotient_graph_type,
+    quotientvertex, unpartitioned_graph
+using NamedGraphs: NamedGraphs, Edges, Vertices, edge_subgraph, get_graph_index,
+    similar_graph, subgraph, to_edges, to_graph_index, to_vertices, vertextype
 using SimpleTraits: SimpleTraits, @traitfn, Not
 
 # ======================== DataGraphs interface for QuotientView ========================= #
@@ -155,6 +154,18 @@ DataGraphs.is_graph_index_assigned(graph::AbstractGraph, ind::QuotientVertexOrEd
 function DataGraphs.set_index_data!(graph::AbstractGraph, value, ind::QuotientVertexOrEdge)
     return throw(MethodError(set_index_data!, (graph, value, ind)))
 end
+# These graphs take an untyped index as a vertex or edge of their own, which a quotient
+# index never is, so they defer to the method above instead of the other way around.
+function DataGraphs.set_index_data!(
+        graph::AbstractVertexDataGraph, value, ind::QuotientVertexOrEdge
+    )
+    return throw(MethodError(set_index_data!, (graph, value, ind)))
+end
+function DataGraphs.set_index_data!(
+        graph::AbstractEdgeDataGraph, value, ind::QuotientVertexOrEdge
+    )
+    return throw(MethodError(set_index_data!, (graph, value, ind)))
+end
 
 function DataGraphs.vertex_data_type(T::Type{<:QuotientView})
     PGT = parent_graph_type(T)
@@ -228,7 +239,7 @@ function PartitionedGraphs.quotient_graph(
     ) where {PV}
     ug = unpartitioned_graph(g)
 
-    sg = similar_graph(underlying_graph(ug), PV)
+    sg = similar_graph(underlying_graph(ug), PV[])
     qg = DataGraph(
         sg;
         vertex_data_type = Base.promote_op(subgraph, typeof(g), QuotientVertex{PV}),
@@ -251,7 +262,7 @@ function PartitionedGraphs.quotient_graph(
         qe = edgetype(qg)(qv_src => qv_dst)
         if qv_src != qv_dst && !has_edge(qg, qe)
             add_edge!(qg, qe)
-            qg[qe] = g[QuotientEdge(e)]
+            qg[qe] = g[QuotientEdge(qv_src => qv_dst)]
         end
     end
 

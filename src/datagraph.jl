@@ -1,8 +1,7 @@
 using Dictionaries: Dictionary
 using Graphs: Graphs, bfs_tree, dfs_tree, edgetype, has_edge, has_vertex
-using NamedGraphs.GraphsExtensions:
-    convert_vertextype, directed_graph, directed_graph_type, rename_vertices, vertextype
-using NamedGraphs: GenericNamedGraph, similar_graph
+using NamedGraphs: NamedGraphs, convert_vertextype, directed_graph, directed_graph_type,
+    rename_vertices, similar_graph, vertextype
 
 # TODO: define VertexDataGraph, a graph with only data on the
 # vertices, and EdgeDataGraph, a graph with only data on the edges.
@@ -141,11 +140,11 @@ function DataGraph{V}(graph::DataGraph) where {V}
     )
 end
 
-function GraphsExtensions.convert_vertextype(vertextype::Type, graph::DataGraph)
+function NamedGraphs.convert_vertextype(vertextype::Type, graph::DataGraph)
     return DataGraph{vertextype}(graph)
 end
 
-function GraphsExtensions.directed_graph_type(graph_type::Type{<:DataGraph})
+function NamedGraphs.directed_graph_type(graph_type::Type{<:DataGraph})
     return DataGraph{
         vertextype(graph_type),
         vertex_data_type(graph_type),
@@ -161,12 +160,10 @@ function Graphs.rem_vertex!(graph::DataGraph, vertex)
     for neighbor_edge in neighbor_edges
         delete!(graph.edge_data, neighbor_edge)
     end
-    Graphs.rem_vertex!(graph.underlying_graph, vertex)
-    return graph
+    return Graphs.rem_vertex!(graph.underlying_graph, vertex)
 end
 
 function Graphs.rem_edge!(graph::DataGraph, edge)
     delete!(graph.edge_data, edge)
-    Graphs.rem_edge!(graph.underlying_graph, edge)
-    return graph
+    return Graphs.rem_edge!(graph.underlying_graph, edge)
 end
