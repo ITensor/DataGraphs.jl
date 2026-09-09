@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0](https://github.com/ITensor/DataGraphs.jl/compare/v0.5.3...main) - Unreleased
+## [0.6.0](https://github.com/ITensor/DataGraphs.jl/compare/v0.5.3...v0.6.0) - 2026-09-09
 
 ### Breaking changes
 
